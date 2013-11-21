@@ -1,0 +1,442 @@
+body {
+	margin: 0px;
+	padding: 0px;
+	overflow: hidden;
+}
+
+#print {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	color: white;
+	font-weight: bold;
+	word-wrap: break-word;
+	white-space: normal;
+	
+	/* Font border black ==> Readable on white background */
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+}
+
+#fullscreenButton {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	cursor: pointer;
+	margin: auto;
+	display: inline;
+	background-image: url(/images/famfamfam/arrow_out.png);
+	width: 16px;
+	height: 16px;
+}
+body:full-screen #fullscreenButton {
+	display: none;
+}
+
+#designerButton {
+	position: absolute;
+	left: 36px;
+	top: 10px;
+	cursor: pointer;
+	background-image: url(/images/famfamfam/page_white_edit.png);
+	width: 16px;
+	height: 16px;
+}
+
+.confirmPopup { /* Background of the popup */
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(100, 100, 100, 0.5);
+}
+
+.confirmPopup .confirmPopupContent {
+	position: absolute;
+	left: calc(50% - 200px);
+	top: calc(50% - 6px - 100px);
+	border: 1px solid black;
+	background-color: #BBBB82;
+	width: 400px;
+	height: 200px;
+	color: black;
+	padding: 3px;
+	overflow-y: auto;
+}
+
+.confirmPopup .confirmPopupContent h3 {
+	margin-top: 0px;
+	margin-bottom: 7px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	border: 3px double black;
+	border-radius: 7px;
+}
+
+.confirmPopup .buttonsLine {
+	position: absolute;
+	left: calc(50% - 200px);
+	top: calc(50% + 100px);
+	border: 1px solid black;
+	background-color: #BBBB82;
+	width: 400px;
+	padding: 3px;
+	color: black;
+}
+
+.confirmPopup .buttonsLine .confirmButton {
+	float: left;
+}
+
+.confirmPopup .buttonsLine .cancelButton {
+	float: right;
+}
+
+.confirmPopup .buttonsLine .message {
+	text-align: center;
+}
+
+/**************
+ * Cost table *
+ **************/
+
+.resourceCostTable {
+	width: 100%;
+}
+
+.resourceCostTable, .resourceCostTable th, .resourceCostTable td {
+	border: 1px solid black;
+	border-collapse: collapse;
+	font-size: 0.9em;
+}
+
+.resourceCostTable tr * {
+	border: 1px dotted gray;
+}
+
+/*.resourceCostTable tr:nth-child(2N+4) {
+	background-color: #DDDDA4;
+}*/
+
+.resourceCostTable tr td {
+	text-align: center;
+}
+
+/* Negative values */
+.resourceCostTable tr td[data-value^="-"] {
+	color: red;
+}
+
+/* Positive values with symbol */
+.resourceCostTable tr td[data-value^="+"] {
+	color: green;
+}
+
+/* Undo red color if value is just "-" to say "no value" */
+.resourceCostTable tr td[data-value="-"] {
+	color: inherit;
+}
+
+.resourceCostTable tr th.resourceName {
+	text-align: left;
+	font-weight: normal;
+	background-color: inherit;
+}
+
+/****************
+ * Context menu *
+ ****************/
+
+ul.contextMenu {
+	position: absolute;
+	list-style-type: none;
+	padding: 0px;
+	margin: 0px;
+	overflow: hidden;
+	z-index: 999;
+}
+
+ul.contextMenu[data-isVisible=false] {
+	display: none;
+}
+
+ul.contextMenu li {
+	list-style-type: none;
+	border: 1px solid black;
+	vertical-align: middle;
+	align: left;
+	padding: 3px;
+	background-color: #DDD;
+	color: black;
+}
+
+ul.contextMenu li:hover {
+	background: #9999BB;
+}
+
+/********************
+ * Designer content *
+ ********************/
+
+#designerWindowContent {
+	overflow: hidden;
+}
+
+/* TODO add a background and a border to be able to see it whatever the background is */
+#designerWindowContent .floorSelectorPlus, 
+#designerWindowContent .floorSelectorLabel, 
+#designerWindowContent .floorSelectorMinus {
+	position: absolute;
+	right: 5px;
+	text-align: center;
+	cursor: pointer;
+	width: 15px;
+}
+
+#designerWindowContent .floorSelectorPlus {
+	top: 5px;
+	font-weight: bold;
+}
+
+#designerWindowContent .floorSelectorLabel {
+	top: 25px;
+}
+
+#designerWindowContent .floorSelectorMinus {
+	top: 45px;
+	font-weight: bold;
+}
+
+#designerWindowContent .tree {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 175px;
+	list-style-type: none;
+	padding: 0px;
+	margin: 0px;
+	overflow: auto;
+	max-height: calc(100% - 30px);
+}
+
+#designerWindowContent .tree li {
+	cursor: pointer;
+}
+
+#designerWindowContent .tree li>ul>li {
+	list-style-type: square;
+}
+
+#designerWindowContent .tree>li>ul>li:hover {
+	background: #333344;
+}
+
+#designerWindowContent .tree>li>ul>li[data-isSelected=true] {
+	background: #555566;
+}
+
+#designerWindowContent .tree>li[data-isOpened=false]>ul {
+	display: none;
+}
+
+#designerWindowContent .tree>li[data-isOpened=false]:before {
+	content: "+";
+}
+
+#designerWindowContent .tree>li:before {
+	content: "-";
+	display: inline-block;
+	border: 1px solid white;
+	margin-right: 5px;
+	font-size: 8px;
+	text-align: center;
+	vertical-align: middle;
+	width: 11px;
+	height: 11px;
+	margin-top: -3px;
+	font-weight: bold;
+	border-radius: 3px;
+	background-color: #111;
+	box-sizing: border-box;
+}
+
+#designerWindowContent .sizeSelectorsContainer {
+	position: absolute;
+	bottom: 3px;
+	left: 3px;
+}
+
+#designerWindowContent .sizeSelectorsContainer .sizeSelector {
+	width: 30px;
+	height: 15px;
+}
+
+/*****************
+ * Window system *
+ *****************/
+
+/* TODO add global window styles : titles (use the same than configuration panel), inputs */
+
+.window {
+	position: absolute;
+	cursor: move;
+	min-width: 100px;
+	min-height: 100px;
+	overflow: hidden;
+	color: #CCC;
+	border-radius: 5px;
+	background-color: red;
+	
+	background: url(/images/windowBorder.png) repeat;
+	/*background: repeating-linear-gradient(90deg, gray 5px, #0B2161 9px, gray 5px);*/
+}
+
+.window * {
+	cursor: default;
+}
+
+.window[data-isResizable=true] {
+	resize: both;
+}
+
+.window[data-isResizable=true] * {
+	resize: none;
+}
+
+.window .closeButton {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 19px;
+	height: 20px;
+	margin-top: -2px;
+	text-align: center;
+	cursor: pointer;
+
+	font-weight: bold;
+}
+
+.window h1 {
+	position: absolute;
+	font-weight: normal;
+	font-size: 16px;
+	margin: 0px 0px 0px 100%;
+	padding: 0px 0px 0px 3px;
+	top: 20px;
+	transform-origin: top left;
+	transform: rotate(90deg);
+	overflow-y: hidden;
+	max-width: calc(100% - 40px); /* 50px = 20px (resize arrow) + 20px (close button) */
+	white-space: nowrap;
+}
+
+.window .content {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	bottom: 0px;
+	right: 20px;
+	padding: 3px;
+	overflow: auto;
+	background: #1A1A2A;
+	border: 5px ridge #0B2161;
+	border-right: 0px;
+	border-radius: 5px;
+}
+
+/***********************
+ * Configuration panel *
+ ***********************/
+
+#configurationButton {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	cursor: pointer;
+	background-image: url(/images/famfamfam/asterisk_yellow.png);
+	width: 16px;
+	height: 16px;
+}
+
+#configurationDiv h2 {
+	font-size: 1.5em;
+	margin-top: 0px;
+	margin-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	border: 3px double white;
+	border-radius: 7px;
+}
+
+#configurationDiv *+h2 {
+	margin-top: 15px;
+}
+
+#configurationDiv input {
+	width: 150px;
+	float: right;
+}
+
+#configurationDiv div {
+	padding: 3px;
+}
+
+/***************
+ * Login panel *
+ ***************/
+
+/* TODO use normal window for login panel ? */
+
+#authenticationDiv {
+	border: 1px solid #BBB;
+	position: absolute;
+	width: 265px;
+	height: 160px;
+	top: 50%;
+	left: 50%;
+	margin-top: -195px;
+	margin-left: -150px;
+	padding: 10px;
+	border-radius: 10px;
+	box-shadow: 10px 7px 15px 0px #656565;
+	background-color: #DDD;
+	background: linear-gradient(to right, #DDD 0%, #EFF8FB 50%, #DDD 100%);
+}
+
+#authenticationDiv[data-isVisible=false] {
+	display: none;
+}
+
+#authenticationDiv h1 {
+	font-size: 1.5em;
+	margin-top: 0px;
+	margin-bottom: 15px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	border: 3px double #F8E0E0;
+	border-radius: 7px;
+	background-color: #FBEFEF;
+	background: linear-gradient(to right, #DDD 0%, #FBEFEF 50%, #DDD 100%);
+}
+
+#authenticationDiv .nameLabel, #authenticationDiv .passwordLabel {
+	display: inline-block;
+	width: 100px;
+}
+
+#authenticationDiv .nameInput, #authenticationDiv .passwordInput {
+	width: 150px;
+}
+
+#authenticationDiv .submitButton {
+	display: block;
+}
+
+#authenticationDiv .informationArea[data-isValid=false] {
+	font-weight: bold;
+	color: red;
+}
+

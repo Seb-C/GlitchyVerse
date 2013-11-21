@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- TODO title, metas ... -->
+		<!-- TODO only one javascript file -->
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		
+		<!-- TODO is cssfx necessary ? It's breaking window title bar appearance -->
+		<!--<link rel="stylesheet" type="text/css" href="./css/main.css" class="cssfx" />-->
+		<link rel="stylesheet" type="text/css" href="/css/main.css" />
+		
+		<!-- TODO use js strict mode everywhere -->
+		
+		<script type="text/javascript" src="/js/polyfills/requestAnimationFrame.js"></script>
+		<script type="text/javascript" src="/js/polyfills/fullscreen-api-polyfill.js"></script>
+		<script type="text/javascript" src="/js/polyfills/e5-shim.min.js"></script>
+		<script type="text/javascript" src="/js/polyfills/html5slider.js"></script>
+		<script type="text/javascript" src="/js/polyfills/cssfx.min.js"></script>
+		<script type="text/javascript" src="/js/polyfills/Canvas.js"></script>
+		<script type="text/javascript" src="/js/polyfills/Object.create.js"></script>
+		<!--<script type="text/javascript" src="/js/polyfills/base64.min.js"></script>--><!-- Only in webworker -->
+		
+		<!-- TODO polyfills and lib : check if licence file is required/present -->
+		
+		<script type="text/javascript" src="/js/lib/gl-matrix.min.js"></script>
+		<script type="text/javascript" src="/js/lib/seedrandom.js"></script>
+		
+		<!-- Include it at first to use the extend function on classes definition -->
+		<script type="text/javascript" src="/js/functions/misc.js"></script>
+		<script type="text/javascript" src="/js/functions/createWindow.js"></script>
+		<script type="text/javascript" src="/js/functions/splitSurface.js"></script>
+		<script type="text/javascript" src="/js/functions/confirmPopup.js"></script>
+		<script type="text/javascript" src="/js/functions/contextMenu.js"></script>
+		<!--<script type="text/javascript" src="/js/functions/pixelArrayToDataURL.js"></script>--><!-- Only in webworker -->
+		<!--<script type="text/javascript" src="/js/functions/createPlanetTexture.js"></script>--><!-- Only in webworker -->
+		<!--<script type="text/javascript" src="/js/functions/createPlanetGeometry.js"></script>--><!-- Only in webworker -->
+		
+		<script type="text/javascript" src="/js/singletons/Materials.js"></script>
+		<script type="text/javascript" src="/js/singletons/Models.js"></script>
+		<script type="text/javascript" src="/js/singletons/Screens.js"></script>
+		<script type="text/javascript" src="/js/singletons/Configuration.js"></script>
+		<script type="text/javascript" src="/js/singletons/LoginForm.js"></script>
+		<script type="text/javascript" src="/js/singletons/Controls.js"></script>
+		<script type="text/javascript" src="/js/singletons/TimerManager.js"></script>
+		<script type="text/javascript" src="/js/singletons/DesignerModels.js"></script>
+		
+		<script type="text/javascript" src="/js/classes/MDArray.js"></script>
+		<script type="text/javascript" src="/js/classes/Clickable.js"></script>
+		<script type="text/javascript" src="/js/classes/Shader.js"></script>
+		<script type="text/javascript" src="/js/classes/World.js"></script>
+		<script type="text/javascript" src="/js/classes/Camera.js"></script>
+		<script type="text/javascript" src="/js/classes/Light.js"></script>
+		<script type="text/javascript" src="/js/classes/Entity.js"></script>
+		<script type="text/javascript" src="/js/classes/Particle.js"></script>
+		<script type="text/javascript" src="/js/classes/ParticleManager.js"></script>
+		<script type="text/javascript" src="/js/classes/LightManager.js"></script>
+		<script type="text/javascript" src="/js/classes/Mesh.js"></script>
+		<script type="text/javascript" src="/js/classes/ControlScreen.js"></script>
+		<script type="text/javascript" src="/js/classes/SpaceShip.js"></script>
+		<script type="text/javascript" src="/js/classes/ServerConnection.js"></script>
+		<script type="text/javascript" src="/js/classes/Timer.js"></script>
+		<script type="text/javascript" src="/js/classes/Designer.js"></script>
+		<script type="text/javascript" src="/js/classes/ResourceManager.js"></script>
+		<script type="text/javascript" src="/js/classes/SpaceContent.js"></script>
+		<script type="text/javascript" src="/js/classes/Animator.js"></script>
+		
+		<script type="text/javascript" src="/js/models/spaceShip/Room.js"></script>
+		<script type="text/javascript" src="/js/models/spaceShip/Door.js"></script>
+		<script type="text/javascript" src="/js/models/spaceShip/Propeller.js"></script>
+		<script type="text/javascript" src="/js/models/spaceShip/Console.js"></script>
+		<script type="text/javascript" src="/js/models/space/Star.js"></script>
+		<script type="text/javascript" src="/js/models/space/Planet.js"></script>
+		
+		<script type="text/javascript" src="/js/designerModels/Console.js"></script>
+		<script type="text/javascript" src="/js/designerModels/Door.js"></script>
+		<script type="text/javascript" src="/js/designerModels/ladder.obj.js"></script>
+		<script type="text/javascript" src="/js/designerModels/Propeller.js"></script>
+		<script type="text/javascript" src="/js/designerModels/shelf.obj.js"></script>
+		<script type="text/javascript" src="/js/designerModels/water_tank.obj.js"></script>
+		<script type="text/javascript" src="/js/designerModels/Window.js"></script>
+		<script type="text/javascript" src="/js/designerModels/power_station.obj.js"></script>
+		
+		<script type="text/javascript" src="/js/screens/Propulsion.js"></script>
+		
+		<script type="text/javascript" src="/js/main.js"></script>
+	</head>
+	<body>
+		<canvas id="canvas"></canvas>
+		<pre id="print"></pre>
+		
+		<div id="fullscreenButton" alt="Fullscreen" title="Fullscreen mode" />&nbsp;</div>
+		
+		<div id="authenticationDiv" data-isVisible="false">
+			<h1>Authentication</h1>
+			
+			<span class="nameLabel">Name</span>
+			<input type="text" class="nameInput" />
+			
+			<span class="passwordLabel">Password</span>
+			<input type="password" class="passwordInput" />
+			
+			<span class="informationArea" data-isValid="true"></span>
+			<input type="button" class="submitButton" value="Login" />
+		</div>
+	</body>
+</html>
