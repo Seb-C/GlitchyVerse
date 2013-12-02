@@ -4,7 +4,7 @@
  * Each model is a class extending Entity.
  */
 var Models = {
-	objectsDirectory: "/objects/",
+	objectsDirectory: "www/objects/",
 	_loadedObjFiles: {},
 	
 	/**
@@ -13,24 +13,13 @@ var Models = {
 	 * @return Array Containing the meshes
 	 */
 	loadMeshesFromObj: function(fileName) {
-		var fileContent;
-		if(this._loadedObjFiles[fileName]) {
-			fileContent = this._loadedObjFiles[fileName];
-		} else {
-			var ajax = new XMLHttpRequest();
-			ajax.open("GET", this.objectsDirectory + fileName, false);
-			ajax.send(null);
-
-			if(ajax.readyState == ajax.DONE && ajax.status == 200) {
-				fileContent = ajax.responseText;
-				this._loadedObjFiles[fileName] = fileContent;
-			} else {
-				throw new Error("Cannot load obj file : " + fileName);
-			}
+		if(!this._loadedObjFiles[fileName]) {
+			this._loadedObjFiles[fileName] = FILES.getText(Models.objectsDirectory + fileName);
 		}
 		
 		// TODO optimize it : store data in this._loadedObjFiles after regexp and splits
 		
+		var fileContent = this._loadedObjFiles[fileName];
 		fileContent = fileContent.replace(/#.*$/gm, ""); // Removing comments
 		fileContent = fileContent.replace(/\t/g, " "); // Replacing tabs with spaces
 		fileContent = fileContent.replace(/(\r\n|\r|\n)+/g, "\n"); // Removing blank lines and using only \n

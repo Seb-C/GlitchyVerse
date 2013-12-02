@@ -57,10 +57,6 @@ Animator.prototype.animate = function(entity, animationName, onEnded) {
 Animator.prototype._loadObjectAnimationFile = function(modelName) {
 	var object = this.animatedModels[modelName] = {};
 	
-	var ajax = new XMLHttpRequest();
-	ajax.open("GET", Models.objectsDirectory + "/animations/" + modelName + ".xml", false);
-	ajax.send(null);
-	
 	var domAttributeToVec3 = function(s) {
 		var s2 = s.replace(/\s/g, "");
 		if(s2.match(/^-?[0-9]+(\.[0-9]+)?\,-?[0-9]+(\.[0-9]+)?\,-?[0-9]+(\.[0-9]+)?$/)) {
@@ -75,52 +71,48 @@ Animator.prototype._loadObjectAnimationFile = function(modelName) {
 		}
 	};
 	
-	if(ajax.readyState == ajax.DONE && ajax.status == 200) {
-		var domDocument = ajax.responseXML.documentElement;
+	var domDocument = FILES.getXML(Models.objectsDirectory + "animations/" + modelName + ".xml").documentElement;
+	
+	if(domDocument.getAttribute("object") != modelName) {
+		throw new Error("Error loading animation file for " + modelName + " : object attribute doesn't match.");
+	}
+	
+	var domAnimations = domDocument.getElementsByTagName("animation");
+	for(var i = 0 ; i < domAnimations.length ; i++) {
+		var domAnimation = domAnimations[i];
+		var animation = object[domAnimation.getAttribute("id")] = [];
 		
-		if(domDocument.getAttribute("object") != modelName) {
-			throw new Error("Error loading animation file for " + modelName + " : object attribute doesn't match.");
-		}
-		
-		var domAnimations = domDocument.getElementsByTagName("animation");
-		for(var i = 0 ; i < domAnimations.length ; i++) {
-			var domAnimation = domAnimations[i];
-			var animation = object[domAnimation.getAttribute("id")] = [];
-			
-			var domActions = domAnimation.childNodes;
-			for(var j = 0 ; j < domActions.length ; j++) {
-				var domAction = domActions[j];
-				if(!(domAction instanceof Text)) {
-					var o = {
-						group: domAction.getAttribute("group"),
-						start: parseInt(domAction.getAttribute("start")),
-						end: parseInt(domAction.getAttribute("end")),
-						from: domAttributeToVec3(domAction.getAttribute("from")),
-						to: domAttributeToVec3(domAction.getAttribute("to"))
-					};
-					switch(domAction.tagName) {
-						case "translate": 
-							o.isTranslation = true;
-							break;
-						case "rotate": 
-							o.isTranslation = false;
-							o.origin        = domAttributeToVec3(domAction.getAttribute("origin"));
-							o.from[0] = degToRad(o.from[0]);
-							o.from[1] = degToRad(o.from[1]);
-							o.from[2] = degToRad(o.from[2]);
-							o.to[0] = degToRad(o.to[0]);
-							o.to[1] = degToRad(o.to[1]);
-							o.to[2] = degToRad(o.to[2]);
-							break;
-						default: 
-							throw new Error("Unknown action " + domAction.tagName + " in " + modelName + " animation file.");
-					}
-					animation.push(o);
+		var domActions = domAnimation.childNodes;
+		for(var j = 0 ; j < domActions.length ; j++) {
+			var domAction = domActions[j];
+			if(!(domAction instanceof Text)) {
+				var o = {
+					group: domAction.getAttribute("group"),
+					start: parseInt(domAction.getAttribute("start")),
+					end: parseInt(domAction.getAttribute("end")),
+					from: domAttributeToVec3(domAction.getAttribute("from")),
+					to: domAttributeToVec3(domAction.getAttribute("to"))
+				};
+				switch(domAction.tagName) {
+					case "translate": 
+						o.isTranslation = true;
+						break;
+					case "rotate": 
+						o.isTranslation = false;
+						o.origin        = domAttributeToVec3(domAction.getAttribute("origin"));
+						o.from[0] = degToRad(o.from[0]);
+						o.from[1] = degToRad(o.from[1]);
+						o.from[2] = degToRad(o.from[2]);
+						o.to[0] = degToRad(o.to[0]);
+						o.to[1] = degToRad(o.to[1]);
+						o.to[2] = degToRad(o.to[2]);
+						break;
+					default: 
+						throw new Error("Unknown action " + domAction.tagName + " in " + modelName + " animation file.");
 				}
+				animation.push(o);
 			}
 		}
-	} else {
-		throw new Error("Cannot load animation file : " + modelName);
 	}
 };
 

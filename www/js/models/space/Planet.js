@@ -15,6 +15,7 @@ Models.Planet = function(world, position, radius, seed) {
 	this.lastQuality = null;
 	
 	this.isWaitingForCreation = false;
+	this.texture = null;
 	
 	// TODO when regenerating texture --> delete the old one from webgl memory
 	
@@ -38,11 +39,11 @@ Models.Planet = function(world, position, radius, seed) {
 			if(!self.isWaitingForCreation) {
 				self.isWaitingForCreation = true;
 				world.spaceContent.requestPlanetCreation(radius, seed, quality, function(result) {
-					var texture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels);
+					self.texture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels, self.texture);
 					
 					// Creating mesh with the texture
 					self.meshes = [new Mesh(
-						texture,
+						self.texture,
 						new Float32Array(result.geometry.vertices),
 						new Float32Array(result.geometry.normals),
 						1,

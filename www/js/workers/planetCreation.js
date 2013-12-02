@@ -1,7 +1,6 @@
-importScripts("/js/polyfills/base64.min.js");
+importScripts("/js/workers/polyfills/base64.min.js");
 importScripts("/js/lib/gl-matrix.min.js");
 importScripts("/js/lib/seedrandom.js");
-//importScripts("/js/functions/pixelArrayToDataURL.js");
 importScripts("/js/functions/createPlanetTexture.js");
 importScripts("/js/functions/createPlanetGeometry.js");
 

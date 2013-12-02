@@ -24,7 +24,7 @@ body {
 	cursor: pointer;
 	margin: auto;
 	display: inline;
-	background-image: url(/images/famfamfam/arrow_out.png);
+	background-image: url(data:FileLoader.js,/content.tar,www/images/famfamfam/arrow_out.png);
 	width: 16px;
 	height: 16px;
 }
@@ -37,7 +37,7 @@ body:full-screen #fullscreenButton {
 	left: 36px;
 	top: 10px;
 	cursor: pointer;
-	background-image: url(/images/famfamfam/page_white_edit.png);
+	background-image: url(data:FileLoader.js,/content.tar,www/images/famfamfam/page_white_edit.png);
 	width: 16px;
 	height: 16px;
 }
@@ -288,7 +288,7 @@ ul.contextMenu li:hover {
 	border-radius: 5px;
 	background-color: red;
 	
-	background: url(/images/windowBorder.png) repeat;
+	background: url(data:FileLoader.js,/content.tar,www/images/windowBorder.png) repeat;
 	/*background: repeating-linear-gradient(90deg, gray 5px, #0B2161 9px, gray 5px);*/
 }
 
@@ -354,7 +354,7 @@ ul.contextMenu li:hover {
 	left: 10px;
 	top: 10px;
 	cursor: pointer;
-	background-image: url(/images/famfamfam/asterisk_yellow.png);
+	background-image: url(data:FileLoader.js,/content.tar,www/images/famfamfam/asterisk_yellow.png);
 	width: 16px;
 	height: 16px;
 }

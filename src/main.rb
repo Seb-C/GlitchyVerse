@@ -4,9 +4,7 @@ require 'thin';
 require 'faye/websocket'
 require 'inifile'
 require 'digest/sha1'
-
-# Removed part : multifile.js doesn't work
-#require 'archive/tar/minitar'
+require 'archive/tar/minitar'
 
 require_relative 'functions'
 require_relative 'classes/database'
@@ -18,12 +16,11 @@ require_relative 'classes/user'
 Dir.chdir(File.expand_path(File.dirname(__FILE__) + "/.."))
 CONFIG = IniFile.load("./config.ini")[:global]
 
-# Removed part : multifile.js doesn't work
 # (Re)creating temp archive with all www content
-#if File::file?("./www/content.tar")
-#	File::delete("./www/content.tar")
-#end
-#Archive::Tar::Minitar.pack("www", "./www/content.tar")
+if File::file?("./www/content.tar")
+	File::delete("./www/content.tar")
+end
+Archive::Tar::Minitar.pack("www", "./www/content.tar")
 
 # Connecting to database
 $DB = Database.new(

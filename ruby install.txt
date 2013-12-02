@@ -12,6 +12,6 @@ gems :
 	- faye-websocket
 	- json
     - inifile
-#	- archive-tar-minitar
+	- archive-tar-minitar
 
 Note : encodage mot de passe = sha1(login+pass)
