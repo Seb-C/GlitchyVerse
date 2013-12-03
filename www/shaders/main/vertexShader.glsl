@@ -1,3 +1,6 @@
+precision mediump float;
+precision mediump int;
+
 // If these constants are changed, World.js and fragmentShader.glsl must be updated too.
 const int DRAW_MODE_NORMAL      = 0;
 const int DRAW_MODE_PICK_MESH   = 1;
@@ -6,28 +9,28 @@ const int DRAW_MODE_PICK_SCREEN = 2;
 // TODO use uniforms instead of these constants ?
 // TODO values precision ?
 
-attribute highp vec3  aVertexPosition;
-attribute highp vec3  aVertexNormal;
-attribute highp vec2  aTextureCoord;
-attribute highp float aVertexShining;
-attribute highp vec3  aPickColor;
+attribute vec3  aVertexPosition;
+attribute vec3  aVertexNormal;
+attribute vec2  aTextureCoord;
+attribute float aVertexShining;
+attribute vec3  aPickColor;
 
-uniform highp mat4 uMVMatrix;
-uniform highp mat4 uPMatrix;
-uniform highp vec3 uCurrentPosition;
-uniform highp vec4 uCurrentRotation;
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform vec3 uCurrentPosition;
+uniform vec4 uCurrentRotation;
 
-uniform highp float uAmbientLight;
+uniform float uAmbientLight;
 
-uniform highp int uDrawMode;
+uniform int uDrawMode;
 
-varying highp vec2 vTextureCoord;
-varying highp float vLighting;
-varying highp vec3 vPickColor;
-varying highp vec3 vRotatedVertexPosition;
-varying highp vec3 vRotatedNormals;
+varying vec2 vTextureCoord;
+varying float vLighting;
+varying vec3 vPickColor;
+varying vec3 vRotatedVertexPosition;
+varying vec3 vRotatedNormals;
 
-highp vec3 rotate_vector(highp vec4 quat, highp vec3 vec);
+vec3 rotate_vector(vec4 quat, vec3 vec);
 
 void main(void) {
 	vRotatedVertexPosition = rotate_vector(uCurrentRotation, aVertexPosition);
@@ -44,6 +47,6 @@ void main(void) {
 }
 
 // https://twistedpairdevelopment.wordpress.com/2013/02/11/rotating-a-vector-by-a-quaternion-in-glsl/
-highp vec3 rotate_vector(highp vec4 quat, highp vec3 vec) {
+vec3 rotate_vector(vec4 quat, vec3 vec) {
 	return vec + 2.0 * cross(cross(vec, quat.xyz) + quat.w * vec, quat.xyz);
 }

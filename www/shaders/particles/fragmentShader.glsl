@@ -1,8 +1,12 @@
-uniform highp sampler2D uSampler;
+precision mediump float;
+precision mediump int;
+precision mediump sampler2D;
 
-varying highp float vTimePassedRate;
-varying highp vec4 vColor;
-varying highp float vDiscard;
+uniform sampler2D uSampler;
+
+varying float vTimePassedRate;
+varying vec4 vColor;
+varying float vDiscard;
 
 void main(void) {
 	if(vDiscard == 1.0) discard;

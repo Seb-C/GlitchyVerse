@@ -124,26 +124,28 @@ ParticleManager.prototype.init = function(gl) {
  * Regenerates the WebGL array buffers
  */
 ParticleManager.prototype._regenerateBuffers = function() {
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._movementBuffer  );
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._movementArray,   this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._positionBuffer  );
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._positionArray,   this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._sizeBuffer      );
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._sizeArray,       this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._colorBuffer     );
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._colorArray,      this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._lifeTimeBuffer  );
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._lifeTimeArray,   this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._createTimeBuffer);
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._createTimeArray, this._gl.STATIC_DRAW);
-	
-	this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._indexesBuffer);
-	this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._indexes, this._gl.STATIC_DRAW);
+	if(this._particles.length > 0) {
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._movementBuffer  );
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._movementArray,   this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._positionBuffer  );
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._positionArray,   this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._sizeBuffer      );
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._sizeArray,       this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._colorBuffer     );
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._colorArray,      this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._lifeTimeBuffer  );
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._lifeTimeArray,   this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._createTimeBuffer);
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._createTimeArray, this._gl.STATIC_DRAW);
+		
+		this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._indexesBuffer);
+		this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._indexes, this._gl.STATIC_DRAW);
+	}
 };
 
 /**
@@ -153,63 +155,65 @@ ParticleManager.prototype._regenerateBuffers = function() {
  * @param mat4 The model-view matrix
  */
 ParticleManager.prototype.draw = function(gl, shader, mvMatrix) {
-	this._gl.uniform1f(shader.getVar("uCurrentTime"), TimerManager.lastUpdateTimeStamp / 1000 - this.baseTime);
-	this._gl.uniform3fv(shader.getVar("uCameraPosition"), this.camera.getPosition());
-	this._gl.uniform2fv(shader.getVar("uScreenSize"), this.camera.screenSize);
-	this._gl.uniform1f(shader.getVar("uFovy"), this.camera.fovy);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._positionBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aPosition"), 3, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._sizeBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aSize"), 1, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._colorBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aColor"), 4, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._lifeTimeBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aLifeTime"), 1, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._createTimeBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aCreateTime"), 1, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._movementBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aMovement"), 3, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.activeTexture(this._gl.TEXTURE0);
-	this._gl.uniform1i(shader.getVar("uSampler"), 0);
-	
-	this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._indexesBuffer);
-	
-	gl.depthMask(false);
-	// TODO don't create those objects here
-	var currentMvMatrix = mat4.create();
-	var emptyVec3 = vec3.create();
-	var position = vec3.create();
-	var tempQuat = quat.create();
-	for(var i = 0 ; i < this._particles.length ; i++) {
-		var realIndex = this._indexes[i];
-		var p = this._particles[realIndex];
+	if(this._particles.length > 0) {
+		this._gl.uniform1f(shader.getVar("uCurrentTime"), TimerManager.lastUpdateTimeStamp / 1000 - this.baseTime);
+		this._gl.uniform3fv(shader.getVar("uCameraPosition"), this.camera.getPosition());
+		this._gl.uniform2fv(shader.getVar("uScreenSize"), this.camera.screenSize);
+		this._gl.uniform1f(shader.getVar("uFovy"), this.camera.fovy);
 		
-		if(p.entity != null) {
-			// Position of the particle is relative to an entity position
-			vec3.copy(position, p.position);
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._positionBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aPosition"), 3, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._sizeBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aSize"), 1, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._colorBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aColor"), 4, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._lifeTimeBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aLifeTime"), 1, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._createTimeBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aCreateTime"), 1, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._movementBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aMovement"), 3, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.activeTexture(this._gl.TEXTURE0);
+		this._gl.uniform1i(shader.getVar("uSampler"), 0);
+		
+		this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._indexesBuffer);
+		
+		gl.depthMask(false);
+		// TODO don't create those objects here
+		var currentMvMatrix = mat4.create();
+		var emptyVec3 = vec3.create();
+		var position = vec3.create();
+		var tempQuat = quat.create();
+		for(var i = 0 ; i < this._particles.length ; i++) {
+			var realIndex = this._indexes[i];
+			var p = this._particles[realIndex];
 			
-			var invertedRotation = quat.copy(tempQuat, p.entity.rotation);
-			quat.invert(tempQuat, tempQuat);
-			vec3.transformQuat(position, position, tempQuat);
+			if(p.entity != null) {
+				// Position of the particle is relative to an entity position
+				vec3.copy(position, p.position);
+				
+				var invertedRotation = quat.copy(tempQuat, p.entity.rotation);
+				quat.invert(tempQuat, tempQuat);
+				vec3.transformQuat(position, position, tempQuat);
+				
+				vec3.add(position, position, p.entity.position);
+				mat4.translate(currentMvMatrix, mvMatrix, position);
+				this._gl.uniform3fv(shader.getVar("uEntityPosition"), p.entity.position);
+			} else {
+				mat4.translate(currentMvMatrix, mvMatrix, p.position);
+				this._gl.uniform3fv(shader.getVar("uEntityPosition"), emptyVec3);
+			}
+			this._gl.uniformMatrix4fv(shader.getVar("uMVMatrix"), false, currentMvMatrix);
 			
-			vec3.add(position, position, p.entity.position);
-			mat4.translate(currentMvMatrix, mvMatrix, position);
-			this._gl.uniform3fv(shader.getVar("uEntityPosition"), p.entity.position);
-		} else {
-			mat4.translate(currentMvMatrix, mvMatrix, p.position);
-			this._gl.uniform3fv(shader.getVar("uEntityPosition"), emptyVec3);
+			this._gl.bindTexture(this._gl.TEXTURE_2D, p.texture);
+			this._gl.drawElements(this._gl.POINTS, 1, this._gl.UNSIGNED_SHORT, 2 * i);
 		}
-		this._gl.uniformMatrix4fv(shader.getVar("uMVMatrix"), false, currentMvMatrix);
-		
-		this._gl.bindTexture(this._gl.TEXTURE_2D, p.texture);
-		this._gl.drawElements(this._gl.POINTS, 1, this._gl.UNSIGNED_SHORT, 2 * i);
+		gl.depthMask(true);
 	}
-	gl.depthMask(true);
 };

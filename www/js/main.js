@@ -11,9 +11,8 @@ var world = new World();
 world.load();
 
 var canvas = document.getElementById("canvas");
-// TODO disable preserveDrawingBuffer by handling click in a callback in read ?
-var gl = canvas.getContext("webgl"/*,              {preserveDrawingBuffer: true}*/) 
-	  || canvas.getContext("experimental-webgl"/*, {preserveDrawingBuffer: true}*/);
+var gl = canvas.getContext("webgl",              {preserveDrawingBuffer: true}) 
+	  || canvas.getContext("experimental-webgl", {preserveDrawingBuffer: true});
 
 if(gl) {
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Set clear color to black, fully opaque

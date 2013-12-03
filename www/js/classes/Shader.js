@@ -34,7 +34,7 @@ Shader.prototype._load = function(typeConstantName, fileName) {
 		shader: null
 	};
 	this._shaders.push(shader);
-
+	// TODO load from tar
 	var ajax = new XMLHttpRequest();
 	ajax.open("GET", this.directory + fileName, false);
 	ajax.send(null);

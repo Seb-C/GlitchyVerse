@@ -8,6 +8,8 @@ var World = function() {
 	
 	this.lastMvMatrix     = this.camera.update();
 	
+	this.lastDrawMode     = null;
+	
 	this.mainShader       = new Shader();
 	this.particlesShader  = new Shader();
 	
@@ -297,12 +299,17 @@ World.prototype.draw = function(mode) {
 	var drawMode = mode || this.DRAW_MODE_NORMAL;
 	
 	this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-	this.gl.uniform1i(this.mainShader.getVar("uDrawMode"), drawMode);
+	
+	if(mode != this.lastDrawMode) {
+		this.gl.uniform1i(this.mainShader.getVar("uDrawMode"), drawMode);
+		this.lastDrawMode = mode;
+	}
+	
 	var currentMvMatrix = mat4.create();
 	var i = 0;
 	
 	// Drawing opaque entities
-	this.gl.useProgram(this.mainShader.program);
+	//this.gl.useProgram(this.mainShader.program);
 	while(i < this._entities.length && !this._entities[i].isTransparency()) {
 		var e = this._entities[i];
 		

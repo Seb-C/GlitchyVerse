@@ -1,23 +1,26 @@
-uniform highp float uCurrentTime;
-uniform highp mat4 uMVMatrix;
-uniform highp mat4 uPMatrix;
-uniform highp vec3 uCameraPosition;
-uniform highp vec2 uScreenSize;
-uniform highp float uFovy;
-uniform highp vec3 uEntityPosition;
+precision mediump float;
+precision mediump int;
 
-attribute highp vec3 aPosition;
-attribute highp float aSize;
-attribute highp vec4 aColor;
-attribute highp float aLifeTime;
-attribute highp float aCreateTime;
-attribute highp vec3 aMovement;
+uniform float uCurrentTime;
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+uniform vec3 uCameraPosition;
+uniform vec2 uScreenSize;
+uniform float uFovy;
+uniform vec3 uEntityPosition;
 
-varying highp float vTimePassedRate;
-varying highp vec4 vColor;
+attribute vec3 aPosition;
+attribute float aSize;
+attribute vec4 aColor;
+attribute float aLifeTime;
+attribute float aCreateTime;
+attribute vec3 aMovement;
+
+varying float vTimePassedRate;
+varying vec4 vColor;
 
 // Boolean : True if particle is dead and must be discarded in fragment shader
-varying highp float vDiscard;
+varying float vDiscard;
 
 void main(void) {
 	vColor          = aColor; // To fragment shader
@@ -25,7 +28,7 @@ void main(void) {
 	vTimePassedRate = 0.0;    // Default value = no life limit
 	
 	// Determining life time passed
-	highp float timePassed = uCurrentTime - aCreateTime;
+	float timePassed = uCurrentTime - aCreateTime;
 	if(aLifeTime > 0.0) vTimePassedRate = clamp(timePassed / aLifeTime, 0.0, 1.0);
 	
 	// Setting position and size, only if it's not dead. Else, discarding.
@@ -34,9 +37,9 @@ void main(void) {
 		gl_Position = uPMatrix * uMVMatrix * vec4(timePassed * aMovement, 1.0);
 		
 		// Point size is different than viewed size because of distance
-		highp float pointSize = aSize * (0.5 + (1.0 - vTimePassedRate) / 2.0);
-		highp float pixelsPerRadian = uScreenSize.y / 2.0 / uFovy;
-		highp float pointDistance = abs(length((aPosition + uEntityPosition) - uCameraPosition));
+		float pointSize = aSize * (0.5 + (1.0 - vTimePassedRate) / 2.0);
+		float pixelsPerRadian = uScreenSize.y / 2.0 / uFovy;
+		float pointDistance = abs(length((aPosition + uEntityPosition) - uCameraPosition));
 		// Multiplying it to have (approximately) the same unit shared by vertices and particles
 		gl_PointSize = pixelsPerRadian * pointSize / pointDistance * 82.0;
 	} else {
@@ -44,13 +47,13 @@ void main(void) {
 	}
 }
 
-/*highp mat4 translate(highp mat4 a, highp vec3 v) {
-	highp mat4 o = mat4(0);
+/*mat4 translate(mat4 a, vec3 v) {
+	mat4 o = mat4(0);
 	
-	highp float x = v[0]; highp float y = v[1]; highp float z = v[2];
-	highp float a00; highp float a01; highp float a02; highp float a03;
-	highp float a10; highp float a11; highp float a12; highp float a13;
-	highp float a20; highp float a21; highp float a22; highp float a23;
+	float x = v[0]; float y = v[1]; float z = v[2];
+	float a00; float a01; float a02; float a03;
+	float a10; float a11; float a12; float a13;
+	float a20; float a21; float a22; float a23;
 	
 	a00 = a[0][0]; a01 = a[0][1]; a02 = a[0][2]; a03 = a[0][3];
 	a10 = a[1][0]; a11 = a[1][1]; a12 = a[1][2]; a13 = a[1][3];
