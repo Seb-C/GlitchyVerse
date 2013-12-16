@@ -155,6 +155,7 @@ ParticleManager.prototype._regenerateBuffers = function() {
  * @param mat4 The model-view matrix
  */
 ParticleManager.prototype.draw = function(gl, shader, mvMatrix) {
+	// TODO optimize particle system like the entities
 	if(this._particles.length > 0) {
 		this._gl.uniform1f(shader.getVar("uCurrentTime"), TimerManager.lastUpdateTimeStamp / 1000 - this.baseTime);
 		this._gl.uniform3fv(shader.getVar("uCameraPosition"), this.camera.getPosition());

@@ -53,7 +53,6 @@ ServerConnection.prototype._auth_query = function(data) {
 };
 
 ServerConnection.prototype._auth_result = function(data) {
-	var self = this;
 	LoginForm.setMessage(data.message, data.is_valid);
 	if(data.is_valid) {
 		LoginForm.close();

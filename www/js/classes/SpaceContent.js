@@ -3,6 +3,7 @@ var SpaceContent = function(world) {
 	this.bodies = {};
 	
 	var self = this;
+	// TODO put planet worker in Planet static class ?
 	this.planetCreationWorker = new Worker("/js/workers/planetCreation.js");
 	this.planetCreationQueue = [];
 	this.planetCreationWorker.onmessage = function(event) {

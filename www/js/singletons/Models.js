@@ -88,7 +88,7 @@ var Models = {
 					}
 					if(textureParts.length == 0) textureParts = null;
 					
-					var mesh = new Mesh(currentMaterial, vertices, normals, 1, textureParts, currentGroups);
+					var mesh = new Mesh(currentMaterial, vertices, normals, textureParts, currentGroups);
 					meshes.push(mesh);
 					
 					break;

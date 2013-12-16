@@ -24,7 +24,7 @@ uniform int   uPointLightingAttenuationArray[MAX_LIGHTS_NUMBER];
 uniform float uPointLightingMaxLightningArray[MAX_LIGHTS_NUMBER];
 uniform int   uPointLightingArrayLength;
 
-uniform sampler2D uSampler;
+uniform sampler2D uTexture;
 uniform int uDrawMode;
 uniform vec3 uCurrentPosition;
 
@@ -58,7 +58,7 @@ void main(void) {
 		//pointLights.g = clamp(pointLights.g, 0.0, 1.0);
 		//pointLights.b = clamp(pointLights.b, 0.0, 1.0);
 		
-		vec4 texelColor = texture2D(uSampler, vTextureCoord);
+		vec4 texelColor = texture2D(uTexture, vTextureCoord);
 		gl_FragColor = vec4(texelColor.rgb * (vLighting + pointLights), texelColor.a);
 	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		gl_FragColor = vec4(vPickColor, 1.0);

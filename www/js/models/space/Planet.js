@@ -17,8 +17,6 @@ Models.Planet = function(world, position, radius, seed) {
 	this.isWaitingForCreation = false;
 	this.texture = null;
 	
-	// TODO when regenerating texture --> delete the old one from webgl memory
-	
 	this.regenerationTimer = new Timer(function() {
 		var maxVisibleDistance = Math.PI * radius * self.MAX_DISTANCE_VISIBILITY_PER_UNIT;
 		
@@ -33,10 +31,9 @@ Models.Planet = function(world, position, radius, seed) {
 		
 		// If quality difference is significative, rebuilding the planet
 		if(self.lastQuality == null || Math.abs((quality / self.lastQuality) - 1) >= self.MIN_QUALITY_DIFFERENCE_TO_UPDATE) {
-			self.lastQuality = quality;
-			
 			// Creating planet, based on the given definition
 			if(!self.isWaitingForCreation) {
+				self.lastQuality = quality;
 				self.isWaitingForCreation = true;
 				world.spaceContent.requestPlanetCreation(radius, seed, quality, function(result) {
 					self.texture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels, self.texture);
@@ -45,8 +42,7 @@ Models.Planet = function(world, position, radius, seed) {
 					self.meshes = [new Mesh(
 						self.texture,
 						new Float32Array(result.geometry.vertices),
-						new Float32Array(result.geometry.normals),
-						1,
+						new Float32Array(result.geometry.normals    ),
 						new Float32Array(result.geometry.texturePart)
 					)];
 					self.regenerateCache();
@@ -57,5 +53,6 @@ Models.Planet = function(world, position, radius, seed) {
 	}, this.REBUILD_TIME_INTERVAL, true);
 	
 	this.parent(world, position, quat.create(), []);
+	this.drawTypeByElements = false;
 };
 Models.Planet.extend(Entity);

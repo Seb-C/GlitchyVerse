@@ -40,6 +40,10 @@ Camera.prototype.update = function() {
 	var negatedPosition = vec3.create();
 	var invertedRotation = mat4.create();
 	
+	// TODO only for tests, remove it
+	if(Controls._keys[107]) this.moveSpeed *= 1.02;
+	if(Controls._keys[109]) this.moveSpeed /= 1.02;
+	
 	// Moves depends of elapsed time
 	var timeNow = TimerManager.lastUpdateTimeStamp;
 	if(this.lastAnimationTime != 0) {

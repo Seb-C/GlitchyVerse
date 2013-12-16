@@ -283,6 +283,9 @@ World.prototype.update = function() {
 	}
 	this.lastMvMatrix = this.camera.update();
 	
+	this.gl.useProgram(this.mainShader.program);
+	this.gl.uniformMatrix4fv(this.mainShader.getVar("uMVMatrix"), false, this.lastMvMatrix);
+	
 	this.animator.update();
 };
 
@@ -305,22 +308,15 @@ World.prototype.draw = function(mode) {
 		this.lastDrawMode = mode;
 	}
 	
-	var currentMvMatrix = mat4.create();
+	this.gl.uniform1i(this.mainShader.getVar("uTexture"), 0);
+	this.gl.activeTexture(this.gl.TEXTURE0);
+	
 	var i = 0;
 	
 	// Drawing opaque entities
 	//this.gl.useProgram(this.mainShader.program);
 	while(i < this._entities.length && !this._entities[i].isTransparency()) {
-		var e = this._entities[i];
-		
-		if(e.meshes.length > 0) {
-			mat4.translate(currentMvMatrix, this.lastMvMatrix, e.position);
-			this.gl.uniformMatrix4fv(this.mainShader.getVar("uMVMatrix"), false, currentMvMatrix);
-			this.gl.uniform3fv(this.mainShader.getVar("uCurrentPosition"), e.position);
-			this.gl.uniform4fv(this.mainShader.getVar("uCurrentRotation"), e.rotation);
-			
-			e.draw(this.gl, this.mainShader, drawMode);
-		}
+		this._entities[i].draw(this.gl, this.mainShader, drawMode);
 		i++;
 	}
 	
@@ -333,16 +329,7 @@ World.prototype.draw = function(mode) {
 	// Drawing transparent entities
 	this.gl.useProgram(this.mainShader.program);
 	while(i < this._entities.length) {
-		var e = this._entities[i];
-		
-		if(e.meshes.length > 0) {
-			mat4.translate(currentMvMatrix, this.lastMvMatrix, e.position);
-			this.gl.uniformMatrix4fv(this.mainShader.getVar("uMVMatrix"), false, currentMvMatrix);
-			this.gl.uniform3fv(this.mainShader.getVar("uCurrentPosition"), e.position);
-			this.gl.uniform4fv(this.mainShader.getVar("uCurrentRotation"), e.rotation);
-			
-			e.draw(this.gl, this.mainShader, drawMode);
-		}
+		this._entities[i].draw(this.gl, this.mainShader, drawMode);
 		i++;
 	}
 	

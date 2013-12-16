@@ -11,7 +11,7 @@ Models.Console = function(world, position, rotation, definition, state) {
 	for(var i = 0 ; i < meshes.length ; i++) {
 		var mesh = meshes[i];
 		if(mesh.texture == material_BLACK) {
-			mesh.shining = 1 / world.lightManager.ambientLightning;
+			// TODO add a small light to the screen
 			mesh.texture = definition.spaceShip.screen.canvasTexture;
 			
 			var widthRatio  = definition.spaceShip.screen.widthRatio;

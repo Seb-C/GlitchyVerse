@@ -58,14 +58,14 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 			circle2Rad1X * cosCurrentAngle, circle2Rad1Y * sinCurrentAngle, backZ,
 			circle2Rad1X * cosNextAngle,    circle2Rad1Y * sinNextAngle,    backZ,
 			circle1Rad1X * cosNextAngle,    circle1Rad1Y * sinNextAngle,    frontZ
-		], [0, 0, 1], null, [0, 0, 1, 0, 1, 1, 0, 1])); // Body out
+		], [0, 0, 1], [0, 0, 1, 0, 1, 1, 0, 1])); // Body out
 		
 		meshes.push(new Mesh(material_PROPELLER, [
 			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, frontZ,
 			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, middleZ,
 			circle1Rad2X * cosNextAngle,    circle1Rad2Y * sinNextAngle,    middleZ,
 			circle1Rad2X * cosNextAngle,    circle1Rad2Y * sinNextAngle,    frontZ
-		], [0, 0, 1], null, [0, 0, 0.2, 0, 0.2, 1, 0, 1])); // Body in
+		], [0, 0, 1], [0, 0, 0.2, 0, 0.2, 1, 0, 1])); // Body in
 		
 		// TODO bodys bug with normals ?
 		
@@ -74,7 +74,7 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, frontZ,
 			circle1Rad2X * cosNextAngle,    circle1Rad2Y * sinNextAngle,    frontZ,
 			circle1Rad1X * cosNextAngle,    circle1Rad1Y * sinNextAngle,    frontZ
-		], [0, 0, 1], null, [0, 0, 0.2, 0, 0.2, 1, 0, 1])); // Edge
+		], [0, 0, 1], [0, 0, 0.2, 0, 0.2, 1, 0, 1])); // Edge
 		
 		meshes.push(new Mesh(material_BLACK, [
 			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, middleZ,

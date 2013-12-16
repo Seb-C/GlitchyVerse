@@ -12,7 +12,6 @@ const int DRAW_MODE_PICK_SCREEN = 2;
 attribute vec3  aVertexPosition;
 attribute vec3  aVertexNormal;
 attribute vec2  aTextureCoord;
-attribute float aVertexShining;
 attribute vec3  aPickColor;
 
 uniform mat4 uMVMatrix;
@@ -34,13 +33,13 @@ vec3 rotate_vector(vec4 quat, vec3 vec);
 
 void main(void) {
 	vRotatedVertexPosition = rotate_vector(uCurrentRotation, aVertexPosition);
-	gl_Position = uPMatrix * uMVMatrix * vec4(vRotatedVertexPosition, 1.0);
+	gl_Position = uPMatrix * uMVMatrix * vec4(vRotatedVertexPosition + uCurrentPosition, 1.0);
 	
 	if(uDrawMode == DRAW_MODE_NORMAL) {
 		vRotatedNormals = rotate_vector(uCurrentRotation, aVertexNormal);
 		
 		vTextureCoord = aTextureCoord;
-		vLighting = uAmbientLight * abs(aVertexShining);
+		vLighting = uAmbientLight;
 	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		vPickColor = aPickColor;
 	}

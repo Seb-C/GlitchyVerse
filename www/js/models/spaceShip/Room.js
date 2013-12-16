@@ -122,11 +122,6 @@ Models.Room.prototype._regenerateMeshes = function() {
 	//if(gaps.top   ) surfaces.top    = splitSurfaceNotOptimized([this.definition.size[0], this.definition.size[2]], gaps.top   );
 	//if(gaps.bottom) surfaces.bottom = splitSurfaceNotOptimized([this.definition.size[0], this.definition.size[2]], gaps.bottom);
 	
-	// Increasing inside meshes shining to avoid too many point lights
-	var insideElementsLightning = 1 / world.lightManager.ambientLightning;
-	var lightAndClimLightning = null;
-	insideElementsLightning = null; // TODO remove static light ?
-	
 	// Misc dimensions
 	var edgeSize = this.definition.edgeSize;
 	var lightAndClimEdgeSize = this.definition.lightAndClimEdgeSize;
@@ -184,7 +179,7 @@ Models.Room.prototype._regenerateMeshes = function() {
 				coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord2[2],
 				coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord2[2],
 				coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord2[2]
-			], [0, 0, 1], 1, textureBounds);
+			], [0, 0, 1], textureBounds);
 			
 			// Interior (Wall)
 			var wall = new Mesh(material_METAL_WALL, [
@@ -192,7 +187,7 @@ Models.Room.prototype._regenerateMeshes = function() {
 				coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord1[2],
 				coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord1[2],
 				coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord1[2]
-			], [0, 0, -1], insideElementsLightning, textureBounds);
+			], [0, 0, -1], textureBounds);
 			
 			meshes.push(hull);
 			meshes.push(wall);
@@ -244,13 +239,13 @@ Models.Room.prototype._regenerateMeshes = function() {
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1],            coord2[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1] - edgeSize, coord2[2],
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1] - edgeSize, coord2[2]
-					], [0, 0, 1], 1, texture);
+					], [0, 0, 1], texture);
 					var wall = new Mesh(material_METAL_WALL, [
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1],            coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1],            coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1] - edgeSize, coord1[2],
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1] - edgeSize, coord1[2]
-					], [0, 0, -1], insideElementsLightning, texture);
+					], [0, 0, -1], texture);
 					
 					meshes.push(hull);
 					meshes.push(wall);
@@ -274,13 +269,13 @@ Models.Room.prototype._regenerateMeshes = function() {
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord2[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1],            coord2[2],
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1],            coord2[2]
-					], [0, 0, 1], 1, texture);
+					], [0, 0, 1], texture);
 					var wall = new Mesh(material_METAL_WALL, [
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1],            coord1[2],
 						coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1],            coord1[2]
-					], [0, 0, -1], insideElementsLightning, texture);
+					], [0, 0, -1], texture);
 					
 					meshes.push(hull);
 					meshes.push(wall);
@@ -304,13 +299,13 @@ Models.Room.prototype._regenerateMeshes = function() {
 						coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
 						coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2],
 						coord2[0] - s[0] * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2]
-					], [0, 0, 1], 1, texture);
+					], [0, 0, 1], texture);
 					var wall = new Mesh(material_METAL_WALL, [
 						coord2[0] - s[0] * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
 						coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
 						coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2],
 						coord2[0] - s[0] * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2]
-					], [0, 0, -1], insideElementsLightning, texture);
+					], [0, 0, -1], texture);
 					
 					meshes.push(hull);
 					meshes.push(wall);
@@ -334,13 +329,13 @@ Models.Room.prototype._regenerateMeshes = function() {
 						coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
 						coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2]
-					], [0, 0, 1], 1, texture);
+					], [0, 0, 1], texture);
 					var wall = new Mesh(material_METAL_WALL, [
 						coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2],
 						coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2]
-					], [0, 0, -1], insideElementsLightning, texture);
+					], [0, 0, -1], texture);
 					
 					meshes.push(hull);
 					meshes.push(wall);
@@ -378,13 +373,13 @@ Models.Room.prototype._regenerateMeshes = function() {
 		 x1, -y1,  z1,
 		 x1, -y1, -z1,
 		-x1, -y1, -z1
-	], [0, 1, 0], insideElementsLightning)); // Ground
+	], [0, 1, 0])); // Ground
 	meshes.push(new Mesh(material_METAL_WALL, [
 		-x1+lightAndClimEdgeSize, y1, -z1+lightAndClimEdgeSize,
 		 x1-lightAndClimEdgeSize, y1, -z1+lightAndClimEdgeSize,
 		 x1-lightAndClimEdgeSize, y1,  z1-lightAndClimEdgeSize,
 		-x1+lightAndClimEdgeSize, y1,  z1-lightAndClimEdgeSize
-	], [0, -1, 0], insideElementsLightning)); // Ceil
+	], [0, -1, 0])); // Ceil
 	
 	// Outer diagonals top
 	meshes.push(new Mesh(material_METAL_BOLT, [
@@ -514,25 +509,25 @@ Models.Room.prototype._regenerateMeshes = function() {
 		-x1+lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
 		-x1,                       y1-lightAndClimEdgeSize, -z1,
 		-x1,                       y1-lightAndClimEdgeSize,  z1
-	], [1, -1, 0], lightAndClimLightning)); // Left
+	], [1, -1, 0])); // Left
 	meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
 		 x1-lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
 		 x1-lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
 		 x1,                       y1-lightAndClimEdgeSize,  z1,
 		 x1,                       y1-lightAndClimEdgeSize, -z1
-	], [-1, -1, 0], lightAndClimLightning)); // Right
+	], [-1, -1, 0])); // Right
 	meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
 		 x1-lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
 		-x1+lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
 		-x1,                       y1-lightAndClimEdgeSize,  z1,
 		 x1,                       y1-lightAndClimEdgeSize,  z1
-	], [0, -1, -1], lightAndClimLightning)); // Front
+	], [0, -1, -1])); // Front
 	meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
 		 x1-lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
 		-x1+lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
 		-x1,                       y1-lightAndClimEdgeSize, -z1,
 		 x1,                       y1-lightAndClimEdgeSize, -z1
-	], [0, -1, 1], lightAndClimLightning)); // Back
+	], [0, -1, 1])); // Back
 	
 	return meshes;
 };

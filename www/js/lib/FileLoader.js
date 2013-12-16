@@ -265,7 +265,7 @@ window.FileLoader = (function() {
 				
 				if(archive.isLoaded) {
 					// Archive already loaded : immediately calling function
-					onLoadCallBack(this);
+					onLoadCallBack.call(this);
 				} else {
 					// Archive is loading : adding function to stack
 					archive.onLoadCallBacks.push(onLoadCallBack);
@@ -295,12 +295,9 @@ window.FileLoader = (function() {
 				function(file) {
 					if(!file.hasAlreadyBeenImportedAsJS) {
 						var script = document.createElement("script");
-						script.setAttribute("type", "text/javascript");
-						script.setAttribute("async", false);
-						
-						var url = JSDebugUrlTransformer == null ? fileToBlobURL(file, "text/javascript") : JSDebugUrlTransformer(file.name);
-						script.setAttribute("src", url);
-						
+						script.type = "text/javascript";
+						script.async = false;
+						script.src = JSDebugUrlTransformer == null ? fileToBlobURL(file, "text/javascript") : JSDebugUrlTransformer(file.name);
 						document.head.appendChild(script);
 						file.hasAlreadyBeenImportedAsJS = true;
 					}

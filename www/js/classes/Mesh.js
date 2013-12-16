@@ -3,25 +3,23 @@
  * @param WebGLTexture The texture which will be applied to the mesh
  * @param Array() An array of vertex (3 points per vertex in the same line)
  * @param Array() containing the normals of the mesh (simple vec3), or normals for each vertice
- * @param Float (optional) The light ratio, relative to the ambient light. If negative, normal light is also passed.
  * @param Array (optional) Size to select on the texture (xBegin, yBegin, xEnd, yEnd)
  *                         or list of 2D points for each vertice (x1, y1, x2, y2, ...)
  * @param Array(String) (optional) Groups where the mesh is.
+ * @param Uint16Array (optional) The vertices indexes array
  */
-var Mesh = function(texture, vertices, normals, shining, texturePart, groups) {
+var Mesh = function(texture, vertices, normals, texturePart, groups, verticesIndex) {
 	this.texture = texture;
 	this.vertices = vertices;
 	this.pointsCount = this.vertices.length / 3;
 	this.normals = normals || null;
-	this.shining = shining || 1;
 	this.texturePart = texturePart || null;
-	this.pickColor = [0, 0, 0];
+	this.pickColor = null;
 	this.pickCallBack = null;
 	this.isScreen = null;
 	this.entity = null; // Initialized at entity creation
 	this.groups = groups || ["default"];
-	
-	// TODO remove shining parameter ?
+	this.verticesIndex = verticesIndex || null;
 	
 	if(this.pointsCount < 3) {
 		throw new Error("A Mesh must at least have 3 vertices.");
@@ -39,7 +37,9 @@ var Mesh = function(texture, vertices, normals, shining, texturePart, groups) {
  * @return Array The indexes of each triangle of the mesh
  */
 Mesh.prototype.getVerticesIndexArray = function() {
-	if(this.pointsCount == 3) {
+	if(this.verticesIndex !== null) {
+		return this.verticesIndex;
+	} else if(this.pointsCount == 3) {
 		return [0, 1, 2];
 	} else {
 		var result = [];
@@ -151,28 +151,21 @@ Mesh.prototype.getVertexNormalsArray = function() {
 };
 
 /**
- * Returns an array containing the light ratio
- * @return Array() the light radio (1 float) for each vertex
- */
-Mesh.prototype.getVertexShiningArray = function() {
-	var result = Array();
-	for(var i = 0 ; i < this.pointsCount ; i++) {
-		result.push(this.shining);
-	}
-	return result;
-};
-
-/**
  * Returns an array containing the pick color
  * @return Array() the pick color (3 float for each vertex)
  */
 Mesh.prototype.getVertexPickColorArray = function() {
 	// Translating color ranges from 0 - 255 to 0.0 - 1.0
-	var color = [
-		1 / 255 * this.pickColor[0],
-		1 / 255 * this.pickColor[1],
-		1 / 255 * this.pickColor[2]
-	];
+	var color;
+	if(this.pickColor == null) {
+		color = [0, 0, 0];
+	} else {
+		color = [
+			1 / 255 * this.pickColor[0],
+			1 / 255 * this.pickColor[1],
+			1 / 255 * this.pickColor[2]
+		];
+	}
 	
 	var result = Array();
 	for(var i = 0 ; i < this.pointsCount ; i++) {

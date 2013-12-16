@@ -27,7 +27,6 @@ var Entity = function(world, position, rotation, meshes, state) {
 	this._textureCoordArray    = null;
 	this._verticesIndexArray   = null;
 	this._vertexNormalsArray   = null;
-	this._verticesShiningArray = null;
 	this._pickColorArray       = null;
 	this._pickScreenColorArray = null;
 	
@@ -35,13 +34,14 @@ var Entity = function(world, position, rotation, meshes, state) {
 	this._textureCoordBuffer    = null;
 	this._verticesIndexBuffer   = null;
 	this._vertexNormalsBuffer   = null;
-	this._verticesShiningBuffer = null;
 	this._pickColorBuffer       = null;
 	this._pickScreenColorBuffer = null;
 	
 	// Same order, same number of elements
 	this._verticesCountToDraw = null;
 	this._texturesToDraw      = null;
+	
+	this.drawTypeByElements = true;
 	
 	this.regenerateCache();
 	
@@ -117,15 +117,19 @@ Entity.prototype.regenerateCache = function() {
 		this._verticesArray      = this.meshes[0].vertices;
 		this._textureCoordArray  = this.meshes[0].getTextureArray();
 		this._vertexNormalsArray = this.meshes[0].getVertexNormalsArray();
+		if(this.drawTypeByElements) {
+			this._verticesIndexArray = this.meshes[0].getVerticesIndexArray();
+		}
 	} else {
 		this._verticesArray      = new Float32Array(3 * verticesCount );
 		this._textureCoordArray  = new Float32Array(2 * verticesCount );
 		this._vertexNormalsArray = new Float32Array(3 * verticesCount );
+		if(this.drawTypeByElements) {
+			this._verticesIndexArray = new Uint16Array (3 * trianglesCount);
+		}
 	}
-	this._verticesShiningArray = new Float32Array(    verticesCount);
 	this._pickColorArray       = new Float32Array(3 * verticesCount);
 	this._pickScreenColorArray = new Float32Array(3 * verticesCount);
-		this._verticesIndexArray = new Uint16Array (3 * trianglesCount);
 	
 	this._verticesCountToDraw = [];
 	this._texturesToDraw      = [];
@@ -161,15 +165,22 @@ Entity.prototype.regenerateCache = function() {
 			this.meshGroups[g].push(mesh);
 		}
 		
+		// TODO optimize mesh.getXXX by writing directly to an array with begin index
+		
 		if(!isSingleMesh) {
 			this._verticesArray       .set(mesh.vertices,                        3 * addedVerticesCount);
 			this._textureCoordArray   .set(mesh.getTextureArray(),               2 * addedVerticesCount);
 			this._vertexNormalsArray  .set(mesh.getVertexNormalsArray(),         3 * addedVerticesCount);
+			if(this.drawTypeByElements) {
+				this._verticesIndexArray.set(mesh.getVerticesIndexArray().map(indexArrayMapFunction), 3 * addedTrianglesCount);
+			}
 		}
-		this._verticesShiningArray.set(mesh.getVertexShiningArray(),             addedVerticesCount);
-		this._pickColorArray      .set(mesh.getVertexPickColorArray(),       3 * addedVerticesCount);
-		this._pickScreenColorArray.set(mesh.getVertexPickScreenColorArray(), 3 * addedVerticesCount);
-		this._verticesIndexArray  .set(mesh.getVerticesIndexArray().map(indexArrayMapFunction), 3 * addedTrianglesCount);
+		
+		if(mesh.pickColor != null) {
+			// If the mesh is not pickable, values are 0, == default value of a TypedArray
+			this._pickColorArray      .set(mesh.getVertexPickColorArray(),       3 * addedVerticesCount);
+			this._pickScreenColorArray.set(mesh.getVertexPickScreenColorArray(), 3 * addedVerticesCount);
+		}
 		
 		addedVerticesCount  += mesh.pointsCount;
 		addedTrianglesCount += mesh.getTrianglesCount();
@@ -177,11 +188,11 @@ Entity.prototype.regenerateCache = function() {
 		mesh.entity = this; // Initializing reference to entity in meshes
 		
 		if(mesh.texture === currentTexture) {
-			currentVerticesCountForTexture += mesh.verticesCount;
+			currentVerticesCountForTexture += this.drawTypeByElements ? mesh.verticesCount : mesh.pointsCount;
 		} else {
 			pushCurrentTexture();
 			currentTexture = mesh.texture;
-			currentVerticesCountForTexture = mesh.verticesCount;
+			currentVerticesCountForTexture = this.drawTypeByElements ? mesh.verticesCount : mesh.pointsCount;
 		}
 	}
 	pushCurrentTexture();
@@ -201,7 +212,6 @@ Entity.prototype.init = function(gl) {
 	this._verticesBuffer        = this._gl.createBuffer();
 	this._vertexNormalsBuffer   = this._gl.createBuffer();
 	this._textureCoordBuffer    = this._gl.createBuffer();
-	this._verticesShiningBuffer = this._gl.createBuffer();
 	this._verticesIndexBuffer   = this._gl.createBuffer();
 	this._pickColorBuffer       = this._gl.createBuffer();
 	this._pickScreenColorBuffer = this._gl.createBuffer();
@@ -222,17 +232,16 @@ Entity.prototype._regenerateBuffers = function() {
 	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureCoordBuffer);
 	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._textureCoordArray, this._gl.STATIC_DRAW);
 	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._verticesShiningBuffer);
-	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._verticesShiningArray, this._gl.STATIC_DRAW);
-	
 	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickColorBuffer);
 	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._pickColorArray, this._gl.STATIC_DRAW);
 	
 	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickScreenColorBuffer);
 	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._pickScreenColorArray, this._gl.STATIC_DRAW);
 	
-	this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);
-	this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexArray, this._gl.STATIC_DRAW);
+	if(this.drawTypeByElements) {
+		this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);
+		this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexArray, this._gl.STATIC_DRAW);
+	}
 };
 
 /**
@@ -242,40 +251,45 @@ Entity.prototype._regenerateBuffers = function() {
  * @param int Draw mode, see World.prototype.DRAW_MODE_XXX
  */
 Entity.prototype.draw = function(gl, shader, drawMode) {
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._verticesBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aVertexPosition"), 3, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._vertexNormalsBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aVertexNormal"), 3, this._gl.FLOAT, false, 0, 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureCoordBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aTextureCoord"), 2, this._gl.FLOAT, false, 0, 0);
-	this._gl.activeTexture(this._gl.TEXTURE0);
-	this._gl.uniform1i(shader.getVar("uSampler"), 0);
-	
-	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._verticesShiningBuffer);
-	this._gl.vertexAttribPointer(shader.getVar("aVertexShining"), 1, this._gl.FLOAT, false, 0, 0);
-	
-	if(drawMode == this.world.DRAW_MODE_PICK_MESH) {
-		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickColorBuffer);
-		this._gl.vertexAttribPointer(shader.getVar("aPickColor"), 3, this._gl.FLOAT, false, 0, 0);
-	} else /*if(drawMode == this.world.DRAW_MODE_PICK_SCREEN)*/ {
-		// !!! When aPickColor is empty, there is a bug. Have to fill it everytime !!!
-		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickScreenColorBuffer);
-		this._gl.vertexAttribPointer(shader.getVar("aPickColor"), 3, this._gl.FLOAT, false, 0, 0);
-	}
-	
-	this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);
-	
-	var currentByteIndex = 0;
-	for(var i = 0 ; i < this._texturesToDraw.length ; i++) {
-		var verticesCount = this._verticesCountToDraw[i];
-		var texture       = this._texturesToDraw[i];
+	if(this.meshes.length > 0) {
+		this._gl.uniform3fv(shader.getVar("uCurrentPosition"), this.position);
+		this._gl.uniform4fv(shader.getVar("uCurrentRotation"), this.rotation);
 		
-		this._gl.bindTexture(this._gl.TEXTURE_2D, texture);
-		this._gl.drawElements(this._gl.TRIANGLES, verticesCount, this._gl.UNSIGNED_SHORT, currentByteIndex);
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._verticesBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aVertexPosition"), 3, this._gl.FLOAT, false, 0, 0);
 		
-		currentByteIndex += 2 * verticesCount;
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._vertexNormalsBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aVertexNormal"), 3, this._gl.FLOAT, false, 0, 0);
+		
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureCoordBuffer);
+		this._gl.vertexAttribPointer(shader.getVar("aTextureCoord"), 2, this._gl.FLOAT, false, 0, 0);
+		
+		if(drawMode == this.world.DRAW_MODE_PICK_MESH) {
+			this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickColorBuffer);
+		} else {
+			this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickScreenColorBuffer);
+		}
+		this._gl.vertexAttribPointer(shader.getVar("aPickColor"), 3, this._gl.FLOAT, false, 0, 0);
+		
+		if(this.drawTypeByElements) {
+			this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);		
+		}
+		
+		var currentIndex = 0;
+		for(var i = 0 ; i < this._texturesToDraw.length ; i++) {
+			var verticesCount = this._verticesCountToDraw[i];
+			var texture       = this._texturesToDraw[i];
+			
+			this._gl.bindTexture(this._gl.TEXTURE_2D, texture);
+			
+			if(this.drawTypeByElements) {
+				this._gl.drawElements(this._gl.TRIANGLES, verticesCount, this._gl.UNSIGNED_SHORT, currentIndex);
+				currentIndex += 2 * verticesCount;
+			} else {
+				this._gl.drawArrays(this._gl.TRIANGLES, currentIndex, verticesCount);
+				currentIndex += verticesCount;
+			}
+		}
 	}
 };
 

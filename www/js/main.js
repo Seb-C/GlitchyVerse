@@ -36,28 +36,29 @@ if(gl) {
 		world.add(new Entity(world, [0, 0, 0], [0, 0, 0], [new Mesh(Materials.get("WHITE"), [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], [0, 0, 1])]));
 	}*/
 	//world.add(new Models.Planet(world, [0, 0, -100], 10, Math.random()));
+	//world.add(new Models.Star(world, [-20, -20, -80], 10, Math.random()));
 	//world.add(new Models.Planet(world, [0, 0, -1000], 100, Math.random()));
 	//world.add(new Entity(world, [0, 0, -150000], [0, 0, 0], [new Mesh(Materials.get("WHITE"), [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], [0, 0, 1])]));
 	// Test with multiple squares in a mesh
-	/*world.add(new Entity(world, [-80480, 4533, -108765, 0, 0], [0, 0, 0], [new Mesh(Materials.get("WHITE"), [
-		-1, -1, 0,
-		0, -1, 0,
-		0, 0, 0,
-		-1, 0, 0,
-		0, 0, 0,
-		1, 0, 0,
-		1, 1, 0,
-		0, 1, 0
-	], [0, 0, 1], null, [
-		0, 0,
-		1, 0,
-		1, 1,
-		0, 1,
-		0, 0,
-		1, 0,
-		1, 1,
-		0, 1
-	])]));*/
+	/*world.add(
+		new Entity(world, [0, 0, 0], quat.create(), [
+			new Mesh(Materials.get("METAL"), [
+				-1, -1, 0,
+				0, -1, 0,
+				0, 0, 0,
+				-1, 0, 0
+			], [0, 0, 1], null, [
+				0, 0,
+				1, 0,
+				1, 1,
+				0, 1,
+				0, 0,
+				1, 0,
+				1, 1,
+				0, 1
+			])
+		])
+	);*/
 	
 	// TODO remove blur effect on far textures ?
 	// TODO perspective problem with very near particles
