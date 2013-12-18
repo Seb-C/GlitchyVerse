@@ -275,6 +275,8 @@ Entity.prototype.draw = function(gl, shader, drawMode) {
 			this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);		
 		}
 		
+		this._gl.activeTexture(this._gl.TEXTURE0);
+		
 		var currentIndex = 0;
 		for(var i = 0 ; i < this._texturesToDraw.length ; i++) {
 			var verticesCount = this._verticesCountToDraw[i];

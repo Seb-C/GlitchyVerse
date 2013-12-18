@@ -28,6 +28,9 @@ uniform sampler2D uTexture;
 uniform int uDrawMode;
 uniform vec3 uCurrentPosition;
 
+uniform float uIsTextureMask;
+uniform sampler2D uTextureMask;
+
 void main(void) {
 	if(uDrawMode == DRAW_MODE_NORMAL) {
 		// Lights

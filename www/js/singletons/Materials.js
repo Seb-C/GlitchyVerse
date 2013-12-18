@@ -34,27 +34,29 @@ var Materials = {
 			
 			var currentMtlName = null;
 			for(var i = 0 ; i < lines.length ; i++) {
-				var line = lines[i].split(" ");
-				switch(line[0]) {
-					case "newmtl":
-						currentMtlName = line[1];
-						break;
-					case "map_Kd":
-						if(currentMtlName == null) {
-							throw new Error("Error reading material file " + fileName + " : newmtl must preceed map_Kd " + line[1]);
-						} else {
-							this._texturesToLoad[currentMtlName] = Models.objectsDirectory + line[1];
-						}
-						break;
-					case "d":
-						if(currentMtlName == null) {
-							throw new Error("Error reading material file " + fileName + " : newmtl must preceed d " + line[1]);
-						} else {
-							this._transparency[currentMtlName] = (parseFloat(line[1]) != 1);
-						}
-						break;
-					default:
-						throw new Error("Only newmtl, map_Kd and d instructions are currently supported.");
+				if(lines[i].length > 0) {
+					var line = lines[i].split(" ");
+					switch(line[0]) {
+						case "newmtl":
+							currentMtlName = line[1];
+							break;
+						case "map_Kd":
+							if(currentMtlName == null) {
+								throw new Error("Error reading material file " + fileName + " : newmtl must preceed map_Kd " + line[1]);
+							} else {
+								this._texturesToLoad[currentMtlName] = Models.objectsDirectory + line[1];
+							}
+							break;
+						case "d":
+							if(currentMtlName == null) {
+								throw new Error("Error reading material file " + fileName + " : newmtl must preceed d " + line[1]);
+							} else {
+								this._transparency[currentMtlName] = (parseFloat(line[1]) != 1);
+							}
+							break;
+						default:
+							throw new Error("Only newmtl, map_Kd and d instructions are currently supported.");
+					}
 				}
 			}
 			

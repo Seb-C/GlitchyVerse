@@ -1,4 +1,4 @@
-newmtl WHITE  
+newmtl WHITE
 	map_Kd textures/white.png
 
 newmtl BLACK
@@ -61,6 +61,9 @@ newmtl BLACK_METAL
 
 newmtl DOOR_LOCK
 	map_Kd textures/doorLock.png
+
+newmtl PLANET
+	map_Kd textures/planet.png
 
 #############
 # Particles #

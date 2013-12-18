@@ -4,7 +4,8 @@
 var Camera = function(world) {
 	this.world = world;
 	this.rotation = quat.create();
-	this.moveSpeed = 0.003;
+	//this.moveSpeed = 0.003;
+	this.moveSpeed = 0.15;
 	this.position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
 	this.lastAnimationTime = 0;
 	this.screenSize = null;

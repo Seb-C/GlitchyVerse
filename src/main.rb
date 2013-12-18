@@ -36,8 +36,16 @@ $SPACESHIP_MAX_SPEED_PER_PROPELLER_UNIT = 20
 $MOVE_MAXIMUM_ERROR_RATE = 0.1 # The maximum difference rate when the client sends new position
 
 # Loading paths for serving normal http files
-static         = Rack::File.new("./www")
-static_index   = Rack::File.new("./www/index.html")
+static         = Rack::File.new("./www", {
+	"Cache-Control" => "no-cache, no-store, must-revalidate",
+	"Pragma"        => "no-cache",
+	"Expires"       => "0"
+})
+static_index   = Rack::File.new("./www/index.html", {
+	"Cache-Control" => "no-cache, no-store, must-revalidate",
+	"Pragma"        => "no-cache",
+	"Expires"       => "0"
+})
 
 # Initializing some useful stuff
 users = []

@@ -6,9 +6,10 @@ var TEXTURE_MAX_RESOLUTION      = 4096; // TODO use gl constant MAX_TEXTURE_SIZE
 var SPHERE_MIN_LINES            = 6;
 var SPHERE_MAX_LINES            = 256; // depending on WebGL max indices by draw
 var LINE_SIZE                   = 3;
+var MAX_COULOURS                = 10;
 
 self.onmessage = function(event) {
-	var variabilityRate = 0.65; // Relies to diamond square
+	var variabilityRate = 1.25; // Relies to diamond square
 	Math.seedrandom(event.data.seed);
 	var radius = event.data.radius;
 	var maxRelief = radius * 0.3;
@@ -42,21 +43,18 @@ self.onmessage = function(event) {
 	 *******************************************************************/
 	
 	// Colors depending on pixel value
-	var colorSteps = [
-		{minValue: 0, color: [
-			Math.random() * 255,
-			Math.random() * 255,
-			Math.random() * 255
-		]}, {minValue: 0.6, color: [
-			Math.random() * 255,
-			Math.random() * 255,
-			Math.random() * 255
-		]}, {minValue: 0.95, color: [
-			Math.random() * 255,
-			Math.random() * 255,
-			Math.random() * 255
-		]}
-	];
+	var coloursNumber = Math.ceil((1 - Math.exp(Math.random()) / Math.E) * MAX_COULOURS);
+	var colorSteps = [];
+	for(var i = 0 ; i < coloursNumber ; i++) {
+		colorSteps.push({
+			minValue: (1 / coloursNumber) * i,
+			color: [
+				Math.random() * 255,
+				Math.random() * 255,
+				Math.random() * 255
+			]
+		});
+	}
 	
 	var texturePixels = new Uint8Array(resolution * (resolution / 2) * 3);
 	var textureRelief = new Float32Array((resolution + 1) * (resolution + 1));
@@ -94,9 +92,9 @@ self.onmessage = function(event) {
 	};
 	
 	// Diamond-Square algorithm
+	var halfSizeY = ((resolution + 1) / 2 + 0.5);
 	for(var currentSize = resolution ; currentSize > 1 ; currentSize /= 2) {
 		var halfCurrentSize = currentSize / 2;
-		var halfSizeY = ((resolution + 1) / 2 + 0.5);
 		
 		// Square
 		for(var x = halfCurrentSize ; x < resolution + 1 ; x += currentSize) {
@@ -107,7 +105,13 @@ self.onmessage = function(event) {
 					+ textureRelief[(x + halfCurrentSize) + (y + halfCurrentSize) * resolution]
 					+ textureRelief[(x - halfCurrentSize) + (y + halfCurrentSize) * resolution]
 				) / 4;
-				setPixel(x, y, squareAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
+				
+				var diamondAvg = diamondSum / diamondCount;
+				if(y == 0 || y == halfSizeY - 1) {
+					setPixel(x, y, 0.5);
+				} else {
+					setPixel(x, y, squareAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
+				}
 			}
 		}
 		
@@ -136,8 +140,12 @@ self.onmessage = function(event) {
 				}
 				
 				var diamondAvg = diamondSum / diamondCount;
-				setPixel(x, y, diamondAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
-				if(x == 0) setPixel(resolution, y, textureRelief[x + y * resolution]);
+				if(y == 0 || y == halfSizeY - 1) {
+					setPixel(x, y, 0.5);
+				} else {
+					setPixel(x, y, diamondAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
+					if(x == 0) setPixel(resolution, y, textureRelief[x + y * resolution]);
+				}
 			}
 		}
 	}
@@ -176,6 +184,7 @@ self.onmessage = function(event) {
 			var sinNextX   = Math.sin(nextAngleX);
 			var cosNextX   = Math.cos(nextAngleX);
 			var reliefPointNextX = Math.round(((j + 1) / columns) * resolution);
+			if(reliefPointNextX == resolution) reliefPointNextX = 0;
 			
 			var radiusTopLeft     = radius + maxRelief * (textureRelief[reliefPointX     + reliefPointY     * resolution] - 0.5);
 			var radiusTopRight    = radius + maxRelief * (textureRelief[reliefPointNextX + reliefPointY     * resolution] - 0.5);
