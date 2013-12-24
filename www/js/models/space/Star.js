@@ -16,7 +16,7 @@ Models.Star = function(world, position, radius, seed) {
 	];
 	
 	// Adding light
-	var lightPower = radius * 40; // TODO light power depending on the star size
+	var lightPower = radius * 100; // TODO light power depending on the star size
 	this.lights.push(new Light(position, color, lightPower, true));
 	world.add(this.lights);
 	

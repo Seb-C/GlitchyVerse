@@ -81,8 +81,11 @@ var Materials = {
 			}
 			
 			self.images[k] = FILES.getImage(self._texturesToLoad[k], function() {
+				texture.isTransparency = self._transparency[k] ? true : false;
+				var colourMode = texture.isTransparency ? gl.RGBA : gl.RGB;
+				
 				gl.bindTexture(gl.TEXTURE_2D, texture);
-				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this);
+				gl.texImage2D(gl.TEXTURE_2D, 0, colourMode, colourMode, gl.UNSIGNED_BYTE, this);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
@@ -90,7 +93,6 @@ var Materials = {
 				gl.generateMipmap(gl.TEXTURE_2D);
 			});
 			
-			texture.isTransparency = self._transparency[k] ? true : false;
 		});
 		this._texturesToLoad = {};
 		
@@ -119,13 +121,16 @@ var Materials = {
 	 * @param WebGL The WebGL context
 	 * @param Array|ArrayBuffer The pixels list, as RGB components
 	 * @param GLTexture The previously generated texture, or null
+	 * @param boolean (optional) True if an alpha channel must be used
 	 * @return GLTexture The texture
 	 */
-	setPixelArrayAsTexture: function(gl, width, height, pixels, glTexture) {
+	setPixelArrayAsTexture: function(gl, width, height, pixels, glTexture, isAlphaChannel) {
 		var texture = glTexture ? glTexture : gl.createTexture();
 		
+		var colourMode = isAlphaChannel ? gl.RGBA : gl.RGB;
+		
 		gl.bindTexture(gl.TEXTURE_2D, texture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array(pixels));
+		gl.texImage2D(gl.TEXTURE_2D, 0, colourMode, width, height, 0, colourMode, gl.UNSIGNED_BYTE, new Uint8Array(pixels));
 		gl.generateMipmap(gl.TEXTURE_2D);
 		
 		return texture;

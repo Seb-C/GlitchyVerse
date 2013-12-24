@@ -71,5 +71,8 @@ newmtl PLANET
 
 newmtl P_SMOKE
 	map_Kd textures/particles/smoke.png
+	d 0
+
 newmtl P_STAR
 	map_Kd textures/particles/star.png
+	d 0

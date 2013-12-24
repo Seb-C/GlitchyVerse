@@ -7,8 +7,9 @@
  *                         or list of 2D points for each vertice (x1, y1, x2, y2, ...)
  * @param Array(String) (optional) Groups where the mesh is.
  * @param Uint16Array (optional) The vertices indexes array
+ * @param Array(float) (optional) The texture mapping array (2D points)
  */
-var Mesh = function(texture, vertices, normals, texturePart, groups, verticesIndex) {
+var Mesh = function(texture, vertices, normals, texturePart, groups, verticesIndex, textureMapping) {
 	this.texture = texture;
 	this.vertices = vertices;
 	this.pointsCount = this.vertices.length / 3;
@@ -20,6 +21,9 @@ var Mesh = function(texture, vertices, normals, texturePart, groups, verticesInd
 	this.entity = null; // Initialized at entity creation
 	this.groups = groups || ["default"];
 	this.verticesIndex = verticesIndex || null;
+	
+	// To apply a second texture on the mesh. Mapped texture is defined by the entity
+	this.textureMapping = textureMapping || null;
 	
 	if(this.pointsCount < 3) {
 		throw new Error("A Mesh must at least have 3 vertices.");

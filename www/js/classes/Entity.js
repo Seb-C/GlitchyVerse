@@ -5,8 +5,9 @@
  * @param quat The rotation to apply to the entity
  * @param Array(Mesh) Meshes of the Entity.
  * @param Float (optional) The initial state of the entiy
+ * @param WebGLTexture (optional) A mapped texture to apply to the entity
  */
-var Entity = function(world, position, rotation, meshes, state) {
+var Entity = function(world, position, rotation, meshes, state, mappedTexture) {
 	if(!this.model) this.model = null;
 	this._gl = null;
 	this.world = world;
@@ -29,6 +30,7 @@ var Entity = function(world, position, rotation, meshes, state) {
 	this._vertexNormalsArray   = null;
 	this._pickColorArray       = null;
 	this._pickScreenColorArray = null;
+	this._textureMappingArray  = null;
 	
 	this._verticesBuffer        = null;
 	this._textureCoordBuffer    = null;
@@ -36,12 +38,18 @@ var Entity = function(world, position, rotation, meshes, state) {
 	this._vertexNormalsBuffer   = null;
 	this._pickColorBuffer       = null;
 	this._pickScreenColorBuffer = null;
+	this._textureMappingBuffer  = null;
 	
 	// Same order, same number of elements
 	this._verticesCountToDraw = null;
 	this._texturesToDraw      = null;
 	
+	this.mappedTexture = mappedTexture || null;
+	
 	this.drawTypeByElements = true;
+	
+	this.onbeforedraw = null;
+	this.onafterdraw  = null;
 	
 	this.regenerateCache();
 	
@@ -117,13 +125,19 @@ Entity.prototype.regenerateCache = function() {
 		this._verticesArray      = this.meshes[0].vertices;
 		this._textureCoordArray  = this.meshes[0].getTextureArray();
 		this._vertexNormalsArray = this.meshes[0].getVertexNormalsArray();
+		if(this.mappedTexture != null) {
+			this._textureMappingArray = this.meshes[0].textureMapping;
+		}
 		if(this.drawTypeByElements) {
 			this._verticesIndexArray = this.meshes[0].getVerticesIndexArray();
 		}
 	} else {
-		this._verticesArray      = new Float32Array(3 * verticesCount );
-		this._textureCoordArray  = new Float32Array(2 * verticesCount );
-		this._vertexNormalsArray = new Float32Array(3 * verticesCount );
+		this._verticesArray      = new Float32Array(3 * verticesCount);
+		this._textureCoordArray  = new Float32Array(2 * verticesCount);
+		this._vertexNormalsArray = new Float32Array(3 * verticesCount);
+		if(this.mappedTexture != null) {
+			this._textureMappingArray = new Float32Array(3 * verticesCount);
+		}
 		if(this.drawTypeByElements) {
 			this._verticesIndexArray = new Uint16Array (3 * trianglesCount);
 		}
@@ -168,9 +182,13 @@ Entity.prototype.regenerateCache = function() {
 		// TODO optimize mesh.getXXX by writing directly to an array with begin index
 		
 		if(!isSingleMesh) {
-			this._verticesArray       .set(mesh.vertices,                        3 * addedVerticesCount);
-			this._textureCoordArray   .set(mesh.getTextureArray(),               2 * addedVerticesCount);
-			this._vertexNormalsArray  .set(mesh.getVertexNormalsArray(),         3 * addedVerticesCount);
+			this._verticesArray       .set(mesh.vertices,                3 * addedVerticesCount);
+			this._textureCoordArray   .set(mesh.getTextureArray(),       2 * addedVerticesCount);
+			this._vertexNormalsArray  .set(mesh.getVertexNormalsArray(), 3 * addedVerticesCount);
+			if(this.mappedTexture != null) {
+				if(mesh.textureMapping == null) throw new Error("textureMapping attribute must be set on all meshes when mappedTexture is defined.");
+				this._textureMappingArray  .set(mesh.textureMapping, 3 * addedVerticesCount);
+			}
 			if(this.drawTypeByElements) {
 				this._verticesIndexArray.set(mesh.getVerticesIndexArray().map(indexArrayMapFunction), 3 * addedTrianglesCount);
 			}
@@ -215,6 +233,7 @@ Entity.prototype.init = function(gl) {
 	this._verticesIndexBuffer   = this._gl.createBuffer();
 	this._pickColorBuffer       = this._gl.createBuffer();
 	this._pickScreenColorBuffer = this._gl.createBuffer();
+	this._textureMappingBuffer  = this._gl.createBuffer();
 	
 	this._regenerateBuffers();
 };
@@ -238,6 +257,11 @@ Entity.prototype._regenerateBuffers = function() {
 	this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickScreenColorBuffer);
 	this._gl.bufferData(this._gl.ARRAY_BUFFER, this._pickScreenColorArray, this._gl.STATIC_DRAW);
 	
+	if(this.mappedTexture != null) {
+		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureMappingBuffer);
+		this._gl.bufferData(this._gl.ARRAY_BUFFER, this._textureMappingArray, this._gl.STATIC_DRAW);
+	}
+	
 	if(this.drawTypeByElements) {
 		this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexBuffer);
 		this._gl.bufferData(this._gl.ELEMENT_ARRAY_BUFFER, this._verticesIndexArray, this._gl.STATIC_DRAW);
@@ -252,6 +276,10 @@ Entity.prototype._regenerateBuffers = function() {
  */
 Entity.prototype.draw = function(gl, shader, drawMode) {
 	if(this.meshes.length > 0) {
+		if(this.onbeforedraw != null) {
+			this.onbeforedraw.call(this);
+		}
+		
 		this._gl.uniform3fv(shader.getVar("uCurrentPosition"), this.position);
 		this._gl.uniform4fv(shader.getVar("uCurrentRotation"), this.rotation);
 		
@@ -263,6 +291,22 @@ Entity.prototype.draw = function(gl, shader, drawMode) {
 		
 		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureCoordBuffer);
 		this._gl.vertexAttribPointer(shader.getVar("aTextureCoord"), 2, this._gl.FLOAT, false, 0, 0);
+		
+		if(this.mappedTexture == null) {
+			// Setting the mapped texture with normal texture buffer, only because we have to set it
+			this._gl.uniform1f(shader.getVar("uHasMappedTexture"), 0);
+			
+			this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureCoordBuffer);
+			this._gl.vertexAttribPointer(shader.getVar("aTextureMapping"), 2, this._gl.FLOAT, false, 0, 0);
+		} else {
+			this._gl.uniform1f(shader.getVar("uHasMappedTexture"), 1);
+			
+			this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._textureMappingBuffer);
+			this._gl.vertexAttribPointer(shader.getVar("aTextureMapping"), 2, this._gl.FLOAT, false, 0, 0);
+			
+			this._gl.activeTexture(this._gl.TEXTURE1);
+			this._gl.bindTexture(this._gl.TEXTURE_2D, this.mappedTexture);
+		}
 		
 		if(drawMode == this.world.DRAW_MODE_PICK_MESH) {
 			this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._pickColorBuffer);
@@ -291,6 +335,10 @@ Entity.prototype.draw = function(gl, shader, drawMode) {
 				this._gl.drawArrays(this._gl.TRIANGLES, currentIndex, verticesCount);
 				currentIndex += verticesCount;
 			}
+		}
+		
+		if(this.onafterdraw != null) {
+			this.onafterdraw.call(this);
 		}
 	}
 };

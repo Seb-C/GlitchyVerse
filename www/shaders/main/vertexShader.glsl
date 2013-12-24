@@ -9,10 +9,11 @@ const int DRAW_MODE_PICK_SCREEN = 2;
 // TODO use uniforms instead of these constants ?
 // TODO values precision ?
 
-attribute vec3  aVertexPosition;
-attribute vec3  aVertexNormal;
-attribute vec2  aTextureCoord;
-attribute vec3  aPickColor;
+attribute vec3 aVertexPosition;
+attribute vec3 aVertexNormal;
+attribute vec2 aTextureCoord;
+attribute vec3 aPickColor;
+attribute vec2 aTextureMapping;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
@@ -22,12 +23,14 @@ uniform vec4 uCurrentRotation;
 uniform float uAmbientLight;
 
 uniform int uDrawMode;
+uniform float uHasMappedTexture;
 
 varying vec2 vTextureCoord;
 varying float vLighting;
 varying vec3 vPickColor;
 varying vec3 vRotatedVertexPosition;
 varying vec3 vRotatedNormals;
+varying vec2 vTextureMapping;
 
 vec3 rotate_vector(vec4 quat, vec3 vec);
 
@@ -39,6 +42,7 @@ void main(void) {
 		vRotatedNormals = rotate_vector(uCurrentRotation, aVertexNormal);
 		
 		vTextureCoord = aTextureCoord;
+		if(uHasMappedTexture == 1.0) vTextureMapping = aTextureMapping;
 		vLighting = uAmbientLight;
 	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		vPickColor = aPickColor;

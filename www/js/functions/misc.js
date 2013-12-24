@@ -95,7 +95,7 @@ function print(/* any objects, any type, any quantity */) {
 	var seen = [];
 	for(i = 0 ; i < arguments.length ; i++) {
 		if(i != 0) {
-			s += "\n\n";
+			s += "<br />";
 		}
 		s += JSON.stringify(
 			arguments[i], 

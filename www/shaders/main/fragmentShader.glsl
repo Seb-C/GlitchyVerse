@@ -15,6 +15,7 @@ varying float vLighting;
 varying vec3 vPickColor;
 varying vec3 vRotatedVertexPosition;
 varying vec3 vRotatedNormals;
+varying vec2 vTextureMapping;
 
 // TODO use a structure for lights to reduce uniform number ?
 uniform vec3  uPointLightingPositionArray[MAX_LIGHTS_NUMBER];
@@ -28,8 +29,8 @@ uniform sampler2D uTexture;
 uniform int uDrawMode;
 uniform vec3 uCurrentPosition;
 
-uniform float uIsTextureMask;
-uniform sampler2D uTextureMask;
+uniform float uHasMappedTexture;
+uniform sampler2D uMappedTexture;
 
 void main(void) {
 	if(uDrawMode == DRAW_MODE_NORMAL) {
@@ -62,6 +63,9 @@ void main(void) {
 		//pointLights.b = clamp(pointLights.b, 0.0, 1.0);
 		
 		vec4 texelColor = texture2D(uTexture, vTextureCoord);
+		if(uHasMappedTexture == 1.0) {
+			texelColor *= texture2D(uMappedTexture, vTextureMapping);
+		}
 		gl_FragColor = vec4(texelColor.rgb * (vLighting + pointLights), texelColor.a);
 	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		gl_FragColor = vec4(vPickColor, 1.0);

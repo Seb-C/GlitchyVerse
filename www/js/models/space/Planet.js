@@ -17,6 +17,11 @@ Models.Planet = function(world, position, radius, seed) {
 	this.isWaitingForCreation = false;
 	this.texture = null;
 	
+	this.atmosphere = new Entity(world, position, quat.create(), []);
+	this.atmosphere.drawTypeByElements = false;
+	this.atmosphereTexture = null;
+	world.add(this.atmosphere);
+	
 	this.regenerationTimer = new Timer(function() {
 		var maxVisibleDistance = Math.PI * radius * self.MAX_DISTANCE_VISIBILITY_PER_UNIT;
 		
@@ -36,16 +41,49 @@ Models.Planet = function(world, position, radius, seed) {
 				self.lastQuality = quality;
 				self.isWaitingForCreation = true;
 				world.spaceContent.requestPlanetCreation(radius, seed, quality, function(result) {
-					self.texture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels, self.texture);
+					self.mappedTexture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels, self.mappedTexture);
 					
 					// Creating mesh with the texture
 					self.meshes = [new Mesh(
-						self.texture,
-						new Float32Array(result.geometry.vertices),
+						Materials.get("PLANET"),
+						new Float32Array(result.geometry.vertices   ),
 						new Float32Array(result.geometry.normals    ),
-						new Float32Array(result.geometry.texturePart)
+						new Float32Array(result.geometry.texturePart),
+						null,
+						null,
+						new Float32Array(result.geometry.textureMapping)
 					)];
 					self.regenerateCache();
+					
+					if(result.atmosphere != null) {
+						self.atmosphereTexture = Materials.setPixelArrayAsTexture(world.gl, 2, 2, result.atmosphere.texturePixels, self.atmosphereTexture, true);
+						self.atmosphereTexture.isTransparency = true;
+						
+						self.atmosphere.meshes = [new Mesh(
+							self.atmosphereTexture,
+							new Float32Array(result.atmosphere.vertices   ),
+							new Float32Array(result.atmosphere.normals    ),
+							new Float32Array(result.atmosphere.texturePart)
+						)];
+						self.atmosphere._cacheIsTransparency = null; // TODO this is dirty
+						self.atmosphere.onbeforedraw = function() {
+							this._gl.enable(this._gl.CULL_FACE);
+							
+							// Culling only the front or the back, depending if the camera is on the surface or not
+							var cameraDistance = vec3.distance(this.world.camera.getPosition(), this.position);
+							if(cameraDistance < result.atmosphere.radius) {
+								this._gl.cullFace(this._gl.FRONT);
+							} else {
+								this._gl.cullFace(this._gl.BACK);
+							}
+						};
+						self.atmosphere.onafterdraw = function() {
+							this._gl.disable(this._gl.CULL_FACE);
+						};
+						
+						self.atmosphere.regenerateCache();
+					}
+					
 					self.isWaitingForCreation = false;
 				});
 			}

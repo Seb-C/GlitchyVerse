@@ -5,7 +5,7 @@ var Camera = function(world) {
 	this.world = world;
 	this.rotation = quat.create();
 	//this.moveSpeed = 0.003;
-	this.moveSpeed = 0.15;
+	this.moveSpeed = 0.15; // TODO only for tests, remove it
 	this.position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
@@ -44,6 +44,8 @@ Camera.prototype.update = function() {
 	// TODO only for tests, remove it
 	if(Controls._keys[107]) this.moveSpeed *= 1.02;
 	if(Controls._keys[109]) this.moveSpeed /= 1.02;
+	
+	// TODO solve position problems with float precision
 	
 	// Moves depends of elapsed time
 	var timeNow = TimerManager.lastUpdateTimeStamp;

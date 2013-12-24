@@ -309,7 +309,7 @@ World.prototype.draw = function(mode) {
 	}
 	
 	this.gl.uniform1i(this.mainShader.getVar("uTexture"), 0);
-	this.gl.uniform1i(this.mainShader.getVar("uTextureMask"), 1);
+	this.gl.uniform1i(this.mainShader.getVar("uMappedTexture"), 1);
 	
 	var i = 0;
 	

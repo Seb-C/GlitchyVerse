@@ -3,7 +3,7 @@ var LightManager = function(world) {
 	this.world            = world;
 	this._shader          = this.world.mainShader;
 	this._lights          = new Array();
-	this.ambientLightning = 0.30;
+	this.ambientLightning = 0.2;
 	this.lightUpdateTimer = null;
 	
 	this.viewableLightsNumber   = 0;
