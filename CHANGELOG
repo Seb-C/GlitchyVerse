@@ -9,6 +9,10 @@ depuis vidéo du 25/10/2013 :
 - Optimisations du moteur
 - Optimisations de la génération des planètes
 - Améliorations de la génération des planètes
-- Ajoout de l'atmosphère es planètes
+- Ajout de l'atmosphère des planètes
+- Correction du bug de précision des flottants utilisés pour la position
+- Modification des étoiles pour utiliser des objets normaux plutôt que des particules
+- Simplification de la flamme des propulseurs
+- Suppression du moteur de particules
 
 - Modélisation personnages ?
