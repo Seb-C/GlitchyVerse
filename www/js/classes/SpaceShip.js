@@ -290,16 +290,18 @@ SpaceShip.prototype.refreshObjectPositionAndRotation = function(id) {
 	this.entities[id].setPosition(position);
 	
 	// Rotating the entity
-	quat.identity(entity.rotation);
+	var entityRotation = entity.getRotation();
+	quat.identity(entityRotation);
 	if(this.objectInitialRotations[id]) {
 		var initialRotation = this.objectInitialRotations[id];
-		quat.rotateX(entity.rotation, entity.rotation, degToRad(initialRotation[0]));
-		quat.rotateY(entity.rotation, entity.rotation, degToRad(initialRotation[1]));
-		quat.rotateZ(entity.rotation, entity.rotation, degToRad(initialRotation[2]));
+		quat.rotateX(entityRotation, entityRotation, degToRad(initialRotation[0]));
+		quat.rotateY(entityRotation, entityRotation, degToRad(initialRotation[1]));
+		quat.rotateZ(entityRotation, entityRotation, degToRad(initialRotation[2]));
 	}
-	if(this.rotation[0] != 0) quat.rotateX(entity.rotation, entity.rotation, degToRad(this.rotation[0]));
-	if(this.rotation[1] != 0) quat.rotateY(entity.rotation, entity.rotation, degToRad(this.rotation[1]));
-	if(this.rotation[2] != 0) quat.rotateZ(entity.rotation, entity.rotation, degToRad(this.rotation[2]));
+	if(this.rotation[0] != 0) quat.rotateX(entityRotation, entityRotation, degToRad(this.rotation[0]));
+	if(this.rotation[1] != 0) quat.rotateY(entityRotation, entityRotation, degToRad(this.rotation[1]));
+	if(this.rotation[2] != 0) quat.rotateZ(entityRotation, entityRotation, degToRad(this.rotation[2]));
+	entity.setRotation(entityRotation);
 };
 
 /**

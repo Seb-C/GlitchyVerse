@@ -3,7 +3,7 @@
  * @param World The World object
  * @param vec3 The position of the entity in the world
  * @param quat The rotation to apply to the entity
- * @param Array(Mesh) Meshes of the Entity.
+ * @param Array(Mesh)|Mesh Meshes of the Entity. Can also be a single mesh, which will be optimized.
  * @param Float (optional) The initial state of the entiy
  * @param WebGLTexture (optional) A mapped texture to apply to the entity
  */
@@ -12,7 +12,7 @@ var Entity = function(world, position, rotation, meshes, state, mappedTexture) {
 	this._gl = null;
 	this.world = world;
 	this.position = position;
-	this.rotation = rotation;
+	this._rotation = rotation;
 	this.meshes = meshes;
 	this.meshGroups = null;
 	this.id = null; // Will be modified by the class which builds the entity
@@ -62,14 +62,24 @@ var Entity = function(world, position, rotation, meshes, state, mappedTexture) {
 	}
 };
 
+Entity.prototype.getRotation = function() {
+	return this._rotation;
+};
+
+Entity.prototype.setRotation = function(newRotation) {
+	this._rotation = newRotation;
+};
+
 /**
  * @return boolean True if at least one of the textures has transparency
  */
 Entity.prototype.isTransparency = function() {
 	if(this._cacheIsTransparency == null) {
+		var meshes = (this.meshes instanceof Mesh) ? [this.meshes] : this.meshes;
+		
 		var result = false;
-		for(var i = 0 ; i < this.meshes.length ; i++) {
-			var texture = this.meshes[i].texture;
+		for(var i = 0 ; i < meshes.length ; i++) {
+			var texture = meshes[i].texture;
 			if(typeof(texture.isTransparency) == "undefined" || texture.isTransparency == null) {
 				// Not loaded yet --> Waiting for the next call to build cache var
 				return false;
@@ -89,11 +99,12 @@ Entity.prototype.isTransparency = function() {
  */
 Entity.prototype.regenerateCache = function() {
 	// When there is only one big mesh in the entity, we just re-use the existing Arrays instead of copying it
-	var isSingleMesh = this.meshes.length == 1;
+	var isSingleMesh = this.meshes instanceof Mesh;
+	var meshes = isSingleMesh ? [this.meshes] : this.meshes;
 	
 	// First, we sort the meshes array by texture (by reference)
 	var tempSortTextures = [];
-	this.meshes.sort(function(a, b) {
+	meshes.sort(function(a, b) {
 		var iA = null;
 		var iB = null;
 		for(var i = 0 ; i <= tempSortTextures.length ; i++) {
@@ -114,22 +125,22 @@ Entity.prototype.regenerateCache = function() {
 	// Determining the number of vertices and triangles in the entity
 	var verticesCount = 0;
 	var trianglesCount = 0;
-	for(var i = 0 ; i < this.meshes.length ; i++) {
-		var mesh = this.meshes[i];
+	for(var i = 0 ; i < meshes.length ; i++) {
+		var mesh = meshes[i];
 		verticesCount += mesh.pointsCount;
 		trianglesCount += mesh.getTrianglesCount();
 	}
 	
 	// Creating arrays
 	if(isSingleMesh) {
-		this._verticesArray      = this.meshes[0].vertices;
-		this._textureCoordArray  = this.meshes[0].getTextureArray();
-		this._vertexNormalsArray = this.meshes[0].getVertexNormalsArray();
+		this._verticesArray      = meshes[0].vertices;
+		this._textureCoordArray  = meshes[0].getTextureArray();
+		this._vertexNormalsArray = meshes[0].getVertexNormalsArray();
 		if(this.mappedTexture != null) {
-			this._textureMappingArray = this.meshes[0].textureMapping;
+			this._textureMappingArray = meshes[0].textureMapping;
 		}
 		if(this.drawTypeByElements) {
-			this._verticesIndexArray = this.meshes[0].getVerticesIndexArray();
+			this._verticesIndexArray = meshes[0].getVerticesIndexArray();
 		}
 	} else {
 		this._verticesArray      = new Float32Array(3 * verticesCount);
@@ -167,8 +178,8 @@ Entity.prototype.regenerateCache = function() {
 	
 	this.meshGroups = {};
 	
-	for(var i = 0 ; i < this.meshes.length ; i++) {
-		var mesh = this.meshes[i];
+	for(var i = 0 ; i < meshes.length ; i++) {
+		var mesh = meshes[i];
 		
 		// Groups
 		for(var j = 0 ; j < mesh.groups.length ; j++) {
@@ -275,13 +286,13 @@ Entity.prototype._regenerateBuffers = function() {
  * @param int Draw mode, see World.prototype.DRAW_MODE_XXX
  */
 Entity.prototype.draw = function(gl, shader, drawMode) {
-	if(this.meshes.length > 0) {
+	if(this.meshes instanceof Mesh || this.meshes.length > 0) {
 		if(this.onbeforedraw != null) {
 			this.onbeforedraw.call(this);
 		}
 		
-		this._gl.uniform3fv(shader.getVar("uCurrentPosition"), this.position);
-		this._gl.uniform4fv(shader.getVar("uCurrentRotation"), this.rotation);
+		this._gl.uniform3fv(shader.getVar("uCurrentPosition"), this.world.positionAbsoluteToRelative(this.position));
+		this._gl.uniform4fv(shader.getVar("uCurrentRotation"), this.getRotation());
 		
 		this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._verticesBuffer);
 		this._gl.vertexAttribPointer(shader.getVar("aVertexPosition"), 3, this._gl.FLOAT, false, 0, 0);

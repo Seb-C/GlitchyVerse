@@ -65,14 +65,10 @@ newmtl DOOR_LOCK
 newmtl PLANET
 	map_Kd textures/planet.png
 
-#############
-# Particles #
-#############
-
-newmtl P_SMOKE
-	map_Kd textures/particles/smoke.png
+newmtl FLAME
+	map_Kd textures/flame.png
 	d 0
 
-newmtl P_STAR
-	map_Kd textures/particles/star.png
+newmtl STAR
+	map_Kd textures/star.png
 	d 0

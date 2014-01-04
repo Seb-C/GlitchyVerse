@@ -9,6 +9,7 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 	Materials.loadMtl("materials/main.mtl");
 	var material_PROPELLER  = Materials.get("PROPELLER");
 	var material_BLACK      = Materials.get("BLACK");
+	var material_FLAME      = Materials.get("FLAME");
 	var material_METAL_BOLT = Materials.get("METAL_BOLT");
 	
 	this.spaceShip   = definition.spaceShip;
@@ -45,6 +46,9 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 	var backZ   = boxFront;
 	var middleZ = frontZ - (0.125 * definition.unitSize[2] * this.size[2]);
 	
+	this.minFlameZ = middleZ - 0.1;
+	this.maxFlameZ = this.minFlameZ + 2.5 * Math.max.apply(null, this.size);
+	
 	for(var i = 0 ; i < circleVerticesNumber ; i++) {
 		var currentAngle = circlePartSize * i;
 		var nextAngle    = circlePartSize * (i + 1);
@@ -54,11 +58,11 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 		var cosNextAngle    = Math.cos(nextAngle   );
 		
 		meshes.push(new Mesh(material_PROPELLER, [
-			circle1Rad1X * cosCurrentAngle, circle1Rad1Y * sinCurrentAngle, frontZ,
 			circle2Rad1X * cosCurrentAngle, circle2Rad1Y * sinCurrentAngle, backZ,
-			circle2Rad1X * cosNextAngle,    circle2Rad1Y * sinNextAngle,    backZ,
-			circle1Rad1X * cosNextAngle,    circle1Rad1Y * sinNextAngle,    frontZ
-		], [0, 0, 1], [0, 0, 1, 0, 1, 1, 0, 1])); // Body out
+			circle1Rad1X * cosCurrentAngle, circle1Rad1Y * sinCurrentAngle, frontZ,
+			circle1Rad1X * cosNextAngle,    circle1Rad1Y * sinNextAngle,    frontZ,
+			circle2Rad1X * cosNextAngle,    circle2Rad1Y * sinNextAngle,    backZ
+		], [0, 0, 1], [1, 0, 0, 0, 0, 1, 1, 1])); // Body out
 		
 		meshes.push(new Mesh(material_PROPELLER, [
 			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, frontZ,
@@ -77,18 +81,28 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 		], [0, 0, 1], [0, 0, 0.2, 0, 0.2, 1, 0, 1])); // Edge
 		
 		meshes.push(new Mesh(material_BLACK, [
-			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, middleZ,
 			circle1Rad2X * cosNextAngle,    circle1Rad2Y * sinNextAngle,    middleZ,
+			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, middleZ,
 			0, 0, middleZ
-		], [0, 0, 1])); // Lid
+		], [0, 0, -1], null, ["lid"])); // Lid
+		
+		meshes.push(new Mesh(material_FLAME, [
+			circle1Rad2X * cosNextAngle,    circle1Rad2Y * sinNextAngle,    this.minFlameZ,
+			circle1Rad2X * cosCurrentAngle, circle1Rad2Y * sinCurrentAngle, this.minFlameZ,
+			0, 0, this.maxFlameZ
+		], [0, 0, -0.2], [
+			0, 0,
+			0, 1,
+			1, 1
+		], ["flame"])); // Flame
 	}
 	
 	// Propeller box
 	meshes.push(new Mesh(material_METAL_BOLT, [
-		-boxHalfX,  boxHalfY,  boxBack,
 		 boxHalfX,  boxHalfY,  boxBack,
-		 boxHalfX, -boxHalfY,  boxBack,
-		-boxHalfX, -boxHalfY,  boxBack
+		-boxHalfX,  boxHalfY,  boxBack,
+		-boxHalfX, -boxHalfY,  boxBack,
+		 boxHalfX, -boxHalfY,  boxBack
 	], [0, 0, -1])); // Back
 	meshes.push(new Mesh(material_METAL_BOLT, [
 		-boxHalfX,  boxHalfY,  boxFront,
@@ -103,16 +117,16 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 		-boxHalfX, -boxHalfY,  boxBack
 	], [-1, 0, 0])); // Right
 	meshes.push(new Mesh(material_METAL_BOLT, [
-		 boxHalfX,  boxHalfY,  boxBack,
 		 boxHalfX,  boxHalfY,  boxFront,
-		 boxHalfX, -boxHalfY,  boxFront,
-		 boxHalfX, -boxHalfY,  boxBack
+		 boxHalfX,  boxHalfY,  boxBack,
+		 boxHalfX, -boxHalfY,  boxBack,
+		 boxHalfX, -boxHalfY,  boxFront
 	], [1, 0, 0])); // Left
 	meshes.push(new Mesh(material_METAL_BOLT, [
-		-boxHalfX, -boxHalfY,  boxBack,
 		 boxHalfX, -boxHalfY,  boxBack,
-		 boxHalfX, -boxHalfY,  boxFront,
-		-boxHalfX, -boxHalfY,  boxFront
+		-boxHalfX, -boxHalfY,  boxBack,
+		-boxHalfX, -boxHalfY,  boxFront,
+		 boxHalfX, -boxHalfY,  boxFront
 	], [0, 1, 0])); // Top
 	meshes.push(new Mesh(material_METAL_BOLT, [
 		-boxHalfX,  boxHalfY,  boxBack,
@@ -123,6 +137,14 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 	
 	this.parent(world, position, rotation, meshes, state);
 	this.model = "Propeller";
+	
+	this.onbeforedraw = function() {
+		this._gl.enable(this._gl.CULL_FACE);
+		this._gl.cullFace(this._gl.FRONT);
+	};
+	this.onafterdraw = function() {
+		this._gl.disable(this._gl.CULL_FACE);
+	};
 };
 Models.Propeller.extend(Entity);
 
@@ -160,88 +182,46 @@ Models.Propeller.prototype.changeState = function(newState) {
 	if(this.state < this.minState) this.state = this.minState;
 	if(this.state > this.maxState) this.state = this.maxState;
 	
-	var material_P_SMOKE = Materials.get("P_SMOKE");
-	
 	var lightColor = [0.5, 0.4, 0.25];
-	var particleLifeTime = 6;
-	var self = this;
 	
-	var maxSize = Math.max.apply(null, this.size);
+	var powerRate = this.getPowerRate();
 	
 	// Recreating light
-	// TODO use a timer here too instead of setTimeout ?
-	setTimeout(function() {
-		if(self.lights[0]) {
-			self.world.remove(self.lights[0]);
-			delete self.lights[0];
-		}
-		
-		if(self.state > 0) {
-			self.lights[0] = new Light([
-				self.position[0], 
-				self.position[1], 
-				self.position[2] + 3
-			], lightColor, 30 * self.getPowerRate() * maxSize, true);
-			self.world.add(self.lights[0]);
-		}
-	}, particleLifeTime * 1000);
-	
-	if(!this.lastFlameTime) this.lastFlameTime = TimerManager.lastUpdateTimeStamp;
-	var tempQuat = quat.create();
-	var particleTimerCallBack = function() {
-		if(self.state > 0) {
-			var particlesToAdd = new Array();
-			var partsNumber = 8;
-			var partAngle = (Math.PI * 2) / partsNumber;
-			var particleSize = 0.8 * maxSize;
-			var particleColor = [lightColor[0] * 2, lightColor[1] * 2, lightColor[2] * 2, 1];
-			var radiusX = 0.6 * self.size[0];
-			var radiusY = 0.6 * self.size[1];
-			var zMovement = 0.65 * self.getPowerRate() * maxSize;
-			for(var i = 0 ; i < partsNumber ; i++) {
-				var angle = i * partAngle;
-				var sinAngleMulRadius = Math.sin(angle);
-				var cosAngleMulRadius = Math.cos(angle);
-				var movement = [
-					-cosAngleMulRadius * radiusX * (1 / (1 + particleLifeTime)),
-					-sinAngleMulRadius * radiusY * (1 / (1 + particleLifeTime)),
-					zMovement
-				];
-				
-				// Adding spaceship rotation in movement
-				var rotationQuat = quat.clone(self.rotation);
-				quat.invert(rotationQuat, rotationQuat);
-				vec3.transformQuat(movement, movement, rotationQuat);
-				
-				var position = [
-					cosAngleMulRadius * radiusX, 
-					sinAngleMulRadius * radiusY, 
-					0
-				];
-				
-				particlesToAdd.push(
-					new Particle(material_P_SMOKE, position, particleSize, particleColor, particleLifeTime, movement, self)
-				);
-			}
-			self.world.add(particlesToAdd);
-			self.lastFlameTime = TimerManager.lastUpdateTimeStamp;
-		}
-	};
-	
+	if(this.lights[0]) {
+		this.world.remove(this.lights[0]);
+		delete this.lights[0];
+	}
 	if(this.state > 0) {
-		var timeBetweenFlames = 400 * (2 - this.getPowerRate());
-		if(this.flameTimer) {
-			this.flameTimer.reset(particleTimerCallBack, timeBetweenFlames, false);
-		} else {
-			// First call : initializing
-			this.flameTimer = new Timer(particleTimerCallBack, timeBetweenFlames, false);
-		}
-		
-		if(this.lastFlameTime < TimerManager.lastUpdateTimeStamp - timeBetweenFlames) {
-			// Update if last change wasn't too near
-			this.flameTimer.forceExecutionNow();
-		}
+		this.lights[0] = new Light([
+			this.position[0], 
+			this.position[1], 
+			this.position[2] + 3
+		], lightColor, 30 * powerRate * Math.max.apply(null, this.size), true);
+		this.world.add(this.lights[0]);
 	}
 	
+	// If required, storing min and max Z for flame, based on the default position
+	if(!this.minFlameZ || !this.maxFlameZ) {
+		var firstFlameMeshVertices = this.meshGroups["flame"][0].vertices;
+		this.minFlameZ = firstFlameMeshVertices[2]; // 2 = Z of 1st vertice
+		this.maxFlameZ = firstFlameMeshVertices[8]; // 8 = Z of 3rd vertice
+	}
+	
+	// Changing lid color
+	var lidMeshes = this.meshGroups["lid"];
+	var lidTexture = Materials.get(powerRate == 0 ? "BLACK" : "WHITE");
+	for(var i = 0 ; i < lidMeshes.length ; i++) {
+		lidMeshes[i].texture = lidTexture;
+	}
+	
+	// Changing flame size
+	var flameMeshes = this.meshGroups["flame"];
+	var flameZ = this.minFlameZ + powerRate * (this.maxFlameZ - this.minFlameZ);
+	for(var i = 0 ; i < flameMeshes.length ; i++) {
+		flameMeshes[i].vertices[8] = flameZ; // 8 = Z of 3rd vertice
+	}
+	
+	this.regenerateCache();
+		
 	this.spaceShip.updateAcceleration();
 };

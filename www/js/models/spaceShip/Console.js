@@ -35,6 +35,8 @@ Models.Console = function(world, position, rotation, definition, state) {
 		}
 	}
 	
+	// TODO use a spacial named material for the screen
+	
 	this.parent(world, position, rotation, meshes, state);
 	this.model = "Console";
 };

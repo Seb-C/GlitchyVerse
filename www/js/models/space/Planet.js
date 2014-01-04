@@ -26,7 +26,7 @@ Models.Planet = function(world, position, radius, seed) {
 		var maxVisibleDistance = Math.PI * radius * self.MAX_DISTANCE_VISIBILITY_PER_UNIT;
 		
 		// Determining quality factor
-		var distanceFromCamera = vec3.distance(position, world.camera.getPosition()) - radius;
+		var distanceFromCamera = vec3.distance(position, world.camera.getAbsolutePosition()) - radius;
 		if(distanceFromCamera > maxVisibleDistance) {
 			distanceFromCamera = maxVisibleDistance;
 		} else if(distanceFromCamera < 0) {
@@ -44,7 +44,7 @@ Models.Planet = function(world, position, radius, seed) {
 					self.mappedTexture = Materials.setPixelArrayAsTexture(world.gl, result.texture.width, result.texture.height, result.texture.pixels, self.mappedTexture);
 					
 					// Creating mesh with the texture
-					self.meshes = [new Mesh(
+					self.meshes = new Mesh(
 						Materials.get("PLANET"),
 						new Float32Array(result.geometry.vertices   ),
 						new Float32Array(result.geometry.normals    ),
@@ -52,25 +52,27 @@ Models.Planet = function(world, position, radius, seed) {
 						null,
 						null,
 						new Float32Array(result.geometry.textureMapping)
-					)];
+					);
 					self.regenerateCache();
 					
 					if(result.atmosphere != null) {
 						self.atmosphereTexture = Materials.setPixelArrayAsTexture(world.gl, 2, 2, result.atmosphere.texturePixels, self.atmosphereTexture, true);
 						self.atmosphereTexture.isTransparency = true;
 						
-						self.atmosphere.meshes = [new Mesh(
+						self.atmosphere.meshes = new Mesh(
 							self.atmosphereTexture,
 							new Float32Array(result.atmosphere.vertices   ),
 							new Float32Array(result.atmosphere.normals    ),
 							new Float32Array(result.atmosphere.texturePart)
-						)];
+						);
 						self.atmosphere._cacheIsTransparency = null; // TODO this is dirty
 						self.atmosphere.onbeforedraw = function() {
 							this._gl.enable(this._gl.CULL_FACE);
 							
+							// TODO bug when determining the distance from the planet here
+							
 							// Culling only the front or the back, depending if the camera is on the surface or not
-							var cameraDistance = vec3.distance(this.world.camera.getPosition(), this.position);
+							var cameraDistance = vec3.distance(this.world.camera.getAbsolutePosition(), this.position);
 							if(cameraDistance < result.atmosphere.radius) {
 								this._gl.cullFace(this._gl.FRONT);
 							} else {

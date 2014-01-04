@@ -3,7 +3,10 @@ var LightManager = function(world) {
 	this.world            = world;
 	this._shader          = this.world.mainShader;
 	this._lights          = new Array();
+	
+	this.defaultAmbientLightning = 0.2;
 	this.ambientLightning = 0.2;
+	
 	this.lightUpdateTimer = null;
 	
 	this.viewableLightsNumber   = 0;
@@ -12,6 +15,15 @@ var LightManager = function(world) {
 	this.lightMaxDistanceArray  = new Array();
 	this.lightAttenuationArray  = new Array();
 	this.lightMaxLightningArray = new Array();
+};
+
+/**
+ * Changes the current ambient lightning.
+ * @param float The new ambient lighning. null to reset to default.
+ */
+LightManager.prototype.setAmbientLightning = function(ambientLightning) {
+	this.ambientLightning = ambientLightning == null ? this.defaultAmbientLightning : ambientLightning;
+	this._gl.uniform1f(this._shader.getVar("uAmbientLight"), this.ambientLightning);
 };
 
 // In case of change, it must be edited in main fragmentShader too
@@ -46,7 +58,7 @@ LightManager.prototype.remove = function(l) {
  * Sorts the light Array
  */
 LightManager.prototype.sortLights = function() {
-	var cameraPosition = this.world.camera.getPosition();
+	var cameraPosition = this.world.camera.getAbsolutePosition();
 	var cameraViewDistance = this.world.camera.viewDistance;
 	
 	// Generating cache values of the light
@@ -75,7 +87,7 @@ LightManager.prototype.regenerateCache = function() {
 	for(var i = 0 ; i < this._lights.length && i < this.MAX_LIGHTS_NUMBER ; i++) {
 		var light = this._lights[i];
 		if(light.nearIndex < 0) {
-			this.lightPositionArray    = this.lightPositionArray.concat(light.position);
+			this.lightPositionArray    = this.lightPositionArray.concat(this.world.positionAbsoluteToRelative(light.position));
 			this.lightColorArray       = this.lightColorArray   .concat(light.color   );
 			this.lightMaxDistanceArray .push(light.maxDistance);
 			this.lightAttenuationArray .push(light.isAttenuation ? 1 : 0);
@@ -109,7 +121,7 @@ LightManager.prototype._regenerateUniforms = function() {
 		this._gl.uniform1iv(this._shader.getVar("uPointLightingAttenuationArray"),  this.lightAttenuationArray );
 		this._gl.uniform1fv(this._shader.getVar("uPointLightingMaxLightningArray"), this.lightMaxLightningArray);
 	}
-	this._gl.uniform1f     (this._shader.getVar("uAmbientLight"),                   this.ambientLightning      );
+	this.setAmbientLightning(null);
 };
 
 /**

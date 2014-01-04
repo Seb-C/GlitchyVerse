@@ -11,10 +11,8 @@ var World = function() {
 	this.lastDrawMode     = null;
 	
 	this.mainShader       = new Shader();
-	this.particlesShader  = new Shader();
 	
 	this._entities        = new Array();
-	this._particleManager = new ParticleManager(this.camera);
 	this.lightManager     = new LightManager(this);
 	this.entitySortTimer  = null;
 	
@@ -28,7 +26,7 @@ var World = function() {
 	this.spaceShips       = {};
 	this.spaceContent     = new SpaceContent(this);
 	
-	// Starts With 1 because 0 = not pickable
+	// Starts with 1 because 0 = not pickable
 	// TODO meshes in this array cannot be destroyed by garbage collector
 	this.nextPickableColor = [0, 0, 1];
 	this._pickableMeshes = {};
@@ -36,7 +34,7 @@ var World = function() {
 
 /**
  * Adds "something" to the world
- * @param Object An object to add to the world (currently, can be Entity, Light, Particle, or Array of one of these types)
+ * @param Object An object to add to the world (currently, can be Entity, Light, or Array of one of these types)
  */
 World.prototype.add = function(o) {
 	if(o instanceof Entity) {
@@ -56,9 +54,6 @@ World.prototype.add = function(o) {
 	} else if(o instanceof Light || (o instanceof Array && o[0] instanceof Light)) {
 		this.lightManager.add(o);
 		this.lightManager.regenerateCache();
-	} else if(o instanceof Particle || (o instanceof Array && o[0] instanceof Particle)) {
-		this._particleManager.add(o);
-		this._particleManager.regenerateCache();
 	} else if(o instanceof SpaceShip) {
 		this.spaceShips[o.id] = o;
 	} else if(o instanceof Array && o[0] instanceof SpaceShip) {
@@ -75,7 +70,7 @@ World.prototype.add = function(o) {
  * at the end of the array, with nearest entities at last
  */
 World.prototype.sortEntities = function() {
-	var cameraPosition = this.camera.getPosition();
+	var cameraPosition = this.camera.getAbsolutePosition();
 	
 	// Generating cache values (distance between entity and camera)
 	this._entities.map(function(entity) {
@@ -183,7 +178,7 @@ World.prototype._colorToObjectKey = function(color) {
 
 /**
  * Removes "something" from the world
- * @param Object An object to remove from the world (currently, can be Entity, Light, Particle, or Array of one of these types)
+ * @param Object An object to remove from the world (currently, can be Entity, Light, or Array of one of these types)
  */
 World.prototype.remove = function(o) {
 	if(o instanceof Entity) {
@@ -194,9 +189,6 @@ World.prototype.remove = function(o) {
 	} else if(o instanceof Light || (o instanceof Array && o[0] instanceof Light)) {
 		this.lightManager.remove(o);
 		this.lightManager.regenerateCache();
-	} else if(o instanceof Particle || (o instanceof Array && o[0] instanceof Particle)) {
-		this._particleManager.remove(o);
-		this._particleManager.regenerateCache();
 	} else if(o instanceof SpaceShip) {
 		this._removeSpaceShip(o);
 	} else if(o instanceof Array && o[0] instanceof SpaceShip) {
@@ -229,7 +221,7 @@ World.prototype.resize = function(screenWidth, screenHeight) {
 	var projectionMatrix = this.camera.updateProjectionMatrix(screenWidth, screenHeight);
 	this.gl.viewport(0, 0, screenWidth, screenHeight);
 	
-	var shaders = [this.mainShader, this.particlesShader];
+	var shaders = [this.mainShader];
 	for(var i = 0 ; i < shaders.length ; i++) {
 		this.gl.useProgram(shaders[i].program);
 		this.gl.uniformMatrix4fv(shaders[i].getVar("uPMatrix"), false, projectionMatrix);
@@ -242,9 +234,6 @@ World.prototype.resize = function(screenWidth, screenHeight) {
 World.prototype.load = function() {
 	this.mainShader.loadVertexShader  ("main/vertexShader.glsl"  );
 	this.mainShader.loadFragmentShader("main/fragmentShader.glsl");
-	
-	this.particlesShader.loadVertexShader  ("particles/vertexShader.glsl"  );
-	this.particlesShader.loadFragmentShader("particles/fragmentShader.glsl");
 };
 
 /**
@@ -262,10 +251,6 @@ World.prototype.init = function(gl) {
 	}
 	
 	this.lightManager.init(this.gl);
-	
-	this.particlesShader.init(this.gl);
-	this.gl.useProgram(this.particlesShader.program);
-	this._particleManager.init(this.gl);
 	
 	// Entity array has to be sorted regularly, but not necessarily at each frame
 	var self = this;
@@ -289,6 +274,17 @@ World.prototype.update = function() {
 	this.animator.update();
 };
 
+/**
+ * Converts an absolute position in the world to a position relative to the spaceship
+ * @param vec3 The absolute position in the world
+ * @return vec3 The position relative to the spaceship.
+ */
+World.prototype.positionAbsoluteToRelative = function(absolutePosition) {
+	var r = vec3.create();
+	if(this.userSpaceShip != null) vec3.subtract(r, absolutePosition, this.userSpaceShip.getPosition());
+	return r;
+};
+
 // If these constants are changed, main fragmentShader.glsl and vertexShader.glsl must be updated too.
 World.prototype.DRAW_MODE_NORMAL      = 0;
 World.prototype.DRAW_MODE_PICK_MESH   = 1;
@@ -308,29 +304,15 @@ World.prototype.draw = function(mode) {
 		this.lastDrawMode = mode;
 	}
 	
+	this.lightManager.regenerateCache(); // TODO remove that from here, but necessary with relative positions
+	
 	this.gl.uniform1i(this.mainShader.getVar("uTexture"), 0);
 	this.gl.uniform1i(this.mainShader.getVar("uMappedTexture"), 1);
 	
-	var i = 0;
-	
-	// Drawing opaque entities
-	//this.gl.useProgram(this.mainShader.program);
-	while(i < this._entities.length && !this._entities[i].isTransparency()) {
-		this._entities[i].draw(this.gl, this.mainShader, drawMode);
-		i++;
-	}
-	
-	// Drawing particles
-	if(drawMode == this.DRAW_MODE_NORMAL) {
-		this.gl.useProgram(this.particlesShader.program);
-		this._particleManager.draw(this.gl, this.particlesShader, this.lastMvMatrix);
-	}
-	
-	// Drawing transparent entities
+	// Drawing entities
 	this.gl.useProgram(this.mainShader.program);
-	while(i < this._entities.length) {
+	for(var i = 0 ; i < this._entities.length ; i++) {
 		this._entities[i].draw(this.gl, this.mainShader, drawMode);
-		i++;
 	}
 	
 	// Drawing additional windows

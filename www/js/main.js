@@ -10,6 +10,8 @@ Configuration.load();
 var world = new World();
 world.load();
 
+// TODO bug showing images from css ?!?
+
 var canvas = document.getElementById("canvas");
 var gl = canvas.getContext("webgl",              {preserveDrawingBuffer: true}) 
 	  || canvas.getContext("experimental-webgl", {preserveDrawingBuffer: true});
@@ -61,7 +63,6 @@ if(gl) {
 	);*/
 	
 	// TODO remove blur effect on far textures ?
-	// TODO perspective problem with very near particles
 	
 	// Full screen canvas
 	var resize = function() {
