@@ -14,5 +14,7 @@ depuis vidéo du 25/10/2013 :
 - Modification des étoiles pour utiliser des objets normaux plutôt que des particules
 - Simplification de la flamme des propulseurs
 - Suppression du moteur de particules
+- Suppression reliquats inutiles dans le modèle des portes
+- Migration des propulseurs vers un fichier obj
 
 - Modélisation personnages ?

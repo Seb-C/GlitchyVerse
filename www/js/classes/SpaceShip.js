@@ -19,7 +19,7 @@
 var SpaceShip = function(world, id, name, position, rotation, definition, attributes) {
 	this.world = world;
 	this.id = id;
-	this.roomUnitSize = [4, 3.5, 4];
+	this.roomUnitSize = [4, 3.5, 4]; // TODO put everything in obj, and remove those constants
 	this.edgeSize = 0.2;
 	this.lightAndClimEdgeSize = 0.58;
 	this.recoilMaxSpeedRate = 0.2; // Relative to the normal max speed
@@ -188,7 +188,7 @@ SpaceShip.prototype._addObject = function(object) {
 	if(Models[object.model]) {
 		entity = new Models[object.model](world, vec3.create(), quat.create(), definition, object.state);
 	} else {
-		entity = new Entity(world, vec3.create(), quat.create(), Models.loadMeshesFromObj(object.model), object.state);
+		entity = new Entity(world, vec3.create(), quat.create(), Models.loadMeshesFromObj(object.model, object.size), object.state);
 		entity.model = object.model;
 	}
 	entity.spaceShip = this;

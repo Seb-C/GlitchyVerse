@@ -10,12 +10,15 @@ var Models = {
 	/**
 	 * Loads a list of meshes from an obj file
 	 * @param String the name of the obj file (relatively to the objects directory), with it's extension
+	 * @param vec3 (optional) The scale to apply to the vertices
 	 * @return Array Containing the meshes
 	 */
-	loadMeshesFromObj: function(fileName) {
+	loadMeshesFromObj: function(fileName, scale) {
 		if(!this._loadedObjFiles[fileName]) {
 			this._loadedObjFiles[fileName] = FILES.getText(Models.objectsDirectory + fileName);
 		}
+		
+		var verticesScale = scale || [1, 1, 1];
 		
 		// TODO optimize it : store data in this._loadedObjFiles after regexp and splits
 		
@@ -41,9 +44,9 @@ var Models = {
 					Materials.loadMtl(line[1]);
 					break;
 				case "v":
-					verticesList.push(parseFloat(line[1]));
-					verticesList.push(parseFloat(line[2]));
-					verticesList.push(parseFloat(line[3]));
+					verticesList.push(parseFloat(line[1]) * verticesScale[0]);
+					verticesList.push(parseFloat(line[2]) * verticesScale[1]);
+					verticesList.push(parseFloat(line[3]) * verticesScale[2]);
 					break;
 				case "vn":
 					normalsList.push(parseFloat(line[1]));
