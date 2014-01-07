@@ -12,7 +12,7 @@ var Camera = function(world) {
 	this.projectionMatrix = null;
 	this.lastModelViewMatrix = mat4.create();
 	this.fovy = 45;
-	this.viewDistance = 1000000; // TODO
+	this.viewDistance = 1000000;
 	// TODO customizable fovy and view distance
 };
 
@@ -45,6 +45,7 @@ Camera.prototype.getRotation = function() {
  */
 Camera.prototype.getAbsolutePosition = function() {
 	var pos = vec3.clone(this.position);
+	vec3.scale(pos, pos, 2); // TODO/FIXME why is it necessary ?
 	if(this.world.userSpaceShip != null) {
 		vec3.add(pos, pos, this.world.userSpaceShip.getPosition());
 	}

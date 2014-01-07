@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript" src="./js/lib/seedrandom.js"></script>
+		<script type="text/javascript">
+			window.addEventListener("load", function() {
+				var seed = Math.random();
+				Math.seedrandom(seed);
+				document.body.appendChild(document.createTextNode("Seed = " + seed));
+				document.body.appendChild(document.createElement("br"));
+				
+				var canvas = document.createElement("canvas");
+				canvas.width  = 640;
+				canvas.height = 480;
+				var context = canvas.getContext("2d");
+				document.body.appendChild(canvas);
+				
+				context.strokeStyle   = "rgb(" + Math.round(Math.random() * 255) + ", " + Math.round(Math.random() * 255) + ", " + Math.round(Math.random() * 255) + ")";
+				context.fillStyle     = "rgb(" + Math.round(Math.random() * 255) + ", " + Math.round(Math.random() * 255) + ", " + Math.round(Math.random() * 255) + ")";
+				var lineWidthRatio    = 0.5  * Math.random();
+				var angleMaxVariation = 0.25 * Math.random(); // Ratio of PI (180 deg)
+				var maxBranches       = 6    * Math.random();
+				var maxLeafSize       = 30   * Math.random();
+				var leafProbability   = Math.random();
+				
+				var draw = function(rootPosition, stepLength, angleVariation) {
+					if(stepLength > 0) {
+						var branchesCount = Math.round(Math.random() * maxBranches + 1);
+						var unitBranchAngle = Math.PI / (branchesCount + 1);
+						
+						for(var i = 1 ; i <= branchesCount ; i++) {
+							var target = [
+								Math.round(rootPosition[0] + Math.cos(angleVariation + Math.random() * Math.PI) * stepLength),
+								Math.round(rootPosition[1] - Math.sin(angleVariation + Math.random() * Math.PI) * stepLength)
+							];
+							
+							context.lineWidth = stepLength * lineWidthRatio;
+							context.beginPath();
+							context.moveTo(rootPosition[0], rootPosition[1]);
+							context.lineTo(target[0], target[1]);
+							context.stroke();
+							
+							var angleDirection;
+							if(angleVariation == 0) {
+								angleDirection = Math.random() < 0.5 ? -1 : 1;
+							} else if(angleVariation < 0) {
+								angleDirection = -1;
+							} else {
+								angleDirection = 1;
+							}
+							
+							draw(
+								target,
+								Math.floor(stepLength * ((Math.exp(Math.random()) - 1) / (Math.E - 1))),
+								angleVariation + angleDirection * (Math.random() / 2) * angleMaxVariation * Math.PI
+							);
+						}
+					} else if(Math.random() < leafProbability) {
+						var leafSize = Math.round(Math.random() * maxLeafSize);
+						var halfLeafSize = Math.round(leafSize / 2);
+						context.fillRect(rootPosition[0] - halfLeafSize, rootPosition[1] - halfLeafSize, leafSize, leafSize);
+					}
+				};
+				draw([320, 480], Math.round(Math.random() * 130) + 20, 0);
+			});
+		</script>
+	</head>
+	<body>
+		
+	</body>
+</html>
