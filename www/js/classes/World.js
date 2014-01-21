@@ -10,13 +10,17 @@ var World = function() {
 	
 	this.lastDrawMode     = null;
 	
-	this.mainShader       = new Shader();
+	this.mainShader = new Shader();
+	this.mainShader.loadVertexShader  ("main/vertexShader.glsl"  );
+	this.mainShader.loadFragmentShader("main/fragmentShader.glsl");
 	
 	this._entities        = new Array();
 	this.lightManager     = new LightManager(this);
 	this.entitySortTimer  = null;
 	
 	this.animator         = new Animator();
+	
+	// TODO always enable face culling (and add a parameter in entity to change it's mode ?)
 	
 	this.userSpaceShip    = null; // Initialized by ServerConnection
 	this.userSpaceShipMoveTimer = null;
@@ -39,18 +43,8 @@ var World = function() {
 World.prototype.add = function(o) {
 	if(o instanceof Entity) {
 		this._entities.push(o);
-		if(this.gl != null) {
-			// When the world is already initialized, initialize the new entity
-			o.init(this.gl);
-		}
 	} else if(o instanceof Array && o[0] instanceof Entity) {
 		Array.prototype.push.apply(this._entities, o);
-		if(this.gl != null) {
-			for(var i = 0 ; i < o.length ; i++) {
-				// When the world is already initialized, initialize the new entities
-				o[i].init(this.gl);
-			}
-		}
 	} else if(o instanceof Light || (o instanceof Array && o[0] instanceof Light)) {
 		this.lightManager.add(o);
 		this.lightManager.regenerateCache();
@@ -74,18 +68,27 @@ World.prototype.sortEntities = function() {
 	
 	// Generating cache values (distance between entity and camera)
 	this._entities.map(function(entity) {
-		if(entity.isTransparency()) {
+		if(entity.model.isTransparency()) {
 			entity.distanceFromCamera = vec3.distance(entity.position, cameraPosition);
 		}
 	});
 	
 	this._entities.sort(function(a, b) {
-		if(a.isTransparency() && b.isTransparency()) {
+		var at = a.model.isTransparency();
+		var bt = b.model.isTransparency();
+		
+		if(at && bt) {
 			return b.distanceFromCamera - a.distanceFromCamera;
-		} else if(a.isTransparency() /*&& !b.isTransparency()*/) {
+		} else if(at/* && !bt*/) {
 			return 1;
-		} else/* if(!a.isTransparency() && b.isTransparency())*/ {
+		} else if(/*!at && */bt) {
 			return -1;
+		} else/* if(!at && !bt)*/ {
+			if(a.model == b.model) {
+				return 0;
+			} else {
+				return -1; // Could also be 1, that doesn't care
+			}
 		}
 	});
 };
@@ -229,14 +232,6 @@ World.prototype.resize = function(screenWidth, screenHeight) {
 };
 
 /**
- * Loads some world elements, for example the shader source files (*.glsl)
- */
-World.prototype.load = function() {
-	this.mainShader.loadVertexShader  ("main/vertexShader.glsl"  );
-	this.mainShader.loadFragmentShader("main/fragmentShader.glsl");
-};
-
-/**
  * Initializes the world
  * @param WebGL The WebGL context
  */
@@ -246,10 +241,6 @@ World.prototype.init = function(gl) {
 	this.mainShader.init(this.gl);
 	this.gl.useProgram(this.mainShader.program);
 	
-	for(var i in this._entities) {
-		this._entities[i].init(this.gl);
-	}
-	
 	this.lightManager.init(this.gl);
 	
 	// Entity array has to be sorted regularly, but not necessarily at each frame
@@ -257,6 +248,8 @@ World.prototype.init = function(gl) {
 	this.entitySortTimer = new Timer(function() {
 		self.sortEntities();
 	}, 1000);
+	
+	this.spaceContent.init();
 };
 
 /**
@@ -309,11 +302,15 @@ World.prototype.draw = function(mode) {
 	this.gl.uniform1i(this.mainShader.getVar("uTexture"), 0);
 	this.gl.uniform1i(this.mainShader.getVar("uMappedTexture"), 1);
 	
+	// TODO transparent textures bug with windows and doors (problem with ordering)
+	
 	// Drawing entities
 	this.gl.useProgram(this.mainShader.program);
 	for(var i = 0 ; i < this._entities.length ; i++) {
 		this._entities[i].draw(this.gl, this.mainShader, drawMode);
 	}
+	
+	// TODO sort entities by model and enable the buffers once
 	
 	// Drawing additional windows
 	if(this.designer != null && this.designer.isVisible) this.designer.draw();

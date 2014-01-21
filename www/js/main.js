@@ -7,9 +7,6 @@ glMatrix.setMatrixArrayType(Array);
 
 Configuration.load();
 
-var world = new World();
-world.load();
-
 // TODO bug showing images from css ?!?
 
 var canvas = document.getElementById("canvas");
@@ -28,39 +25,12 @@ if(gl) {
 	Configuration.init();
 	Controls.init(canvas);
 	Materials.init(gl);
+	
+	var world = new World();
 	world.init(gl);
 	
 	// TODO remove last invisible webgl errors + fix min-capability-mode
 	var server = new ServerConnection(window.location.host, "play", world);
-	
-	// TODO tests to remove
-	/*for(var i = 0 ; i < 1000 ; i++) {
-		world.add(new Entity(world, [0, 0, 0], [0, 0, 0], [new Mesh(Materials.get("WHITE"), [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], [0, 0, 1])]));
-	}*/
-	//world.add(new Models.Planet(world, [0, 0, -100], 10, Math.random()));
-	//world.add(new Models.Star(world, [-20, -20, -80], 10, Math.random()));
-	//world.add(new Models.Planet(world, [0, 0, -1000], 100, Math.random()));
-	//world.add(new Entity(world, [0, 0, -150000], [0, 0, 0], [new Mesh(Materials.get("WHITE"), [-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], [0, 0, 1])]));
-	// Test with multiple squares in a mesh
-	/*world.add(
-		new Entity(world, [0, 0, 0], quat.create(), [
-			new Mesh(Materials.get("METAL"), [
-				-1, -1, 0,
-				0, -1, 0,
-				0, 0, 0,
-				-1, 0, 0
-			], [0, 0, 1], null, [
-				0, 0,
-				1, 0,
-				1, 1,
-				0, 1,
-				0, 0,
-				1, 0,
-				1, 1,
-				0, 1
-			])
-		])
-	);*/
 	
 	// TODO remove blur effect on far textures ?
 	

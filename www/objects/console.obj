@@ -65,8 +65,10 @@ o Screen
 
 usemtl BLACK # Black texture is used by models/Console.js to identify where to draw the screen
 
+vn 0 0 0
+
 v -1  0.417 -1.799 
 v  1  0.417 -1.799 
 v  1 -0.583 -0.799 
 v -1 -0.583 -0.799
-f 27 28 29 30
+f 27//6 28//6 29//6 30//6

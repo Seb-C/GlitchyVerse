@@ -4,28 +4,31 @@
  *               - unitSize : Array(3) Vector(3), size of each unit (the smallest possible room size)
  *               - edgeSize : The side of the room edges
  */
-Models.Door = function(world, position, rotation, definition, state) {
+CustomEntities.Door = function(world, position, rotation, definition, state) {
 	this.isAnimationStarted = false;
 	
-	var meshes = Models.loadMeshesFromObj("door.obj");
-	meshes = meshes.concat(Models.loadMeshesFromObj("door_locks.obj"));
+	var model = new Model(world, []);
+	model.loadMeshesFromObj("door.obj");
+	model.loadMeshesFromObj("door_locks.obj");
 	
-	for(var i = 0 ; i < meshes.length ; i++) {
-		var mesh = meshes[i];
+	var self = this;
+	for(var i = 0 ; i < model.meshes.length ; i++) {
+		var mesh = model.meshes[i];
 		
 		if(mesh.groups.indexOf("lock") != -1) {
 			world.configurePickableMesh(mesh, function() {
-				this.entity.changeState(1 - this.entity.state);
+				self.changeState(1 - self.state);
 			}, false);
 		}
 	}
 	
-	this.model = "door.obj";
-	this.parent(world, position, rotation, meshes, state);
+	this.modelName = "door.obj";
+	model.regenerateCache();
+	this.parent(world, model, position, rotation, state);
 };
-Models.Door.extend(Entity);
+CustomEntities.Door.extend(Entity);
 
-Models.Door.prototype.changeState = function(newState) {
+CustomEntities.Door.prototype.changeState = function(newState) {
 	if(this.state == null && newState == 0) {
 		// First call and door is closed --> nothing to do
 		this.state = newState;

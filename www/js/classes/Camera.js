@@ -6,7 +6,7 @@ var Camera = function(world) {
 	this.rotation = quat.create();
 	this.moveSpeed = 0.003;
 	//this.moveSpeed = 0.15; // TODO only for tests, remove it
-	this.position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
+	this.position = vec3.fromValues(0, 9, 0); // TODO initial position should be dynamic
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
 	this.projectionMatrix = null;
@@ -25,18 +25,22 @@ Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
 
 // TODO option to freeze z axis (and synchronize camera rotation with spaceship + gravity and walls)
 
-Camera.prototype.getPosition = function() {
+/*Camera.prototype.getPosition = function() {
 	return vec3.clone(this.position); // TODO is it useful to clone it ?
-};
+};*/
 
 Camera.prototype.getRotation = function() {
 	var rotation = quat.clone(this.rotation);
-	if(this.world.userSpaceShip != null) {
-		quat.rotateX(rotation, rotation, degToRad(this.world.userSpaceShip.rotation[0]));
-		quat.rotateY(rotation, rotation, degToRad(this.world.userSpaceShip.rotation[1]));
-		quat.rotateZ(rotation, rotation, degToRad(this.world.userSpaceShip.rotation[2]));
-	}
 	quat.invert(rotation, rotation);
+	
+	if(this.world.userSpaceShip != null) {
+		var ssRotation = quat.create();
+		quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
+		quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
+		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
+		quat.multiply(rotation, rotation, ssRotation);
+	}
+	
 	return rotation;
 };
 
@@ -45,10 +49,17 @@ Camera.prototype.getRotation = function() {
  */
 Camera.prototype.getAbsolutePosition = function() {
 	var pos = vec3.clone(this.position);
-	vec3.scale(pos, pos, 2); // TODO/FIXME why is it necessary ?
 	if(this.world.userSpaceShip != null) {
+		var ssRotation = quat.create();
+		quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
+		quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
+		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
+		quat.invert(ssRotation, ssRotation);
+		vec3.transformQuat(pos, pos, ssRotation);
+		
 		vec3.add(pos, pos, this.world.userSpaceShip.getPosition());
 	}
+	
 	return pos;
 };
 
@@ -61,8 +72,8 @@ Camera.prototype.update = function() {
 	var invertedRotation = mat4.create();
 	
 	// TODO only for tests, remove it
-	if(Controls._keys[107]) this.moveSpeed *= 1.02;
-	if(Controls._keys[109]) this.moveSpeed /= 1.02;
+	if(Controls._keys[107]) this.moveSpeed *= 1.05;
+	if(Controls._keys[109]) this.moveSpeed /= 1.05;
 	
 	// Moves depends of elapsed time
 	var timeNow = TimerManager.lastUpdateTimeStamp;
@@ -112,8 +123,8 @@ Camera.prototype.update = function() {
 		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
 		mat4.fromQuat(invertedRotation, ssRotation);
 		
+		//mat4.translate(this.lastModelViewMatrix, this.lastModelViewMatrix, negatedPosition);
 		mat4.multiply(this.lastModelViewMatrix, this.lastModelViewMatrix, invertedRotation);
-		mat4.translate(this.lastModelViewMatrix, this.lastModelViewMatrix, negatedPosition);
 	}
 	
 	return this.lastModelViewMatrix;

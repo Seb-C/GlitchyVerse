@@ -16,5 +16,11 @@ depuis vidéo du 25/10/2013 :
 - Suppression du moteur de particules
 - Suppression reliquats inutiles dans le modèle des portes
 - Migration des propulseurs vers un fichier obj
+- Impossible d'entrer en collision avec une planète : on reste en orbite
+- Ajout système de modèles
+- Génération des arbres
+- Débug de la caméra et des calculs de distances qui vont avec (transparence, lumière ...)
+- Ajout des arbres sur les planètes
+- Changement de générateur de nombres pseudo aléatoires
 
 - Modélisation personnages ?

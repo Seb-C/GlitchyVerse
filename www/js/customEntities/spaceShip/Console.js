@@ -2,14 +2,15 @@
  * Creates a console with a control screen
  * @param {definition} Object Containing the definition of the window
  */
-Models.Console = function(world, position, rotation, definition, state) {
-	var meshes = Models.loadMeshesFromObj("console.obj");
+CustomEntities.Console = function(world, position, rotation, definition, state) {
+	var model = new Model(world, []);
+	model.loadMeshesFromObj("console.obj");
 	var material_BLACK = Materials.get("BLACK");
 	
 	// Searching from mesh which has a black texture (it's used to identify where to draw the screen)
 	// TODO replace black texture by a group to identify it
-	for(var i = 0 ; i < meshes.length ; i++) {
-		var mesh = meshes[i];
+	for(var i = 0 ; i < model.meshes.length ; i++) {
+		var mesh = model.meshes[i];
 		if(mesh.texture == material_BLACK) {
 			// TODO add a small light to the screen
 			mesh.texture = definition.spaceShip.screen.canvasTexture;
@@ -37,7 +38,8 @@ Models.Console = function(world, position, rotation, definition, state) {
 	
 	// TODO use a special named material for the screen ?
 	
-	this.parent(world, position, rotation, meshes, state);
-	this.model = "Console";
+	model.regenerateCache();
+	this.parent(world, model, position, rotation, state);
+	this.modelName = "Console";
 };
-Models.Console.extend(Entity);
+CustomEntities.Console.extend(Entity);

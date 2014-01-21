@@ -147,7 +147,7 @@ Designer.prototype._createDesignerCanvas = function() {
 						)
 					) {
 						self.contextMenuTargetObject = entity;
-						if(!(entity instanceof Models.Room)) {
+						if(!(entity instanceof CustomEntities.Room)) {
 							// If it's a Room, we have to check if there's another entity on it
 							break;
 						}
@@ -427,7 +427,7 @@ Designer.prototype._createContextMenu = function() {
 			for(var i = 0 ; i < self.types.length ; i++) {
 				var type = self.types[i];
 				
-				if(self.contextMenuTargetObject.model == type.model) {
+				if(self.contextMenuTargetObject.modelName == type.modelName) {
 					objectTypeName = type.name; // TODO better use of a lang/locale class
 				}
 			}
@@ -519,7 +519,7 @@ Designer.prototype.draw = function() {
 		var size     = this.spaceShip.objectSizes[k];
 		var position = this.spaceShip.objectPositions[k];
 		
-		if(entity instanceof Models.Room && (
+		if(entity instanceof CustomEntities.Room && (
 			position[1] == this.scroll[1]
 			|| (
 				position[1] < this.scroll[1]

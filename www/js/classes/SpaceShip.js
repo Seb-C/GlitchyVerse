@@ -27,6 +27,8 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	
 	this._linearMaxSpeed = 0;
 	
+	this.alreadyCreatedModels = {};
+	
 	// TODO models : replace the definition parameter by normal parameters
 	// TODO organize js classes in subfolders
 	
@@ -149,7 +151,7 @@ SpaceShip.prototype._addGapObject = function(object) {
 	// Recreates the rooms concerned
 	for(var k in this.entities) {
 		var entity = this.entities[k];
-		if(entity instanceof Models.Room) {
+		if(entity instanceof CustomEntities.Room) {
 			var pos  = this.objectPositions[k];
 			var size = this.objectSizes[k];
 			
@@ -185,11 +187,19 @@ SpaceShip.prototype._addObject = function(object) {
 	vec3.add(rotation, object.rotation, this.rotation);
 	
 	var entity;
-	if(Models[object.model]) {
-		entity = new Models[object.model](world, vec3.create(), quat.create(), definition, object.state);
+	if(CustomEntities[object.model]) {
+		entity = new CustomEntities[object.model](world, vec3.create(), quat.create(), definition, object.state);
 	} else {
-		entity = new Entity(world, vec3.create(), quat.create(), Models.loadMeshesFromObj(object.model, object.size), object.state);
-		entity.model = object.model;
+		if(this.alreadyCreatedModels[object.model]) {
+			var model = this.alreadyCreatedModels[object.model];
+		} else {
+			var model = new Model(world, []);
+			model.loadMeshesFromObj(object.model, object.size);
+			model.regenerateCache();
+		}
+		
+		entity = new Entity(world, model, vec3.create(), quat.create(), object.state);
+		entity.modelName = object.model;
 	}
 	entity.spaceShip = this;
 	entity.id = object.id;
@@ -233,7 +243,7 @@ SpaceShip.prototype.deleteObject = function(id) {
 		// Recreates the rooms concerned by the deletion
 		for(var k in this.entities) {
 			var entity = this.entities[k];
-			if(entity instanceof Models.Room) {
+			if(entity instanceof CustomEntities.Room) {
 				var pos  = this.objectPositions[k];
 				var size = this.objectSizes[k];
 				
@@ -365,11 +375,42 @@ SpaceShip.prototype.updatePosition = function() {
 	vec3.transformQuat(move, move, rotationQuat);
 	vec3.add(this._position, this._position, move);
 	
+	this.checkCollisions();
+	
 	// Updating entities positions and rotations
 	for(var k in this.entities) {
 		this.refreshObjectPositionAndRotation(k);
 	}
 	this.world.lightManager.regenerateCache();
+};
+
+/**
+ * Checks that the spaceship is not colliding with space objects (planets ...), and remains in orbit.
+ */
+SpaceShip.prototype.checkCollisions = function() {
+	// Determining the radius of the "hitbox", based on highest absolute coordinates
+	var highestCoord = vec3.fromValues(
+		Math.max(Math.abs(this.minBounds[0]), Math.abs(this.maxBounds[0])),
+		Math.max(Math.abs(this.minBounds[1]), Math.abs(this.maxBounds[1])),
+		Math.max(Math.abs(this.minBounds[2]), Math.abs(this.maxBounds[2]))
+	);
+	var hitBoxCoord = vec3.multiply(highestCoord, highestCoord, this.roomUnitSize);
+	var hitBoxRadius = vec3.length(hitBoxCoord);
+	
+	var self = this;
+	var positionRelativeToBody = vec3.create()
+	this.world.spaceContent.forEachCollidableBody(function(body) {
+		var hitBoxDistanceFromBody = vec3.distance(body.position, self._position) - hitBoxRadius;
+		if(hitBoxDistanceFromBody < body.orbitRadius) {
+			// Moving the spaceship to the orbit
+			vec3.subtract(positionRelativeToBody, body.position, self._position);
+			vec3.scale(positionRelativeToBody, positionRelativeToBody, (body.orbitRadius / hitBoxDistanceFromBody) - 1);
+			vec3.subtract(self._position, self._position, positionRelativeToBody);
+			
+			// Stopping the spaceship
+			self.linearSpeed = 0;
+		}
+	});
 };
 
 SpaceShip.prototype.updateAcceleration = function() {

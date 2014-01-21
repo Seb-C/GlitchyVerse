@@ -1,4 +1,7 @@
-importScripts("/js/lib/seedrandom.js");
+importScripts("/js/lib/rng.js");
+importScripts("/js/lib/gl-matrix.min.js");
+
+glMatrix.setMatrixArrayType(Array);
 
 var TEXTURE_RESOLUTION_PER_UNIT = 1.2;
 var TEXTURE_MIN_RESOLUTION      = 32;
@@ -11,28 +14,34 @@ var LINE_SIZE                   = 3;
 var MAX_COULOURS                = 10;
 var ATMOSPHERE_PROBABILITY      = 0.5;
 var ATMOSPHERE_RADIUS           = 1.15; // Relative to the planet radius
+var ORBIT_RADIUS                = ATMOSPHERE_RADIUS + 0.075;
+var TREES_MIN_QUALITY           = 0.8; // Minimum quality to show trees
+var MAX_TREE_DENSITY            = 0.5; // Density by radius unit
 
 self.onmessage = function(event) {
+	var seed = event.data.seed;
+	
 	var variabilityRate = 1.25; // Relies to diamond square
-	Math.seedrandom(event.data.seed);
+	var prng = new RNG(seed);
 	var radius = event.data.radius;
 	var maxRelief = radius * 0.3;
 	
-	var hasAtmosphere = Math.random() < ATMOSPHERE_PROBABILITY;
+	var hasAtmosphere = prng.uniform() < ATMOSPHERE_PROBABILITY;
 	var atmosphereRadius = (radius + maxRelief) * ATMOSPHERE_RADIUS;
+	var orbitRadius      = (radius + maxRelief) * ORBIT_RADIUS;
 	
 	var quality = event.data.quality;
 	var visibleSize = Math.PI * radius * quality;
 	
-	hasAtmosphere = true; // TODO test to remove
+	var hasTrees = hasAtmosphere && quality >= TREES_MIN_QUALITY;
 	
 	// Must generate atmosphere colour in first
 	var atmosphereColor = null;
 	if(hasAtmosphere) {
 		atmosphereColor = [
-			Math.random() * 255,
-			Math.random() * 255,
-			Math.random() * 255,
+			prng.uniform() * 255,
+			prng.uniform() * 255,
+			prng.uniform() * 255,
 			75
 		];
 	}
@@ -52,15 +61,15 @@ self.onmessage = function(event) {
 	if(resolution > TEXTURE_MAX_RESOLUTION) resolution = TEXTURE_MAX_RESOLUTION;
 	
 	// Colors depending on pixel value
-	var colorsNumber = Math.ceil((1 - Math.exp(Math.random()) / Math.E) * MAX_COULOURS);
+	var colorsNumber = Math.ceil((1 - Math.exp(prng.uniform()) / Math.E) * MAX_COULOURS);
 	var colorSteps = [];
 	for(var i = 0 ; i < colorsNumber ; i++) {
 		colorSteps.push({
 			minValue: (1 / colorsNumber) * i,
 			color: [
-				Math.random() * 255,
-				Math.random() * 255,
-				Math.random() * 255
+				prng.uniform() * 255,
+				prng.uniform() * 255,
+				prng.uniform() * 255
 			]
 		});
 	}
@@ -119,7 +128,7 @@ self.onmessage = function(event) {
 				if(y == 0 || y == halfSizeY - 1) {
 					setPixel(x, y, 0.5);
 				} else {
-					setPixel(x, y, squareAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
+					setPixel(x, y, squareAvg + ((prng.uniform() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
 				}
 			}
 		}
@@ -152,7 +161,7 @@ self.onmessage = function(event) {
 				if(y == 0 || y == halfSizeY - 1) {
 					setPixel(x, y, 0.5);
 				} else {
-					setPixel(x, y, diamondAvg + ((Math.random() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
+					setPixel(x, y, diamondAvg + ((prng.uniform() * 2 - 1) * currentSize * variabilityRate) / (resolution + 1));
 					if(x == 0) setPixel(resolution, y, textureRelief[x + y * resolution]);
 				}
 			}
@@ -369,6 +378,46 @@ self.onmessage = function(event) {
 	}
 	
 	/*******************************************************************
+	 ******************* Generating trees if required ******************
+	 *******************************************************************/
+	
+	var treesData = null;
+	if(hasTrees) {
+		var prng = new RNG(seed);
+		
+		var treeCount = Math.round(MAX_TREE_DENSITY * radius * prng.uniform());
+		var treesData = {
+			positions: new Array(treeCount), // vec3
+			rotations: new Array(treeCount)  // quat
+		};
+		
+		for(var i = 0 ; i < treeCount ; i++) {
+			var angleX = Math.PI * 2 * prng.uniform();
+			var angleY = Math.PI * prng.uniform();
+			
+			var reliefPointX = Math.round((angleX / (Math.PI * 2)) *  resolution     );
+			var reliefPointY = Math.round((angleY /  Math.PI     ) * (resolution / 2));
+			var pointRadius  = radius + maxRelief * (textureRelief[reliefPointX + reliefPointY * resolution] - 0.5);
+			
+			var cosX = Math.cos(angleX);
+			var cosY = Math.cos(angleY);
+			var sinX = Math.sin(angleX);
+			var sinY = Math.sin(angleY);
+			
+			treesData.positions[i] = vec3.fromValues(
+				sinY     * cosX * pointRadius,
+				cosY            * pointRadius,
+				sinY     * sinX * pointRadius
+			);
+			
+			var rotation = quat.create();
+			quat.rotateX(rotation, rotation, angleY);
+			quat.rotateY(rotation, rotation, -angleX);
+			treesData.rotations[i] = rotation;
+		}
+	}
+	
+	/*******************************************************************
 	 *************************** Sending data **************************
 	 *******************************************************************/
 	
@@ -395,6 +444,7 @@ self.onmessage = function(event) {
 		};
 	}
 	postMessage({
+		orbitRadius: orbitRadius,
 		texture: {
 			width : resolution,
 			height: resolution / 2,
@@ -406,6 +456,8 @@ self.onmessage = function(event) {
 			texturePart   : geometryTexturePartBuffer,
 			textureMapping: geometryTextureMappingBuffer
 		},
-		atmosphere: atmosphereData
+		atmosphere: atmosphereData,
+		hasTrees: hasTrees,
+		trees: treesData
 	}, buffersToSend);
 };

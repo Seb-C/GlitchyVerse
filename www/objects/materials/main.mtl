@@ -72,3 +72,10 @@ newmtl FLAME
 newmtl STAR
 	map_Kd textures/star.png
 	d 0
+
+newmtl TREE_BARK
+	map_Kd textures/treeBark.png
+
+newmtl TREE_LEAF
+	map_Kd textures/treeLeaf.png
+	d 0

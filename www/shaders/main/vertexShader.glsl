@@ -43,7 +43,14 @@ void main(void) {
 		
 		vTextureCoord = aTextureCoord;
 		if(uHasMappedTexture == 1.0) vTextureMapping = aTextureMapping;
-		vLighting = uAmbientLight;
+		
+		// Applying ambient light only when normals are defined (!= [0, 0, 0])
+		if(aVertexNormal == vec3(0)) {
+			vLighting = 1.0;
+		} else {
+			vLighting = uAmbientLight;
+		}
+		
 	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		vPickColor = aPickColor;
 	}

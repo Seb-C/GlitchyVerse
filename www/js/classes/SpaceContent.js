@@ -2,6 +2,8 @@ var SpaceContent = function(world) {
 	this.world = world;
 	this.bodies = {};
 	
+	this.skyBox = null;
+	
 	var self = this;
 	// TODO put planet worker in Planet static class ?
 	this.planetCreationWorker = new Worker("/js/workers/planetCreation.js");
@@ -9,6 +11,14 @@ var SpaceContent = function(world) {
 	this.planetCreationWorker.onmessage = function(event) {
 		self.planetCreationQueue.shift()(event.data);
 	};
+};
+
+/**
+ * Initializes some space stuff (skybox ...)
+ */
+SpaceContent.prototype.init = function() {
+	this.skyBox = new CustomEntities.SkyBox(this.world);
+	this.world.add(this.skyBox);
 };
 
 /**
@@ -23,7 +33,7 @@ SpaceContent.prototype.setContent = function(content) {
 		var objectIndex = tempKeys.indexOf(bodyDefinition.id.toString());
 		if(objectIndex == -1) {
 			// Creating new object
-			var body = new Models[bodyDefinition.model](this.world, bodyDefinition.position, bodyDefinition.radius, bodyDefinition.seed);
+			var body = new CustomEntities[bodyDefinition.model](this.world, bodyDefinition.position, bodyDefinition.radius, bodyDefinition.seed);
 			this.bodies[bodyDefinition.id] = body;
 			entitiesToAddToWorld.push(body);
 		} else {
@@ -42,6 +52,18 @@ SpaceContent.prototype.setContent = function(content) {
 			delete this.bodies[id];
 		}
 		this.world.remove(entitiesToRemoveFromWorld);
+	}
+};
+
+/**
+ * Executes the given callback for each body which can be collided.
+ */
+SpaceContent.prototype.forEachCollidableBody = function(callBack) {
+	for(var k in this.bodies) {
+		var body = this.bodies[k];
+		if(body.orbitRadius != null) {
+			callBack(body);
+		}
 	}
 };
 

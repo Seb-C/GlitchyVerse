@@ -10,14 +10,14 @@
  *                            Values are are Array(Array(2)), a list of Vector(2), position of gaps. Positions are defined with 2D coordinates 
  *                            (beginning with [0, 0], which is the top left point), saw from the inside of the room.
  */
-Models.Room = function(world, position, rotation, definition, state) {
+CustomEntities.Room = function(world, position, rotation, definition, state) {
 	// Loading required textures
 	Materials.loadMtl("materials/main.mtl");
 	
 	this.definition = definition;
 	
 	var meshes = this._regenerateMeshes();
-	this.parent(world, position, rotation, meshes, state);
+	this.parent(world, new Model(world, meshes), position, rotation, state);
 	var distance = Math.max.apply(Math, [
 		this.definition.unitSize[0] * this.definition.size[0] - (this.definition.edgeSize / 2),
 		this.definition.unitSize[1] * this.definition.size[1] - (this.definition.edgeSize / 2),
@@ -26,24 +26,24 @@ Models.Room = function(world, position, rotation, definition, state) {
 	this.lights.push(new Light([position[0], position[1], position[2]], [1, 1, 1], distance, true, 0.8));
 	
 	world.add(this.lights);
-	this.model = "Room";
+	this.modelName = "Room";
 };
-Models.Room.extend(Entity);
+CustomEntities.Room.extend(Entity);
 
 /**
  * Regenerates meshes, based on the known definition and the gaps listed in the SpaceShip object.
  * Also regenerates buffers and caches
  */
-Models.Room.prototype.regenerate = function() {
-	this.meshes = this._regenerateMeshes();
-	this.regenerateCache();
+CustomEntities.Room.prototype.regenerate = function() {
+	this.model.meshes = this._regenerateMeshes();
+	this.model.regenerateCache();
 };
 
 /**
  * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
  * @return Object containing meshes list
  */
-Models.Room.prototype._regenerateMeshes = function() {
+CustomEntities.Room.prototype._regenerateMeshes = function() {
 	var unitSize = this.definition.unitSize;
 	
 	var material_METAL_BOLT     = Materials.get("METAL_BOLT");

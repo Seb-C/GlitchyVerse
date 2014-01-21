@@ -4,16 +4,17 @@
  *               - unitSize : Array(3) Vector(3), size of each unit (the smallest possible room size)
  *               - edgeSize : The side of the room edges
  */
-Models.Propeller = function(world, position, rotation, definition, state) {
+CustomEntities.Propeller = function(world, position, rotation, definition, state) {
 	this.spaceShip   = definition.spaceShip;
 	this.minState    = definition.minState;
 	this.maxState    = definition.maxState;
 	this.exertThrust = definition.exertThrust;
 	
-	var meshes = Models.loadMeshesFromObj("propeller.obj", definition.size);
-	
-	this.parent(world, position, rotation, meshes, state);
-	this.model = "Propeller";
+	var model = new Model(world, []);
+	model.loadMeshesFromObj("propeller.obj", definition.size);
+	model.regenerateCache();
+	this.parent(world, model, position, rotation, state);
+	this.modelName = "Propeller";
 	
 	this.onbeforedraw = function() {
 		this._gl.enable(this._gl.CULL_FACE);
@@ -23,14 +24,14 @@ Models.Propeller = function(world, position, rotation, definition, state) {
 		this._gl.disable(this._gl.CULL_FACE);
 	};
 };
-Models.Propeller.extend(Entity);
+CustomEntities.Propeller.extend(Entity);
 
 /**
  * Determines the current power rate of the propeller, based on it's maximum power capacity.
  * @param float (optional) To compare a future state value with it's min and max states instead of current state
  * @return float -1.0 .. 1.0
  */
-Models.Propeller.prototype.getPowerRate = function(forceValue) {
+CustomEntities.Propeller.prototype.getPowerRate = function(forceValue) {
 	var state = forceValue ? forceValue : this.state;
 	var result;
 	if(state < 0) {
@@ -46,7 +47,7 @@ Models.Propeller.prototype.getPowerRate = function(forceValue) {
  * Sets the power state with percents instead of raw values
  * @param float The value to set (-1.0 .. 1.0)
  */
-Models.Propeller.prototype.setPowerRate = function(powerRate) {
+CustomEntities.Propeller.prototype.setPowerRate = function(powerRate) {
 	if(powerRate < 0) {
 		this.changeState(powerRate * -this.minState);
 	} else {
@@ -54,7 +55,7 @@ Models.Propeller.prototype.setPowerRate = function(powerRate) {
 	}
 };
 
-Models.Propeller.prototype.changeState = function(newState) {
+CustomEntities.Propeller.prototype.changeState = function(newState) {
 	this.state = newState;
 	if(this.state < this.minState) this.state = this.minState;
 	if(this.state > this.maxState) this.state = this.maxState;
@@ -79,26 +80,26 @@ Models.Propeller.prototype.changeState = function(newState) {
 	
 	// If required, storing min and max Z for flame, based on the default position
 	if(!this.minFlameZ || !this.maxFlameZ) {
-		var firstFlameMeshVertices = this.meshGroups["flame"][0].vertices;
+		var firstFlameMeshVertices = this.model.meshGroups["flame"][0].vertices;
 		this.minFlameZ = firstFlameMeshVertices[2]; // 2 = Z of 1st vertice
 		this.maxFlameZ = firstFlameMeshVertices[8]; // 8 = Z of 3rd vertice
 	}
 	
 	// Changing lid color
-	var lidMeshes = this.meshGroups["lid"];
+	var lidMeshes = this.model.meshGroups["lid"];
 	var lidTexture = Materials.get(powerRate == 0 ? "BLACK" : "WHITE");
 	for(var i = 0 ; i < lidMeshes.length ; i++) {
 		lidMeshes[i].texture = lidTexture;
 	}
 	
 	// Changing flame size
-	var flameMeshes = this.meshGroups["flame"];
+	var flameMeshes = this.model.meshGroups["flame"];
 	var flameZ = this.minFlameZ + powerRate * (this.maxFlameZ - this.minFlameZ);
 	for(var i = 0 ; i < flameMeshes.length ; i++) {
 		flameMeshes[i].vertices[8] = flameZ; // 8 = Z of 3rd vertice
 	}
 	
-	this.regenerateCache();
+	this.model.regenerateCache();
 		
 	this.spaceShip.updateAcceleration();
 };

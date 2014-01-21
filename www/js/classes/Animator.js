@@ -15,13 +15,13 @@ var Animator = function() {
  * @param Function (optional) Function to call when the animation has ended.
  */
 Animator.prototype.animate = function(entity, animationName, onEnded) {
-	if(entity.model == null) {
+	if(entity.modelName == null) {
 		throw new Error("An entity must have a valid model attribute to be animated.");
 	} else {
-		if(!this.animatedModels[entity.model]) {
-			this._loadObjectAnimationFile(entity.model);
+		if(!this.animatedModels[entity.modelName]) {
+			this._loadObjectAnimationFile(entity.modelName);
 		}
-		var modelAnimations = this.animatedModels[entity.model];
+		var modelAnimations = this.animatedModels[entity.modelName];
 		
 		if(modelAnimations[animationName]) {
 			var anim = modelAnimations[animationName];
@@ -34,7 +34,7 @@ Animator.prototype.animate = function(entity, animationName, onEnded) {
 			
 			// Initializing meshes backup of initial vertices
 			for(var i = 0 ; i < anim.length ; i++) {
-				var meshes = entity.meshGroups[anim[i].group];
+				var meshes = entity.model.meshGroups[anim[i].group];
 				if(meshes) {
 					for(var j = 0 ; j < meshes.length ; j++) {
 						var mesh = meshes[j];
@@ -45,7 +45,7 @@ Animator.prototype.animate = function(entity, animationName, onEnded) {
 				}
 			}
 		} else {
-			throw new Error("Cannot find animation " + animationName + " for model " + entity.model);
+			throw new Error("Cannot find animation " + animationName + " for model " + entity.modelName);
 		}
 	}
 };
@@ -71,7 +71,7 @@ Animator.prototype._loadObjectAnimationFile = function(modelName) {
 		}
 	};
 	
-	var domDocument = FILES.getXML(Models.objectsDirectory + "animations/" + modelName + ".xml").documentElement;
+	var domDocument = FILES.getXML("www/objects/animations/" + modelName + ".xml").documentElement;
 	
 	if(domDocument.getAttribute("object") != modelName) {
 		throw new Error("Error loading animation file for " + modelName + " : object attribute doesn't match.");
@@ -136,7 +136,7 @@ Animator.prototype.update = function() {
 			// Reinitializing meshes vertices before animating it
 			for(var j = 0 ; j < animation.length ; j++) {
 				var g = animation[j].group;
-				var meshes = entity.meshGroups[g];
+				var meshes = entity.model.meshGroups[g];
 				if(meshes) {
 					for(var k = 0 ; k < meshes.length ; k++) {
 						var mesh = meshes[k];
@@ -152,7 +152,7 @@ Animator.prototype.update = function() {
 			var maxEndTime = 0;
 			for(var j = 0 ; j < animation.length ; j++) {
 				var action = animation[j];
-				var meshes = entity.meshGroups[action.group];
+				var meshes = entity.model.meshGroups[action.group];
 				
 				if(meshes) {
 					// To determine when the animation is finished
@@ -197,7 +197,7 @@ Animator.prototype.update = function() {
 				}
 			}
 			
-			entity.regenerateCache();
+			entity.model.regenerateCache();
 			
 			// Animation finished --> removing it
 			if(timePassed > maxEndTime) {

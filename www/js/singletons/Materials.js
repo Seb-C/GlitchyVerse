@@ -24,7 +24,7 @@ var Materials = {
 		if(this._loadedMtlFiles.indexOf(fileName) == -1) {
 			this._loadedMtlFiles.push(fileName);
 			
-			var content = FILES.getText(Models.objectsDirectory + fileName);
+			var content = FILES.getText("www/objects/" + fileName);
 			content = content.replace(/#.*$/gm, ""); // Removing comments
 			content = content.replace(/\t/g, " "); // Replacing tabs with spaces
 			content = content.replace(/(\r\n|\r|\n)+/g, "\n"); // Removing blank lines and using only \n
@@ -44,7 +44,7 @@ var Materials = {
 							if(currentMtlName == null) {
 								throw new Error("Error reading material file " + fileName + " : newmtl must preceed map_Kd " + line[1]);
 							} else {
-								this._texturesToLoad[currentMtlName] = Models.objectsDirectory + line[1];
+								this._texturesToLoad[currentMtlName] = "www/objects/" + line[1];
 							}
 							break;
 						case "d":
