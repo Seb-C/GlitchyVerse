@@ -15,8 +15,8 @@ var MAX_COULOURS                = 10;
 var ATMOSPHERE_PROBABILITY      = 0.5;
 var ATMOSPHERE_RADIUS           = 1.15; // Relative to the planet radius
 var ORBIT_RADIUS                = ATMOSPHERE_RADIUS + 0.075;
-var TREES_MIN_QUALITY           = 0.8; // Minimum quality to show trees
-var MAX_TREE_DENSITY            = 0.5; // Density by radius unit
+var TREES_MIN_QUALITY           = 0.95; // Minimum quality to show trees
+var MAX_TREE_DENSITY            = 5; // Density by radius unit
 
 self.onmessage = function(event) {
 	var seed = event.data.seed;
@@ -411,7 +411,7 @@ self.onmessage = function(event) {
 			);
 			
 			var rotation = quat.create();
-			quat.rotateX(rotation, rotation, angleY);
+			quat.rotateX(rotation, rotation, -angleY);
 			quat.rotateY(rotation, rotation, -angleX);
 			treesData.rotations[i] = rotation;
 		}

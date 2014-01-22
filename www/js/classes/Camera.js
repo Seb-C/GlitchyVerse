@@ -6,7 +6,7 @@ var Camera = function(world) {
 	this.rotation = quat.create();
 	this.moveSpeed = 0.003;
 	//this.moveSpeed = 0.15; // TODO only for tests, remove it
-	this.position = vec3.fromValues(0, 9, 0); // TODO initial position should be dynamic
+	this.position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
 	this.projectionMatrix = null;
@@ -47,7 +47,7 @@ Camera.prototype.getRotation = function() {
 /**
  * @return The camera absolute position in the world
  */
-Camera.prototype.getAbsolutePosition = function() {
+Camera.prototype.getAbsolutePosition = function() { // TODO optimize by caching it for each frame
 	var pos = vec3.clone(this.position);
 	if(this.world.userSpaceShip != null) {
 		var ssRotation = quat.create();

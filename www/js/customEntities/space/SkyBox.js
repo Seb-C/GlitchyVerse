@@ -159,7 +159,7 @@ CustomEntities.SkyBox = function(world) {
 	this.parent(world, model, vec3.create(), quat.create());
 	
 	this.getRelativePosition = function() {
-		return world.camera.position;
+		return world.positionAbsoluteToRelative(world.camera.getAbsolutePosition());
 	};
 };
 CustomEntities.SkyBox.extend(Entity);
