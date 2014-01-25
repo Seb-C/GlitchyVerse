@@ -8,19 +8,21 @@ depuis vidéo du 25/10/2013 :
 - Intégration système de chargement optimisé des fichiers
 - Optimisations du moteur
 - Optimisations de la génération des planètes
-- Améliorations de la génération des planètes
-- Ajout de l'atmosphère des planètes
-- Correction du bug de précision des flottants utilisés pour la position
-- Modification des étoiles pour utiliser des objets normaux plutôt que des particules
-- Simplification de la flamme des propulseurs
-- Suppression du moteur de particules
-- Suppression reliquats inutiles dans le modèle des portes
-- Migration des propulseurs vers un fichier obj
-- Impossible d'entrer en collision avec une planète : on reste en orbite
-- Ajout système de modèles
-- Génération des arbres
 - Débug de la caméra et des calculs de distances qui vont avec (transparence, lumière ...)
-- Ajout des arbres sur les planètes
+- Correction du bug de précision des flottants utilisés pour la position
+- Ajout système de modèles
+
+- Suppression reliquats inutiles dans le modèle des portes
+- Modification des étoiles pour utiliser des objets normaux plutôt que des particules
+- Migration des propulseurs vers un fichier obj
 - Changement de générateur de nombres pseudo aléatoires
 
-- Modélisation personnages ?
+- Améliorations de la génération des planètes
+- Ajout de l'atmosphère des planètes
+- Simplification de la flamme des propulseurs
+- Suppression du moteur de particules
+- Impossible d'entrer en collision avec une planète : on reste en orbite
+- Génération des arbres
+- Ajout des arbres sur les planètes
+
+- Modélisation personnages

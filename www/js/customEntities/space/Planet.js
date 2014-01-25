@@ -170,8 +170,8 @@ CustomEntities.Planet.prototype.generateTreeModel = function() {
 	var leafProbability   = prng.uniform();
 	var minStepLength     = 0.1;
 	
-	var firstBranchMinSize = 1;
-	var firstBranchMaxSize = 5;
+	var firstBranchMinSize = 3;
+	var firstBranchMaxSize = 10;
 	
 	var barkVertices   = [];
 	var barkNormals    = [];
