@@ -9,5 +9,5 @@ DesignerModels["shelf.obj"] = function(entity, context, unitSize, borderSize) {
 	context.textBaseline = "middle";
 	context.fillStyle    = "white";
 	context.font         = Math.round(unitSize * 0.2) + "px Arial";
-	context.fillText("Shelf", 0, 0); // TODO put the name of the resource stored here ("Shelf (Xxx)")
+	context.fillText("Shelf", 0, 0);
 };

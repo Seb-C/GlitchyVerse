@@ -1,6 +1,6 @@
 /**
  * Interface allowing the player to modify his spaceship
- * @param Object containing object types definition
+ * @param Object containing building types definition
  */
 var Designer = function(world, definition) {
 	this.world = world;
@@ -10,10 +10,9 @@ var Designer = function(world, definition) {
 	this.selectedType      = null; // When choosing a new building in a tree
 	this.selectedPosition  = null;
 	this.selectedRotation  = null;
-	this.currentBuildPopup = null;
 	
-	this.contextMenuTargetObject = null;
-	this.contextMenu             = null;
+	this.contextMenuTargetBuilding = null;
+	this.contextMenu               = null;
 	
 	this._DOMWindow = null;
 	this.canvas     = null;
@@ -30,7 +29,7 @@ var Designer = function(world, definition) {
 	this.angleSelectorPointsRadius = 6;
 	this.angleSelectorArrowSize    = 10;
 	
-	// TODO in database, add a field to forbid removing the last object of a determined type (propeller, room ...)
+	// TODO in database, add a field to forbid removing the last building of a determined type (propeller, room ...)
 	
 	// Creating designer button
 	this._DOMShowButton = document.createElement("div");
@@ -49,7 +48,7 @@ var Designer = function(world, definition) {
 	document.body.appendChild(this._DOMShowButton);
 };
 
-// TODO building times + "ghost" objects while building
+// TODO "ghost" buildings while building
 // TODO history window
 
 Designer.prototype.setSpaceShip = function(spaceShip) {
@@ -125,13 +124,13 @@ Designer.prototype._createDesignerCanvas = function() {
 			if(event.button == 2) { // Right click
 				var isGap = (isXInteger || isYInteger) && !(isXInteger && isYInteger); // (isXInteger XOR isYInteger)
 				
-				self.contextMenuTargetObject = null;
+				self.contextMenuTargetBuilding = null;
 				var keys = Object.keys(self.spaceShip.entities);
 				for(var i = keys.length - 1 ; i >= 0 ; i--) {
 					var k = keys[i];
 					var entity   = self.spaceShip.entities[k];
-					var position = self.spaceShip.objectPositions[k];
-					var size     = self.spaceShip.objectSizes[k];
+					var position = self.spaceShip.buildingPositions[k];
+					var size     = self.spaceShip.buildingSizes[k];
 					
 					if(
 						(
@@ -146,14 +145,14 @@ Designer.prototype._createDesignerCanvas = function() {
 							&& mouseRoomCoordinates[1] == position[2]
 						)
 					) {
-						self.contextMenuTargetObject = entity;
+						self.contextMenuTargetBuilding = entity;
 						if(!(entity instanceof CustomEntities.Room)) {
 							// If it's a Room, we have to check if there's another entity on it
 							break;
 						}
 					}
 				}
-				if(self.contextMenuTargetObject != null) {
+				if(self.contextMenuTargetBuilding != null) {
 					// User has right-clicked on something, so we open the menu
 					self.contextMenu.setPosition(event.layerX, event.layerY);
 					self.contextMenu.setAttribute("data-isVisible", true);
@@ -182,35 +181,20 @@ Designer.prototype._createDesignerCanvas = function() {
 				// (cannot be in "else" of the previous "if")
 				if(self.selectedPosition != null && self.selectedRotation != null) {
 					var size = (self.selectedType.is_sizeable ? [self.domSizeX.value, self.domSizeY.value, self.domSizeZ.value] : [1, 1, 1]);
-					self.currentBuildPopup = confirmPopup(
-						self._DOMWindow,
-						"Build : " + self.selectedType.name,
-						function() {
-							self.selectedType.domElement.setAttribute("data-isSelected", false);
-							self.sizeSelectorsContainer.style.display = "none";
-							self.canvas.style.cursor = "default";
-							self.selectedType      = null;
-							self.selectedPosition  = null;
-							self.selectedRotation  = null;
-							
-							return true;
-						},
-						function() {
-							self.world.server.sendMessage("build_query", {
-								"type_id": self.selectedType.id,
-								"position": self.selectedPosition,
-								"size": size,
-								"rotation": self.selectedRotation,
-								"use_money": self.currentBuildPopup.useMoney
-							});
-							// TODO database : ressources + build times
-							self.currentBuildPopup.disableButtons(true);
-							self.currentBuildPopup.setMessage("Please wait ...");
-							
-							return false;
-						}
-					);
-					self.world.resourceManager.buildCostTable(self.currentBuildPopup, self.selectedType.id, size, false);
+					
+					self.world.server.sendMessage("build_query", {
+						"type_id": self.selectedType.id,
+						"position": self.selectedPosition,
+						"size": size,
+						"rotation": self.selectedRotation
+					});
+					
+					self.selectedType.domElement.setAttribute("data-isSelected", false);
+					self.sizeSelectorsContainer.style.display = "none";
+					self.selectedType      = null;
+					self.selectedPosition  = null;
+					self.selectedRotation  = null;
+					self.canvas.style.cursor = "default";
 				}
 			}
 		} else {
@@ -317,11 +301,11 @@ Designer.prototype._createDesignerTree = function() {
 	this._DOMWindow.appendChild(tree);
 	
 	var tempCategoriesDOMSubElements = {};
-	this.types.map(function(object) {
-		if(!tempCategoriesDOMSubElements[object.category]) {
+	this.types.map(function(building) {
+		if(!tempCategoriesDOMSubElements[building.category]) {
 			// Creating category li
 			var categoryDOMElement = document.createElement("li");
-			categoryDOMElement.appendChild(document.createTextNode(object.category));
+			categoryDOMElement.appendChild(document.createTextNode(building.category));
 			categoryDOMElement.setAttribute("data-isOpened", false);
 			categoryDOMElement.addEventListener("click", function(event) {
 				if(event.target == this) {
@@ -333,32 +317,32 @@ Designer.prototype._createDesignerTree = function() {
 			// Creating category ul where to put types
 			categoryDOMSubElement = document.createElement("ul");
 			categoryDOMElement.appendChild(categoryDOMSubElement);
-			tempCategoriesDOMSubElements[object.category] = categoryDOMSubElement;
+			tempCategoriesDOMSubElements[building.category] = categoryDOMSubElement;
 		}
 		
-		object.domElement = document.createElement("li");
-		object.domElement.appendChild(document.createTextNode(object.name));
-		object.domElement.addEventListener("click", function(event) {
+		building.domElement = document.createElement("li");
+		building.domElement.appendChild(document.createTextNode(building.name));
+		building.domElement.addEventListener("click", function(event) {
 			if(self.selectedType != null) {
 				self.selectedType.domElement.setAttribute("data-isSelected", false);
 			}
-			if(self.selectedType == object) {
+			if(self.selectedType == building) {
 				self.selectedType     = null;
 				self.selectedPosition = null;
 				self.selectedRotation = null;
 				self.canvas.style.cursor = "default";
 			} else {
 				this.setAttribute("data-isSelected", true);
-				self.selectedType = object;
+				self.selectedType = building;
 				self.canvas.style.cursor = "copy";
 			}
 			
 			self.sizeSelectorsContainer.style.display = (self.selectedType != null && self.selectedType.is_sizeable) ? "block" : "none";
 		});
-		tempCategoriesDOMSubElements[object.category].appendChild(object.domElement);
+		tempCategoriesDOMSubElements[building.category].appendChild(building.domElement);
 	});
 	
-	// TODO objects names --> client only (in a lang singleton ? How to manage category names ?), then remove names from database
+	// TODO buildings names --> client only (in a lang singleton ? How to manage category names ?), then remove names from database
 };
 
 Designer.prototype._createSizeSelectors = function() {
@@ -423,75 +407,21 @@ Designer.prototype._createContextMenu = function() {
 	this.contextMenu = contextMenu(this._DOMWindow, {
 		"Dismantle": function(event) {
 			// Determining selection type name
-			var objectTypeName = null;
+			var buildingTypeName = null;
 			for(var i = 0 ; i < self.types.length ; i++) {
 				var type = self.types[i];
 				
-				if(self.contextMenuTargetObject.modelName == type.modelName) {
-					objectTypeName = type.name; // TODO better use of a lang/locale class
+				if(self.contextMenuTargetBuilding.modelName == type.modelName) {
+					buildingTypeName = type.name; // TODO better use of a lang/locale class
 				}
 			}
 			
-			self.currentBuildPopup = confirmPopup(
-				self._DOMWindow,
-				"Dismantle : " + objectTypeName,
-				function() {
-					self.contextMenuTargetObject = null;
-					self.contextMenu.setAttribute("data-isVisible", false);
-					
-					return true;
-				},
-				function() {
-					self.world.server.sendMessage("dismantle_query", self.contextMenuTargetObject.id);
-					
-					// TODO database : ressources + build times
-					self.contextMenuTargetObject = null;
-					self.contextMenu.setAttribute("data-isVisible", false);
-					
-					return false;
-				}
-			);
-			var targetObjectId = self.contextMenuTargetObject.id;
-			var targetTypeId   = self.spaceShip.objectTypeIds[targetObjectId];
-			var targetSize     = self.spaceShip.objectSizes[targetObjectId];
-			self.world.resourceManager.buildCostTable(self.currentBuildPopup, targetTypeId, targetSize, true);
+			self.world.server.sendMessage("dismantle_query", self.contextMenuTargetBuilding.id);
+			
+			self.contextMenuTargetBuilding = null;
+			self.contextMenu.setAttribute("data-isVisible", false);
 		}
 	}, false);
-};
-
-/**
- * Changes the popup with the received result.
- * Called by ServerConnection.
- * @param boolean True if building was allowed
- */
-Designer.prototype.setBuildResult = function(result) {
-	if(result) {
-		this.selectedType.domElement.setAttribute("data-isSelected", false);
-		this.sizeSelectorsContainer.style.display = "none";
-		this.currentBuildPopup.close();
-		this.selectedType      = null;
-		this.selectedPosition  = null;
-		this.selectedRotation  = null;
-		this.canvas.style.cursor = "default";
-	} else {
-		this.currentBuildPopup.disableButtons(false);
-		this.currentBuildPopup.setMessage("You can't build that here.");
-	}
-};
-
-/**
- * Changes the popup with the received result.
- * Called by ServerConnection.
- * @param boolean True if deletion was allowed
- */
-Designer.prototype.setDismantleResult = function(result) {
-	if(result) {
-		this.contextMenuTargetObject = null;
-		this.currentBuildPopup.close();
-	} else {
-		this.currentBuildPopup.disableButtons(false);
-		this.currentBuildPopup.setMessage("You can't do that now.");
-	}
 };
 
 /**
@@ -502,7 +432,7 @@ Designer.prototype.draw = function() {
 	var trueSize = this.roomUnitSize * this.zoom;
 	var borderSize = trueSize / 20; // (trueSize / 2) * (0.2 * 2)
 	var halfBorderSize = borderSize / 2;
-	var objectsUnitSize = trueSize - borderSize * 2 + 1;
+	var buildingsUnitSize = trueSize - borderSize * 2 + 1;
 	
 	// Initializing canvas
 	this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -513,11 +443,11 @@ Designer.prototype.draw = function() {
 	
 	// Looping rooms and drawing it
 	var positionAlreadyDrawn = new MDArray(); // To debug some cases + TODO replace MDArray by ES6 maps (see WeakMap for example) and with polyfill ?
-	var objectsKeysToDraw = new Array();
+	var buildingsKeysToDraw = new Array();
 	for(var k in this.spaceShip.entities) {
 		var entity   = this.spaceShip.entities[k];
-		var size     = this.spaceShip.objectSizes[k];
-		var position = this.spaceShip.objectPositions[k];
+		var size     = this.spaceShip.buildingSizes[k];
+		var position = this.spaceShip.buildingPositions[k];
 		
 		if(entity instanceof CustomEntities.Room && (
 			position[1] == this.scroll[1]
@@ -583,17 +513,17 @@ Designer.prototype.draw = function() {
 				}
 			}
 		} else if(position[1] == this.scroll[1]) {
-			objectsKeysToDraw.push(k);
+			buildingsKeysToDraw.push(k);
 		}
 	}
 	
-	for(var i = 0 ; i < objectsKeysToDraw.length ; i++) {
-		var k        = objectsKeysToDraw[i];
+	for(var i = 0 ; i < buildingsKeysToDraw.length ; i++) {
+		var k        = buildingsKeysToDraw[i];
 		var entity   = this.spaceShip.entities[k];
-		var model    = this.spaceShip.objectModels[k];
-		var size     = this.spaceShip.objectSizes[k];
-		var position = this.spaceShip.objectPositions[k];
-		var rotation = this.spaceShip.objectInitialRotations[k];
+		var model    = this.spaceShip.buildingModels[k];
+		var size     = this.spaceShip.buildingSizes[k];
+		var position = this.spaceShip.buildingPositions[k];
+		var rotation = this.spaceShip.buildingInitialRotations[k];
 		
 		this.context.save();
 		this.context.translate(
@@ -605,7 +535,7 @@ Designer.prototype.draw = function() {
 		this.context.scale(size[0], size[2]);
 		
 		if(DesignerModels[model]) {
-			DesignerModels[model](entity, this.context, objectsUnitSize, borderSize);
+			DesignerModels[model](entity, this.context, buildingsUnitSize, borderSize);
 		} else {
 			this.context.textAlign    = "center";
 			this.context.textBaseline = "middle";
@@ -613,7 +543,7 @@ Designer.prototype.draw = function() {
 			this.context.fillStyle    = "white";
 			this.context.strokeStyle  = "black";
 			this.context.lineWidth    = 1;
-			this.context.font         = Math.round(objectsUnitSize * 0.5) + "px Arial";
+			this.context.font         = Math.round(buildingsUnitSize * 0.5) + "px Arial";
 			this.context.fillText  ("?", 0, 0);
 			this.context.strokeText("?", 0, 0);
 		}
@@ -621,7 +551,7 @@ Designer.prototype.draw = function() {
 		this.context.restore();
 	}
 	
-	// Choosing the y angle of the new object
+	// Choosing the y angle of the new building
 	if(this.selectedType != null && this.selectedPosition != null && this.selectedType.rotation_allowed_divisions[1] != 0) {
 		if(this.selectedRotation == null) this.selectedRotation = [0, 0, 0];
 		
@@ -726,5 +656,3 @@ Designer.prototype.draw = function() {
 		}
 	}
 };
-
-// TODO window to view a table of all resources and capacities

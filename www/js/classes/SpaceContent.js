@@ -30,15 +30,15 @@ SpaceContent.prototype.setContent = function(content) {
 	var entitiesToAddToWorld = [];
 	for(var i = 0 ; i < content.length ; i++) {
 		var bodyDefinition = content[i];
-		var objectIndex = tempKeys.indexOf(bodyDefinition.id.toString());
-		if(objectIndex == -1) {
-			// Creating new object
+		var buildingIndex = tempKeys.indexOf(bodyDefinition.id.toString());
+		if(buildingIndex == -1) {
+			// Creating new building
 			var body = new CustomEntities[bodyDefinition.model](this.world, bodyDefinition.position, bodyDefinition.radius, bodyDefinition.seed);
 			this.bodies[bodyDefinition.id] = body;
 			entitiesToAddToWorld.push(body);
 		} else {
 			// Already exists : just removing it from temp ids list
-			tempKeys.splice(objectIndex, 1);
+			tempKeys.splice(buildingIndex, 1);
 		}
 	}
 	if(entitiesToAddToWorld.length > 0) this.world.add(entitiesToAddToWorld);

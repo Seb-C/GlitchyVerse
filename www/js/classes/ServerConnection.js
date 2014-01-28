@@ -60,39 +60,23 @@ ServerConnection.prototype._auth_result = function(data) {
 };
 
 ServerConnection.prototype._data_spaceship = function(data) {
-	var ss = new SpaceShip(this.world, data.id, data.name, data.position, data.rotation, data.objects, data.attributes);
+	var ss = new SpaceShip(this.world, data.id, data.name, data.position, data.rotation, data.buildings, data.attributes);
 	this.world.add(ss);
 	if(data.owner) {
 		this.world.setUserSpaceShip(ss);
 	}
 };
 
-ServerConnection.prototype._data_object_types_definition = function(data) {
+ServerConnection.prototype._data_building_types_definition = function(data) {
 	this.world.setDesigner(data);
 };
 
-ServerConnection.prototype._build_answer = function(data) {
-	this.world.designer.setBuildResult(data);
+ServerConnection.prototype._add_building = function(data) {
+	this.world.spaceShips[data.spaceship_id].addBuilding(data);
 };
 
-ServerConnection.prototype._add_object = function(data) {
-	this.world.spaceShips[data.spaceship_id].addObject(data);
-};
-
-ServerConnection.prototype._dismantle_answer = function(data) {
-	this.world.designer.setDismantleResult(data);
-};
-
-ServerConnection.prototype._delete_object = function(data) {
-	this.world.spaceShips[data.spaceship_id].deleteObject(data.object_id);
-};
-
-ServerConnection.prototype._data_resources_definition = function(data) {
-	this.world.setResourceManager(data);
-};
-
-ServerConnection.prototype._data_resource_stock = function(data) {
-	this.world.resourceManager.setStocks(data);
+ServerConnection.prototype._delete_building = function(data) {
+	this.world.spaceShips[data.spaceship_id].deleteBuilding(data.building_id);
 };
 
 ServerConnection.prototype._data_space_content = function(data) {

@@ -8,11 +8,11 @@
  * @param Array(Object) An object containing the definition of the content of the spaceship.
  *                      Each object has attributes : 
  *                      - model    : Name of the model in models list.
- *                      - is_gap   : boolean, true if the objects has to create a gap in the room
- *                      - is_room  : boolean true if the object has the size of a room and takes the same space
- *                      - position : vec3 Containing the position of object
- *                      - rotation : vec3 Containing the rotation of object
- *                      - size     : vec3 Containing the size of object
+ *                      - is_gap   : boolean, true if the buildings has to create a gap in the room
+ *                      - is_room  : boolean true if the building has the size of a room and takes the same space
+ *                      - position : vec3 Containing the position of building
+ *                      - rotation : vec3 Containing the rotation of building
+ *                      - size     : vec3 Containing the size of building
  * @param Object Containing the definition of some attributes : 
  *               - max_speed_per_propeller_unit : The max speed to add per propeller unit
  */
@@ -47,31 +47,31 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.maxBounds = null;
 	
 	// Objects attributes and entities, with id as key
-	this.objectPositions        = {};
-	this.objectInitialRotations = {}; 
-	this.objectSizes            = {};
-	this.objectTypeIds          = {};
-	this.objectModels           = {};
-	this.objectsByTypeIds       = {};
-	this.roomUnitObjects        = {};
-	this.gapObjects             = {};
-	this.entities               = {};
+	this.buildingPositions        = {};
+	this.buildingInitialRotations = {}; 
+	this.buildingSizes            = {};
+	this.buildingTypeIds          = {};
+	this.buildingModels           = {};
+	this.buildingsByTypeIds       = {};
+	this.roomUnitBuildings        = {};
+	this.gapBuildings             = {};
+	this.entities                 = {};
 	// TODO move this attributes in a class extending Entity, herited by all spaceship models
 	
 	// TODO moving bug (rotating) when windows on the right (or left ?)
 	// TODO can't see spaceship without propeller ?!?
 	
-	// Initializing gap objects list
+	// Initializing gap buildings list
 	for(var i = 0 ; i < definition.length ; i++) {
-		var object = definition[i];
-		if(object.is_gap) {
-			this._addGapObject(object);
+		var building = definition[i];
+		if(building.is_gap) {
+			this._addGapBuilding(building);
 		}
 	}
 	
-	// Creating objects
+	// Creating buildings
 	for(var i = 0 ; i < definition.length ; i++) {
-		this._addObject(definition[i]);
+		this._addBuilding(definition[i]);
 	}
 	
 	this._recalculateMinMaxBounds();
@@ -81,14 +81,14 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 };
 
 /**
- * Recalculates the min and max bounds objects
+ * Recalculates the min and max bounds buildings
  */
 SpaceShip.prototype._recalculateMinMaxBounds = function() {
 	this.minBounds = null;
 	this.maxBounds = null;
 	for(var k in this.entities) {
-		var position = this.objectPositions[k];
-		var size = this.objectSizes[k];
+		var position = this.buildingPositions[k];
+		var size = this.buildingSizes[k];
 		var positionEnd = [position[0] + size[0] - 1, position[1] + size[1] - 1, position[2] + size[2] - 1];
 		if(this.minBounds == null || this.maxBounds == null) {
 			// First iteration
@@ -107,17 +107,17 @@ SpaceShip.prototype._recalculateMinMaxBounds = function() {
 };
 
 /**
- * Adds an object to the spaceship, based on it's definition.
+ * Adds a building to the spaceship, based on it's definition.
  * @param Object Definition received from server.
  */
-SpaceShip.prototype.addObject = function(object) {
-	if(object.is_gap) {
-		this._addGapObject(object);
+SpaceShip.prototype.addBuilding = function(building) {
+	if(building.is_gap) {
+		this._addGapBuilding(building);
 	}
-	this._addObject(object);
+	this._addBuilding(building);
 	
-	var position = object.position;
-	var size = object.size;
+	var position = building.position;
+	var size = building.size;
 	var positionEnd = [position[0] + size[0] - 1, position[1] + size[1] - 1, position[2] + size[2] - 1];
 	
 	// Recalculates min and max bounds (addition => we can do faster than the method)
@@ -134,26 +134,26 @@ SpaceShip.prototype.addObject = function(object) {
  * Adds information to the list of gaps to apply to the rooms, and recreates the required rooms
  * @param Object Definition received from server.
  */
-SpaceShip.prototype._addGapObject = function(object) {
-	this.gapObjects[object.id] = {
-		isLeftOrRight: (object.rotation[1] != 0 && object.rotation[1] != 180),
-		position: object.position
+SpaceShip.prototype._addGapBuilding = function(building) {
+	this.gapBuildings[building.id] = {
+		isLeftOrRight: (building.rotation[1] != 0 && building.rotation[1] != 180),
+		position: building.position
 	};
 	
-	// Determining new object bounds
-	var beginX = object.position[0] - 0.5;
-	var beginY = object.position[1];
-	var beginZ = object.position[2] - 0.5;
-	var endX = beginX + object.size[0];
-	var endY = beginY + object.size[1];
-	var endZ = beginZ + object.size[2];
+	// Determining new building bounds
+	var beginX = building.position[0] - 0.5;
+	var beginY = building.position[1];
+	var beginZ = building.position[2] - 0.5;
+	var endX = beginX + building.size[0];
+	var endY = beginY + building.size[1];
+	var endZ = beginZ + building.size[2];
 	
 	// Recreates the rooms concerned
 	for(var k in this.entities) {
 		var entity = this.entities[k];
 		if(entity instanceof CustomEntities.Room) {
-			var pos  = this.objectPositions[k];
-			var size = this.objectSizes[k];
+			var pos  = this.buildingPositions[k];
+			var size = this.buildingSizes[k];
 			
 			if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 				&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
@@ -166,73 +166,73 @@ SpaceShip.prototype._addGapObject = function(object) {
 };
 
 /**
- * Adds an object to the spaceship, based on it's definition.
+ * Adds a building to the spaceship, based on it's definition.
  * Be careful not to use this private method, there is another 
  * public method with the same name (without underscore)
  * @param Object Definition received from server.
  */
-SpaceShip.prototype._addObject = function(object) {
+SpaceShip.prototype._addBuilding = function(building) {
 	var definition = {};
 	definition.unitSize = this.roomUnitSize;
 	definition.edgeSize = this.edgeSize;
 	definition.lightAndClimEdgeSize = this.lightAndClimEdgeSize;
 	definition.spaceShip = this;
-	definition.size        = object.size;
-	definition.position    = object.position;
-	definition.minState    = object.min_state;
-	definition.maxState    = object.max_state;
-	definition.exertThrust = object.exert_thrust; // TODO attributes to put on .obj models
+	definition.size        = building.size;
+	definition.position    = building.position;
+	definition.minState    = building.min_state;
+	definition.maxState    = building.max_state;
+	definition.exertThrust = building.exert_thrust; // TODO attributes to put on .obj models
 	
 	var rotation = vec3.create();
-	vec3.add(rotation, object.rotation, this.rotation);
+	vec3.add(rotation, building.rotation, this.rotation);
 	
 	var entity;
-	if(CustomEntities[object.model]) {
-		entity = new CustomEntities[object.model](world, vec3.create(), quat.create(), definition, object.state);
+	if(CustomEntities[building.model]) {
+		entity = new CustomEntities[building.model](world, vec3.create(), quat.create(), definition, building.state);
 	} else {
-		if(this.alreadyCreatedModels[object.model]) {
-			var model = this.alreadyCreatedModels[object.model];
+		if(this.alreadyCreatedModels[building.model]) {
+			var model = this.alreadyCreatedModels[building.model];
 		} else {
 			var model = new Model(world, []);
-			model.loadMeshesFromObj(object.model, object.size);
+			model.loadMeshesFromObj(building.model, building.size);
 			model.regenerateCache();
 		}
 		
-		entity = new Entity(world, model, vec3.create(), quat.create(), object.state);
-		entity.modelName = object.model;
+		entity = new Entity(world, model, vec3.create(), quat.create(), building.state);
+		entity.modelName = building.model;
 	}
 	entity.spaceShip = this;
-	entity.id = object.id;
+	entity.id = building.id;
 	
-	this.objectPositions[object.id] = object.position;
-	this.objectSizes    [object.id] = object.size;
-	this.objectModels   [object.id] = object.model;
-	this.objectTypeIds  [object.id] = object.type_id;
-	this.roomUnitObjects[object.id] = object.is_position_by_room_unit;
-	this.entities       [object.id] = entity;
-	if(object.rotation[0] != 0 || object.rotation[1] != 0 || object.rotation[2] != 0) {
-		this.objectInitialRotations[object.id] = object.rotation;
+	this.buildingPositions[building.id] = building.position;
+	this.buildingSizes    [building.id] = building.size;
+	this.buildingModels   [building.id] = building.model;
+	this.buildingTypeIds  [building.id] = building.type_id;
+	this.roomUnitBuildings[building.id] = building.is_position_by_room_unit;
+	this.entities       [building.id] = entity;
+	if(building.rotation[0] != 0 || building.rotation[1] != 0 || building.rotation[2] != 0) {
+		this.buildingInitialRotations[building.id] = building.rotation;
 	}
-	if(!this.objectsByTypeIds[object.type_id]) this.objectsByTypeIds[object.type_id] = new Array();
-	this.objectsByTypeIds[object.type_id].push(object.id);
+	if(!this.buildingsByTypeIds[building.type_id]) this.buildingsByTypeIds[building.type_id] = new Array();
+	this.buildingsByTypeIds[building.type_id].push(building.id);
 	
-	this.refreshObjectPositionAndRotation(entity.id);
+	this.refreshBuildingPositionAndRotation(entity.id);
 	this.world.add(entity);
 	this.updateAcceleration();
 };
 
 /**
- * Deletes an object from the spaceship, based on it's id.
- * @param int Id of the object to delete
+ * Deletes a building from the spaceship, based on it's id.
+ * @param int Id of the building to delete
  */
-SpaceShip.prototype.deleteObject = function(id) {
-	if(this.gapObjects[id]) {
-		delete this.gapObjects[id];
+SpaceShip.prototype.deleteBuilding = function(id) {
+	if(this.gapBuildings[id]) {
+		delete this.gapBuildings[id];
 		
-		var position = this.objectPositions[id];
-		var size = this.objectSizes[id];
+		var position = this.buildingPositions[id];
+		var size = this.buildingSizes[id];
 		
-		// Determining object bounds
+		// Determining building bounds
 		var beginX = position[0] - 0.5;
 		var beginY = position[1];
 		var beginZ = position[2] - 0.5;
@@ -244,8 +244,8 @@ SpaceShip.prototype.deleteObject = function(id) {
 		for(var k in this.entities) {
 			var entity = this.entities[k];
 			if(entity instanceof CustomEntities.Room) {
-				var pos  = this.objectPositions[k];
-				var size = this.objectSizes[k];
+				var pos  = this.buildingPositions[k];
+				var size = this.buildingSizes[k];
 				
 				if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 					&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
@@ -259,16 +259,16 @@ SpaceShip.prototype.deleteObject = function(id) {
 	
 	var entity = this.entities[id];
 	
-	this.objectsByTypeIds[this.objectTypeIds[id]].splice(
-		this.objectsByTypeIds[this.objectTypeIds[id]].indexOf(id),
+	this.buildingsByTypeIds[this.buildingTypeIds[id]].splice(
+		this.buildingsByTypeIds[this.buildingTypeIds[id]].indexOf(id),
 		1
 	);
-	delete this.objectPositions[id];
-	delete this.objectInitialRotations[id];
-	delete this.objectSizes[id];
-	delete this.objectTypeIds[id];
-	delete this.objectModels[id];
-	delete this.roomUnitObjects[id];
+	delete this.buildingPositions[id];
+	delete this.buildingInitialRotations[id];
+	delete this.buildingSizes[id];
+	delete this.buildingTypeIds[id];
+	delete this.buildingModels[id];
+	delete this.roomUnitBuildings[id];
 	delete this.entities[id];
 	
 	this._recalculateMinMaxBounds();
@@ -277,21 +277,21 @@ SpaceShip.prototype.deleteObject = function(id) {
 };
 
 /**
- * Recalculates the position of the object
- * @param int The id of the object
+ * Recalculates the position of the building
+ * @param int The id of the building
  */
-SpaceShip.prototype.refreshObjectPositionAndRotation = function(id) {
+SpaceShip.prototype.refreshBuildingPositionAndRotation = function(id) {
 	var entity = this.entities[id];
 	var position;
 	
-	if(this.roomUnitObjects[id]) {
+	if(this.roomUnitBuildings[id]) {
 		position = vec3.fromValues(
-			(this.objectPositions[id][0] + (this.objectSizes[id][0] / 2) - 0.5) * this.roomUnitSize[0], 
-			(this.objectPositions[id][1] + (this.objectSizes[id][1] / 2) - 0.5) * this.roomUnitSize[1], 
-			(this.objectPositions[id][2] + (this.objectSizes[id][2] / 2) - 0.5) * this.roomUnitSize[2]
+			(this.buildingPositions[id][0] + (this.buildingSizes[id][0] / 2) - 0.5) * this.roomUnitSize[0], 
+			(this.buildingPositions[id][1] + (this.buildingSizes[id][1] / 2) - 0.5) * this.roomUnitSize[1], 
+			(this.buildingPositions[id][2] + (this.buildingSizes[id][2] / 2) - 0.5) * this.roomUnitSize[2]
 		);
 	} else {
-		position = vec3.clone(this.objectPositions[id]);
+		position = vec3.clone(this.buildingPositions[id]);
 	}
 	
 	rotatePoint(position, [degToRad(this.rotation[0]), degToRad(this.rotation[1]), degToRad(this.rotation[2])]);
@@ -302,8 +302,8 @@ SpaceShip.prototype.refreshObjectPositionAndRotation = function(id) {
 	// Rotating the entity
 	var entityRotation = entity.getRotation();
 	quat.identity(entityRotation);
-	if(this.objectInitialRotations[id]) {
-		var initialRotation = this.objectInitialRotations[id];
+	if(this.buildingInitialRotations[id]) {
+		var initialRotation = this.buildingInitialRotations[id];
 		quat.rotateX(entityRotation, entityRotation, degToRad(initialRotation[0]));
 		quat.rotateY(entityRotation, entityRotation, degToRad(initialRotation[1]));
 		quat.rotateZ(entityRotation, entityRotation, degToRad(initialRotation[2]));
@@ -315,8 +315,8 @@ SpaceShip.prototype.refreshObjectPositionAndRotation = function(id) {
 };
 
 /**
- * Returns the spaceship objects which are able to exert thrust.
- * @return Array List of the objects
+ * Returns the spaceship buildings which are able to exert thrust.
+ * @return Array List of the buildings
  */
 SpaceShip.prototype.getEntitiesWhichExertsThrust = function(modelClass) {
 	var r = new Array();
@@ -379,7 +379,7 @@ SpaceShip.prototype.updatePosition = function() {
 	
 	// Updating entities positions and rotations
 	for(var k in this.entities) {
-		this.refreshObjectPositionAndRotation(k);
+		this.refreshBuildingPositionAndRotation(k);
 	}
 	this.world.lightManager.regenerateCache();
 };
@@ -428,12 +428,12 @@ SpaceShip.prototype.updateAcceleration = function() {
 	this._linearMaxSpeed = 0;
 	for(var k in this.entities) {
 		if(this.entities[k].exertThrust) {
-			var positionX = this.objectPositions[k][0] + (this.objectSizes[k][0] / 2 - 0.5);
-			var positionY = this.objectPositions[k][1] + (this.objectSizes[k][1] / 2 - 0.5);
+			var positionX = this.buildingPositions[k][0] + (this.buildingSizes[k][0] / 2 - 0.5);
+			var positionY = this.buildingPositions[k][1] + (this.buildingSizes[k][1] / 2 - 0.5);
 			
 			var maxState = this.entities[k].maxState;
 			var state = this.entities[k].state;
-			var size = this.objectSizes[k];
+			var size = this.buildingSizes[k];
 			var sizeMultiplicator = size[0] * size[1] * size[2];
 			
 			this.rotationSpeed[1] += (middleXY[0] - positionX) * state * sizeMultiplicator;

@@ -26,7 +26,6 @@ var World = function() {
 	this.userSpaceShipMoveTimer = null;
 	this.userSpaceShipMoveTimerDelay = 5000;
 	this.designer         = null; // Initialized by ServerConnection
-	this.resourceManager  = null;
 	this.spaceShips       = {};
 	this.spaceContent     = new SpaceContent(this);
 	
@@ -102,7 +101,6 @@ World.prototype.sortEntities = function() {
 World.prototype.setUserSpaceShip = function(spaceShip) {
 	this.userSpaceShip = spaceShip;
 	this.designer       .setSpaceShip(this.userSpaceShip);
-	this.resourceManager.setSpaceShip(this.userSpaceShip);
 	
 	var self = this;
 	var lastPos = vec3.clone(this.userSpaceShip.getPosition());
@@ -122,15 +120,6 @@ World.prototype.setUserSpaceShip = function(spaceShip) {
 World.prototype.setDesigner = function(definition) {
 	this.designer = new Designer(this, definition);
 	if(this.userSpaceShip != null) this.designer.setSpaceShip(this.userSpaceShip);
-};
-
-/**
- * Creates the resource manager with the given definition
- * @see ResourceManager constructor definition
- */
-World.prototype.setResourceManager = function(definition) {
-	this.resourceManager = new ResourceManager(definition);
-	if(this.userSpaceShip != null) this.resourceManager.setSpaceShip(this.userSpaceShip);
 };
 
 /**

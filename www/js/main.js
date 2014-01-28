@@ -51,7 +51,12 @@ if(gl) {
 	
 	// Fullscreen button (and it have to resize canvas to be sure to have a good resolution
 	document.getElementById("fullscreenButton").addEventListener("click", function() {
-		document.body.requestFullscreen();
+		if(document.documentElement.webkitRequestFullscreen) {
+			// Webkit developers, I hate you ...
+			document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+		} else {
+			document.documentElement.requestFullscreen();
+		}
 		
 		// Not sure if it should be automatically thrown, but it's better to be sure :)
 		resize();

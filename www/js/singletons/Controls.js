@@ -76,7 +76,7 @@ var Controls = {
 		});
 		
 		// Keyboard
-		window.addEventListener("keydown", function(event) {
+		window.addEventListener("keydown", function(event) { print(Math.random());
 			if(self.hasFocus && event.target.tagName != "INPUT") {
 				var key = event.keyCode || event.which;
 				self._keys[key] = true;

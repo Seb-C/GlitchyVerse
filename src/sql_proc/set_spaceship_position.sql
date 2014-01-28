@@ -1,4 +1,4 @@
--- Updates the position and the rotation of the spaceship,only if
+-- Updates the position and the rotation of the spaceship, only if
 -- the new position is coherent with the maximum speed of the ship
 -- @param REAL :MAX_SPEED_PER_PROPELLER_UNIT
 -- @param REAL :MOVE_MAXIMUM_ERROR_RATE
@@ -27,15 +27,15 @@ AND (
 	) < :passed_time_rate * (1 + :MOVE_MAXIMUM_ERROR_RATE) * (
 		SELECT
 			SUM(
-				object_size_x
-				* object_size_y
-				* object_size_z
-				* object_type_max_state
+				building_size_x
+				* building_size_y
+				* building_size_z
+				* building_type_max_state
 				* :MAX_SPEED_PER_PROPELLER_UNIT
 			) AS max_speed
-		FROM object
-		NATURAL INNER JOIN object_type
+		FROM building
+		NATURAL INNER JOIN building_type
 		WHERE spaceship_id = :spaceship_id
-		AND object_type_can_exert_thrust = 1
+		AND building_type_can_exert_thrust = 1
 	)
 )

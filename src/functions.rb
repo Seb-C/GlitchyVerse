@@ -13,61 +13,28 @@ def make_unique_integer(*args)
 	args.map(&:to_i).join("b").gsub("-", "a").to_i(12)
 end
 
-# Creates an object containing objects types, categories and constraints definition, 
+# Creates an object containing building types, categories and constraints definition, 
 # to send to clients when connecting
 # @return Array Containing types definition and a sub-array with constraints
-def get_object_types_definition()
+def get_building_types_definition()
 	definition = []
-	$DB.get_object_types().each do |row|
+	$DB.get_building_types().each do |row|
 		definition.push({
-			"id"               => row["object_type_id"],
-			"name"             => row["object_type_name"],
-			"category"         => row["object_type_category_name"],
-			"model"            => row["object_type_model"],
-			"is_gap"           => row["object_type_is_gap"] == 1,
-			"default_state"    => row["object_type_default_state"],
-			"allow_rotation_x" => row["object_type_allow_rotation_x"],
-			"allow_rotation_y" => row["object_type_allow_rotation_y"],
-			"allow_rotation_z" => row["object_type_allow_rotation_z"],
-			"is_sizeable"      => row["object_type_is_sizeable"] == 1,
+			"id"               => row["building_type_id"],
+			"name"             => row["building_type_name"],
+			"category"         => row["building_type_category_name"],
+			"model"            => row["building_type_model"],
+			"is_gap"           => row["building_type_is_gap"] == 1,
+			"default_state"    => row["building_type_default_state"],
+			"allow_rotation_x" => row["building_type_allow_rotation_x"],
+			"allow_rotation_y" => row["building_type_allow_rotation_y"],
+			"allow_rotation_z" => row["building_type_allow_rotation_z"],
+			"is_sizeable"      => row["building_type_is_sizeable"] == 1,
 			"rotation_allowed_divisions" => [
-				row["object_type_rotation_x_allowed_divisions"],
-				row["object_type_rotation_y_allowed_divisions"],
-				row["object_type_rotation_z_allowed_divisions"]
+				row["building_type_rotation_x_allowed_divisions"],
+				row["building_type_rotation_y_allowed_divisions"],
+				row["building_type_rotation_z_allowed_divisions"]
 			]
-		})
-	end
-	
-	definition
-end
-
-# Creates an object containing resource types and costs
-# to send to clients when connecting
-# @return Array Containing resources types definition
-def get_resources_definition()
-	definition = {}
-	
-	$DB.get_resource_types().each do |row|
-		definition[row["resource_type_id"]] = {
-			"name"       => row["resource_type_name"],
-			"is_money"   => row["resource_type_is_money"],
-			"costs"      => [],
-			"containers" => []
-		}
-	end
-	
-	$DB.get_resource_costs().each do |row|
-		definition[row["resource_type_id"]]["costs"].push({
-			"object_type_id" => row["object_type_id"],
-			"build_cost"     => row["resource_cost_build_cost"],
-			"consumption"    => row["resource_cost_consumption"]
-		})
-	end
-	
-	$DB.get_resource_containers().each do |row|
-		definition[row["resource_type_id"]]["containers"].push({
-			"object_type_id" => row["object_type_id"],
-			"capacity"       => row["resource_container_capacity"]
 		})
 	end
 	

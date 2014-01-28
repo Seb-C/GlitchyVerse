@@ -52,8 +52,8 @@ CustomEntities.Room.prototype._regenerateMeshes = function() {
 	var material_LIGHT_AND_CLIM = Materials.get("LIGHT_AND_CLIM");
 	
 	var gaps = {};
-	for(var k in this.definition.spaceShip.gapObjects) {
-		var gap = this.definition.spaceShip.gapObjects[k];
+	for(var k in this.definition.spaceShip.gapBuildings) {
+		var gap = this.definition.spaceShip.gapBuildings[k];
 		
 		var side = null;
 		var pos = null;

@@ -40,7 +40,7 @@ CustomEntities.Planet = function(world, position, radius, seed) {
 		}
 		var quality = (Math.exp(1 - (distanceFromCamera / maxVisibleDistance)) - 1) / (Math.E - 1);
 		
-		// If quality difference is significative, rebuilding the planet
+		// If quality difference is significative, recreating the planet
 		if(self.lastQuality == null || Math.abs((quality / self.lastQuality) - 1) >= self.MIN_QUALITY_DIFFERENCE_TO_UPDATE) {
 			// Creating planet, based on the given definition
 			if(!self.isWaitingForCreation) {

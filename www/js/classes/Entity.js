@@ -20,7 +20,7 @@ var Entity = function(world, model, position, rotation, state) {
 	// Used as cache by world to define draw order
 	this.distanceFromCamera = 0;
 	
-	// Initializing object state
+	// Initializing entity state
 	if(this.changeState == null) {
 		this.state = typeof(state) == "undefined" ? null : state;
 	} else {

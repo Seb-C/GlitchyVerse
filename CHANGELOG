@@ -11,6 +11,7 @@ depuis vidéo du 25/10/2013 :
 - Débug de la caméra et des calculs de distances qui vont avec (transparence, lumière ...)
 - Correction du bug de précision des flottants utilisés pour la position
 - Ajout système de modèles
+- Structure de la base de données pour les items
 
 - Suppression reliquats inutiles dans le modèle des portes
 - Modification des étoiles pour utiliser des objets normaux plutôt que des particules
@@ -24,5 +25,6 @@ depuis vidéo du 25/10/2013 :
 - Impossible d'entrer en collision avec une planète : on reste en orbite
 - Génération des arbres
 - Ajout des arbres sur les planètes
+- Suppression du système de ressources en vue d'un système d'inventaires différent
 
 - Modélisation personnages

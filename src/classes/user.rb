@@ -56,54 +56,54 @@ class User
 		end
 	end
 	
-	# Formats a row from database (get_spaceship_object[s])
+	# Formats a row from database (get_spaceship_building[s])
 	# @param Object row from database
 	# @return Object formated
-	def format_object_row(row)
+	def format_building_row(row)
 		{
-			"id"      => row["object_id"],
-			"type_id" => row["object_type_id"],
-			"model"   => row["object_type_model"],
-			"is_gap"  => row["object_type_is_gap"] == 1,
-			"is_position_by_room_unit" => row["object_type_is_position_by_room_unit"] == 1,
+			"id"      => row["building_id"],
+			"type_id" => row["building_type_id"],
+			"model"   => row["building_type_model"],
+			"is_gap"  => row["building_type_is_gap"] == 1,
+			"is_position_by_room_unit" => row["building_type_is_position_by_room_unit"] == 1,
 			"position" => [
-				row["object_position_x"],
-				row["object_position_y"],
-				row["object_position_z"]
+				row["building_position_x"],
+				row["building_position_y"],
+				row["building_position_z"]
 			],
 			"rotation" => [
-				row["object_rotation_x"],
-				row["object_rotation_y"],
-				row["object_rotation_z"]
+				row["building_rotation_x"],
+				row["building_rotation_y"],
+				row["building_rotation_z"]
 			],
 			"size" => [
-				row["object_size_x"],
-				row["object_size_y"],
-				row["object_size_z"]
+				row["building_size_x"],
+				row["building_size_y"],
+				row["building_size_z"]
 			],
-			"state"        => row["object_state"],
-			"min_state"    => row["object_type_min_state"],
-			"max_state"    => row["object_type_max_state"],
-			"exert_thrust" => row["object_type_can_exert_thrust"]
+			"state"        => row["building_state"],
+			"min_state"    => row["building_type_min_state"],
+			"max_state"    => row["building_type_max_state"],
+			"exert_thrust" => row["building_type_can_exert_thrust"]
 		}
 	end
 	
 	# Sends the spaceship informations using the message handler given
 	# @param MessageHandler Object to use to send data
 	def send_spaceship_data(message_handler)
-		objects = []
-		$DB.get_spaceship_objects(:user_id => @user_id).each do |row|
-			objects.push(self.format_object_row(row))
+		buildings = []
+		$DB.get_spaceship_buildings(:user_id => @user_id).each do |row|
+			buildings.push(self.format_building_row(row))
 		end
 		
 		# Preparing data to send
 		spaceship_data = {
-			"id"       => @spaceship_id,
-			"owner"    => true,
-			"name"     => @name,
-			"position" => @position,
-			"rotation" => @rotation,
-			"objects"  => objects,
+			"id"         => @spaceship_id,
+			"owner"      => true,
+			"name"       => @name,
+			"position"   => @position,
+			"rotation"   => @rotation,
+			"buildings"  => buildings,
 			"attributes" => {
 				"max_speed_per_propeller_unit" => $SPACESHIP_MAX_SPEED_PER_PROPELLER_UNIT
 			}
@@ -117,19 +117,11 @@ class User
 		message_handler.send_message_broadcast("data_spaceship", spaceship_data, self)
 	end
 	
-	def send_resource_stock(message_handler)
-		stocks = {}
-		$DB.get_resource_stocks(:spaceship_id => @spaceship_id).each do |row|
-			stocks[row["resource_type_id"]] = row["resource_stock"]
-		end
-		message_handler.send_message("data_resource_stock", stocks, self)
-	end
-	
 	def update_propellers(message_handler, propeller_id, power_level)
 		$DB.set_propellers_power_rate(
 			:spaceship_id => @spaceship_id,
 			:power_rate   => power_level,
-			:object_id    => propeller_id
+			:building_id  => propeller_id
 		)
 		message_handler.send_message_broadcast("update_propellers", {
 			"spaceship_id" => @spaceship_id,
@@ -139,11 +131,11 @@ class User
 	end
 	
 	def update_doors(message_handler, propeller_id, state)
-		$DB.set_objects_state(
+		$DB.set_buildings_state(
 			:spaceship_id => @spaceship_id,
-			:model        => "Door", # TODO replace model by type_id here + block possibility to update multiple objects at a time ?
+			:model        => "Door", # TODO replace model by type_id here + block possibility to update multiple buildings at a time ?
 			:state        => state,
-			:object_id    => propeller_id
+			:building_id  => propeller_id
 		)
 		# TODO send information to other clients ?
 	end
@@ -180,34 +172,20 @@ class User
 		}, send_position_to_user ? self : nil)
 	end
 	
-	# Tries to add an object to the spaceship
+	# Tries to add a building to the spaceship
 	# @param MessageHandler Object to use to send data
-	# @param int The id of the object type
-	# @param Array (vec3) Position of the new object
-	# @param Array (vec3) Size of the new object
-	# @param Array (vec3) Rotation of the new object
-	# @param boolean True if we only use money resource
-	# @return Id of the inserted object, or nil if the object hasn't been added
-	def add_object(message_handler, type_id, position, size, rotation, use_money)
+	# @param int The id of the building type
+	# @param Array (vec3) Position of the new building
+	# @param Array (vec3) Size of the new building
+	# @param Array (vec3) Rotation of the new building
+	# @return Id of the inserted building, or nil if the building hasn't been added
+	def add_building(message_handler, type_id, position, size, rotation)
 		# TODO add controls because it can crash if we don't send a well formated rotation (for example)
 		# TODO also handle SQL errors (constraint violation, null values from the client) ...
 		
 		$DB.transaction()
 		
-		$DB.buy_object(
-			:spaceship_id   => @spaceship_id,
-			:object_type_id => type_id,
-			:use_money      => use_money ? 1 : 0,
-			:object_size_x  => size[0],
-			:object_size_y  => size[1],
-			:object_size_z  => size[2]
-		)
-		if $DB.affected_rows() == 0
-			$DB.rollback()
-			return false
-		end
-		
-		$DB.insert_object(
+		$DB.insert_building(
 			:spaceship_id => @spaceship_id,
 			:type_id      => type_id,
 			:position_x   => position[0],
@@ -227,41 +205,31 @@ class User
 		else
 			$DB.commit()
 			
-			object = self.format_object_row(
-				$DB.get_spaceship_object(
+			building = self.format_building_row(
+				$DB.get_spaceship_building(
 					:user_id => @user_id,
-					:object_id => $DB.last_inserted_id()
+					:building_id => $DB.last_inserted_id()
 				).next()
 			)
-			object["spaceship_id"] = @spaceship_id
+			building["spaceship_id"] = @spaceship_id
 			
-			message_handler.send_message_broadcast("add_object", object)
-			self.send_resource_stock(message_handler)
+			message_handler.send_message_broadcast("add_building", building)
 			
 			return true
 		end
 	end
 	
-	# Tries to delete an object from the spaceship
+	# Tries to delete a building from the spaceship
 	# @param MessageHandler Object to use to send data
-	# @param int The id of the object
-	# @return boolean True if the object has been deleted
-	def delete_object(message_handler, object_id)
+	# @param int The id of the building
+	# @return boolean True if the building has been deleted
+	def delete_building(message_handler, building_id)
 		
 		$DB.transaction()
 		
-		$DB.sell_object(
+		$DB.delete_building(
 			:spaceship_id => @spaceship_id,
-			:object_id    => object_id
-		)
-		#if $DB.affected_rows() == 0
-		#	$DB.rollback()
-		#	return false
-		#end
-		
-		$DB.delete_object(
-			:spaceship_id => @spaceship_id,
-			:object_id    => object_id
+			:building_id  => building_id
 		)
 		
 		if $DB.affected_rows() == 0
@@ -270,11 +238,10 @@ class User
 		else
 			$DB.commit()
 			
-			message_handler.send_message_broadcast("delete_object", {
-				"object_id"    => object_id,
+			message_handler.send_message_broadcast("delete_building", {
+				"building_id"  => building_id,
 				"spaceship_id" => @spaceship_id
 			})
-			self.send_resource_stock(message_handler)
 			
 			return true
 		end

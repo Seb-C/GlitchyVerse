@@ -61,11 +61,9 @@ class MessageHandler
 		}, user)
 		
 		if is_valid
-			# Sending spaceship and resources data
-			self.send_message("data_object_types_definition", $OBJECT_TYPES_DEFINITION, user)
-			self.send_message("data_resources_definition",    $RESOURCES_DEFINITION,    user)
+			# Sending spaceship data
+			self.send_message("data_building_types_definition", $BUILDING_TYPES_DEFINITION, user)
 			user.send_spaceship_data(self)
-			user.send_resource_stock(self)
 			
 			# Sending space data
 			$SPACE.send_visible_chunks(user)
@@ -84,13 +82,13 @@ class MessageHandler
 		user.update_position(self, data["position"], data["rotation"])
 	end
 	
-	# TODO better and unique way to update objects, with boolean indicating if the object is freely updatable or not
+	# TODO better and unique way to update building, with boolean indicating if the building is freely updatable or not
 	
 	def build_query(data, user)
-		self.send_message("build_answer", user.add_object(self, data["type_id"], data["position"], data["size"], data["rotation"], data["use_money"]), user)
+		user.add_building(self, data["type_id"], data["position"], data["size"], data["rotation"])
 	end
 	
 	def dismantle_query(data, user)
-		self.send_message("dismantle_answer", user.delete_object(self, data), user)
+		user.delete_building(self, data)
 	end
 end
