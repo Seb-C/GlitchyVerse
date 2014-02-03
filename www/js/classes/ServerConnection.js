@@ -76,7 +76,10 @@ ServerConnection.prototype._add_building = function(data) {
 };
 
 ServerConnection.prototype._delete_building = function(data) {
-	this.world.spaceShips[data.spaceship_id].deleteBuilding(data.building_id);
+	var ss = this.world.spaceShips[data.spaceship_id];
+	var building = ss.entities[data.building_id];
+	ss.deleteBuilding(data.building_id);
+	this.world.camera.notifyBuildingRemoved(building);
 };
 
 ServerConnection.prototype._data_space_content = function(data) {

@@ -84,7 +84,8 @@ class User
 			"state"        => row["building_state"],
 			"min_state"    => row["building_type_min_state"],
 			"max_state"    => row["building_type_max_state"],
-			"exert_thrust" => row["building_type_can_exert_thrust"]
+			"exert_thrust" => row["building_type_can_exert_thrust"],
+			"is_controllable" => row["building_type_is_controllable"] == 1
 		}
 	end
 	

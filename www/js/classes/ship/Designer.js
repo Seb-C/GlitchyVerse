@@ -102,6 +102,8 @@ Designer.prototype._createDesignerCanvas = function() {
 	this.canvas.addEventListener("mousewheel",     function(event) { mouseWheelCallBack(event.wheelDelta, event.layerX, event.layerY); });
 	this.canvas.addEventListener("DOMMouseScroll", function(event) { mouseWheelCallBack(-40*event.detail, event.layerX, event.layerY); });
 	
+	// TODO deletion of a room in designer
+	
 	// Moving
 	var initialMousePos = null;
 	var lastMousePos = null;
@@ -129,8 +131,8 @@ Designer.prototype._createDesignerCanvas = function() {
 				for(var i = keys.length - 1 ; i >= 0 ; i--) {
 					var k = keys[i];
 					var entity   = self.spaceShip.entities[k];
-					var position = self.spaceShip.buildingPositions[k];
-					var size     = self.spaceShip.buildingSizes[k];
+					var position = entity.positionInSpaceShip;
+					var size     = entity.sizeInSpaceShip;
 					
 					if(
 						(
@@ -146,7 +148,7 @@ Designer.prototype._createDesignerCanvas = function() {
 						)
 					) {
 						self.contextMenuTargetBuilding = entity;
-						if(!(entity instanceof CustomEntities.Room)) {
+						if(!(entity instanceof Building.builders.Room)) {
 							// If it's a Room, we have to check if there's another entity on it
 							break;
 						}
@@ -446,10 +448,10 @@ Designer.prototype.draw = function() {
 	var buildingsKeysToDraw = new Array();
 	for(var k in this.spaceShip.entities) {
 		var entity   = this.spaceShip.entities[k];
-		var size     = this.spaceShip.buildingSizes[k];
-		var position = this.spaceShip.buildingPositions[k];
+		var size     = entity.sizeInSpaceShip;
+		var position = entity.positionInSpaceShip;
 		
-		if(entity instanceof CustomEntities.Room && (
+		if(entity.modelName == "Room" && (
 			position[1] == this.scroll[1]
 			|| (
 				position[1] < this.scroll[1]
@@ -520,10 +522,10 @@ Designer.prototype.draw = function() {
 	for(var i = 0 ; i < buildingsKeysToDraw.length ; i++) {
 		var k        = buildingsKeysToDraw[i];
 		var entity   = this.spaceShip.entities[k];
-		var model    = this.spaceShip.buildingModels[k];
-		var size     = this.spaceShip.buildingSizes[k];
-		var position = this.spaceShip.buildingPositions[k];
-		var rotation = this.spaceShip.buildingInitialRotations[k];
+		var model    = entity.modelName;
+		var size     = entity.sizeInSpaceShip;
+		var position = entity.positionInSpaceShip;
+		var rotation = entity.initialRotation;
 		
 		this.context.save();
 		this.context.translate(

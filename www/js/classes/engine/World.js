@@ -111,11 +111,13 @@ World.prototype.setUserSpaceShip = function(spaceShip) {
 			self.server.sendMessage("update_position", {position: newPosition, rotation: self.userSpaceShip.rotation});
 		}
 	}, this.userSpaceShipMoveTimerDelay, false);
+	
+	// TODO use first building with type.is_controllable as controlled by camera
 };
 
 /**
  * Creates the designer with the given definition
- * @see Designer constructor definition
+ * @see functions.rb : get_building_types_definition
  */
 World.prototype.setDesigner = function(definition) {
 	this.designer = new Designer(this, definition);

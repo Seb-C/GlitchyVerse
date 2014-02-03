@@ -1,6 +1,6 @@
 var SpaceContent = function(world) {
 	this.world = world;
-	this.bodies = {};
+	this.bodies = {}; // TODO change customEntities to the same structure than buildingBuilders
 	
 	this.skyBox = null;
 	

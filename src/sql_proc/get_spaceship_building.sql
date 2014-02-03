@@ -19,7 +19,8 @@ SELECT
 	building_state,
 	building_type_min_state,
 	building_type_max_state,
-	building_type_can_exert_thrust
+	building_type_can_exert_thrust,
+	building_type_is_controllable
 FROM spaceship
 NATURAL INNER JOIN building
 NATURAL INNER JOIN building_type

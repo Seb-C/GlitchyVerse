@@ -13,6 +13,7 @@ var Camera = function(world) {
 	this.lastModelViewMatrix = mat4.create();
 	this.fovy = 45;
 	this.viewDistance = 1000000;
+	this.targetBuilding = null;
 	// TODO customizable fovy and view distance
 };
 
@@ -28,6 +29,16 @@ Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
 /*Camera.prototype.getPosition = function() {
 	return vec3.clone(this.position); // TODO is it useful to clone it ?
 };*/
+
+/**
+ * Resets the camera if the building which has been removed is the one targetted by the camera.
+ * @param Building The removed building
+ */
+Camera.prototype.notifyBuildingRemoved = function(building) {
+	if(building == this.targetBuilding) {
+		this.targetBuilding = null;
+	}
+};
 
 Camera.prototype.getRotation = function() {
 	var rotation = quat.clone(this.rotation);
@@ -68,6 +79,17 @@ Camera.prototype.getAbsolutePosition = function() { // TODO optimize by caching 
  * @return mat4 The model/view matrix
  */
 Camera.prototype.update = function() {
+	var userSpaceShip = this.world.userSpaceShip;
+	
+	if(this.targetBuilding == null && userSpaceShip != null) {
+		for(var k in userSpaceShip.entities) {
+			if(userSpaceShip.entities[k].isControllable) {
+				this.targetBuilding = userSpaceShip.entity[k];
+				break;
+			}
+		}
+	}
+	
 	var negatedPosition = vec3.create();
 	var invertedRotation = mat4.create();
 	
@@ -116,11 +138,11 @@ Camera.prototype.update = function() {
 	mat4.translate(this.lastModelViewMatrix, this.lastModelViewMatrix, negatedPosition);
 	// TODO camera lagging --> webworker ?
 	
-	if(this.world.userSpaceShip != null) {
+	if(userSpaceShip != null) {
 		var ssRotation = quat.create();
-		quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
-		quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
-		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
+		quat.rotateX(ssRotation, ssRotation, degToRad(userSpaceShip.rotation[0]));
+		quat.rotateY(ssRotation, ssRotation, degToRad(userSpaceShip.rotation[1]));
+		quat.rotateZ(ssRotation, ssRotation, degToRad(userSpaceShip.rotation[2]));
 		mat4.fromQuat(invertedRotation, ssRotation);
 		
 		//mat4.translate(this.lastModelViewMatrix, this.lastModelViewMatrix, negatedPosition);

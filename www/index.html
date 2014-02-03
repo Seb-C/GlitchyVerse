@@ -19,7 +19,10 @@
 				this.importJS(/js\/lib\/.*\.js$/);
 				this.importJS(/js\/functions\/.*\.js$/); // Include it at first to use the extend function on classes definition
 				this.importJS(/js\/singletons\/.*\.js$/);
-				this.importJS(/js\/classes\/.*\.js$/);
+				this.importJS(/js\/classes\/engine\/.*\.js$/);
+				this.importJS(/js\/classes\/ship\/.*\.js$/);
+				this.importJS(/js\/classes\/[^\/]*\.js$/);
+				this.importJS(/js\/buildingBuilders\/.*\.js$/);
 				this.importJS(/js\/customEntities\/.*\.js$/);
 				this.importJS(/js\/designerModels\/.*\.js$/);
 				this.importJS(/js\/screens\/.*\.js$/);

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script type="text/javascript">
+			window.addEventListener("load", function() {
+				var Inventory = function(slotCount, definition) {
+					this.items = [];
+					this.slotCount = slotCount;
+					
+					for(var i = 0 ; i < definition.length ; i++) {
+						this.items.push(new Item(this, definition[i]));
+					}
+					
+					this.inventoryDom = null;
+					this.createDom();
+				};
+				
+				Inventory.prototype.createDom = function() {
+					this.inventoryDom = document.createElement("div");
+					this.inventoryDom.setAttribute("class", "inventory");
+					
+					var self = this;
+					this.inventoryDom.addEventListener("dragover", function(event) {
+						if(self.items.length < self.slotCount && Item.currentItemDragged.inventory != self) {
+							event.preventDefault();
+							event.dataTransfer.dropEffect = 'move';
+						}
+					});
+					this.inventoryDom.addEventListener("drop", function(event) {
+						if(self.items.length < self.slotCount && Item.currentItemDragged.inventory != self) {
+							Item.currentItemDragged.moveTo(self);
+						}
+					});
+					
+					this.regenDomChilds();
+				};
+				
+				Inventory.prototype.regenDomChilds = function() {
+					while(this.inventoryDom.firstChild != null) {
+						this.inventoryDom.removeChild(this.inventoryDom.firstChild);
+					}
+					
+					for(var i = 0 ; i < this.items.length ; i++) {
+						this.inventoryDom.appendChild(this.items[i].inventoryDom);
+					}
+					for(var i = this.items.length ; i < this.slotCount ; i++) {
+						var emptySlot = document.createElement("div");
+						emptySlot.setAttribute("class", "emptySlot");
+						emptySlot.appendChild(document.createTextNode("vide"));
+						this.inventoryDom.appendChild(emptySlot);
+					}
+				};
+				
+				Inventory.prototype.addItem = function(item) {
+					this.items.push(item);
+					this.regenDomChilds();
+				};
+				
+				Inventory.prototype.removeItem = function(item) {
+					var index = this.items.indexOf(item);
+					if(index >= 0) {
+						this.items.splice(index, 1);
+						this.regenDomChilds();
+					}
+				};
+				
+				
+				var Item = function(inventory, definition) {
+					this.inventory = inventory;
+					this.name = definition.name;
+					
+					this.dom = null;
+					this.createDom();
+				};
+				
+				Item.prototype.createDom = function() {
+					this.dom = document.createElement("div");
+					this.dom.setAttribute("class", "item");
+					this.dom.setAttribute("draggable", true);
+					
+					var self = this;
+					this.dom.addEventListener("dragstart", function(event) {
+						Item.currentItemDragged = self;
+						event.dataTransfer.setData("text", ""); // Required for visual move effect
+						event.dataTransfer.setDragImage(this, this.offsetWidth / 2, this.offsetHeight / 2);
+					});
+					this.dom.addEventListener("dragend", function(event) {
+						Item.currentItemDragged = null;
+					});
+					
+					this.dom.appendChild(document.createTextNode(this.name));
+				};
+				
+				Item.prototype.moveTo = function(newInventory) {
+					this.inventory.removeItem(this);
+					newInventory.addItem(this);
+					this.inventory = newInventory;
+				};
+				
+				Item.currentItemDragged = null; // Static
+				
+				document.body.appendChild((new Inventory(10, [
+					{name: "test1"},
+					{name: "test2"},
+					{name: "test3"},
+					{name: "test4"}
+				])).inventoryDom);
+				document.body.appendChild((new Inventory(5, [])).inventoryDom);
+			});
+		</script>
+		<style type="text/css">
+			.inventory {
+				display: inline-block;
+				border: 1px solid black;
+				min-width: 100px;
+				min-height: 20px;
+			}
+			
+			.item, .emptySlot {
+				border: 1px dashed gray;
+				width: 100px;
+				height: 20px;
+				margin: 1px;
+			}
+			
+			.emptySlot {
+				color: gray;
+			}
+			
+			.item {
+				
+			}
+		</style>
+	</head>
+	<body>
+		
+	</body>
+</html>

@@ -4,9 +4,8 @@
  * @param Model the model of the entity
  * @param vec3 The position of the entity in the world
  * @param quat The rotation to apply to the entity
- * @param Float (optional) The initial state of the entity
  */
-var Entity = function(world, model, position, rotation, state) {
+var Entity = function(world, model, position, rotation) {
 	this.gl = null;
 	this.world = world;
 	this.model = model;
@@ -19,14 +18,6 @@ var Entity = function(world, model, position, rotation, state) {
 	
 	// Used as cache by world to define draw order
 	this.distanceFromCamera = 0;
-	
-	// Initializing entity state
-	if(this.changeState == null) {
-		this.state = typeof(state) == "undefined" ? null : state;
-	} else {
-		this.state = null;
-		this.changeState(state);
-	}
 };
 
 // TODO clean object (OOP) reference hierarchy
@@ -81,9 +72,3 @@ Entity.prototype.setPosition = function(newPos) {
 Entity.prototype.destroy = function() {
 	this.world.remove(this.lights);
 };
-
-/**
- * Abstract method called when changing the state of the entity, for example on user action. It can modify meshes.
- * @param float (optional) The new state of the object
- */
-Entity.prototype.changeState = null;

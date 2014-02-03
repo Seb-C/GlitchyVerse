@@ -6,13 +6,6 @@
  * @param vec3 The position of the spaceship
  * @param vec3 The rotation of the spaceship
  * @param Array(Object) An object containing the definition of the content of the spaceship.
- *                      Each object has attributes : 
- *                      - model    : Name of the model in models list.
- *                      - is_gap   : boolean, true if the buildings has to create a gap in the room
- *                      - is_room  : boolean true if the building has the size of a room and takes the same space
- *                      - position : vec3 Containing the position of building
- *                      - rotation : vec3 Containing the rotation of building
- *                      - size     : vec3 Containing the size of building
  * @param Object Containing the definition of some attributes : 
  *               - max_speed_per_propeller_unit : The max speed to add per propeller unit
  */
@@ -26,8 +19,6 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.maxSpeedPerPropellerUnit = attributes.max_speed_per_propeller_unit;
 	
 	this._linearMaxSpeed = 0;
-	
-	this.alreadyCreatedModels = {};
 	
 	// TODO models : replace the definition parameter by normal parameters
 	// TODO organize js classes in subfolders
@@ -46,17 +37,11 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.minBounds = null;
 	this.maxBounds = null;
 	
-	// Objects attributes and entities, with id as key
-	this.buildingPositions        = {};
-	this.buildingInitialRotations = {}; 
-	this.buildingSizes            = {};
-	this.buildingTypeIds          = {};
-	this.buildingModels           = {};
 	this.buildingsByTypeIds       = {};
-	this.roomUnitBuildings        = {};
+	
 	this.gapBuildings             = {};
-	this.entities                 = {};
-	// TODO move this attributes in a class extending Entity, herited by all spaceship models
+	
+	this.entities                 = {}; // TODO is it useful to keep an id as key ? Should we replace it by a normal array ?
 	
 	// TODO moving bug (rotating) when windows on the right (or left ?)
 	// TODO can't see spaceship without propeller ?!?
@@ -87,8 +72,9 @@ SpaceShip.prototype._recalculateMinMaxBounds = function() {
 	this.minBounds = null;
 	this.maxBounds = null;
 	for(var k in this.entities) {
-		var position = this.buildingPositions[k];
-		var size = this.buildingSizes[k];
+		var entity = this.entities[k];
+		var position = entity.positionInSpaceShip;
+		var size = entity.sizeInSpaceShip;
 		var positionEnd = [position[0] + size[0] - 1, position[1] + size[1] - 1, position[2] + size[2] - 1];
 		if(this.minBounds == null || this.maxBounds == null) {
 			// First iteration
@@ -151,15 +137,15 @@ SpaceShip.prototype._addGapBuilding = function(building) {
 	// Recreates the rooms concerned
 	for(var k in this.entities) {
 		var entity = this.entities[k];
-		if(entity instanceof CustomEntities.Room) {
-			var pos  = this.buildingPositions[k];
-			var size = this.buildingSizes[k];
+		if(entity.modelName == "Room") {
+			var pos  = entity.positionInSpaceShip;
+			var size = entity.sizeInSpaceShip;
 			
 			if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 				&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
 				&& !(pos[2] > endZ || (pos[2] + size[2]) < beginZ)
 			) {
-				entity.regenerate();
+				entity.regenerateMeshes();
 			}
 		}
 	}
@@ -171,53 +157,15 @@ SpaceShip.prototype._addGapBuilding = function(building) {
  * public method with the same name (without underscore)
  * @param Object Definition received from server.
  */
-SpaceShip.prototype._addBuilding = function(building) {
-	var definition = {};
-	definition.unitSize = this.roomUnitSize;
-	definition.edgeSize = this.edgeSize;
-	definition.lightAndClimEdgeSize = this.lightAndClimEdgeSize;
-	definition.spaceShip = this;
-	definition.size        = building.size;
-	definition.position    = building.position;
-	definition.minState    = building.min_state;
-	definition.maxState    = building.max_state;
-	definition.exertThrust = building.exert_thrust; // TODO attributes to put on .obj models
-	
+SpaceShip.prototype._addBuilding = function(definition) {
 	var rotation = vec3.create();
-	vec3.add(rotation, building.rotation, this.rotation);
+	vec3.add(rotation, definition.rotation, this.rotation);
 	
-	var entity;
-	if(CustomEntities[building.model]) {
-		entity = new CustomEntities[building.model](world, vec3.create(), quat.create(), definition, building.state);
-	} else {
-		if(this.alreadyCreatedModels[building.model]) {
-			var model = this.alreadyCreatedModels[building.model];
-		} else {
-			var model = new Model(world, []);
-			model.loadMeshesFromObj(building.model, building.size);
-			model.regenerateCache();
-		}
-		
-		entity = new Entity(world, model, vec3.create(), quat.create(), building.state);
-		entity.modelName = building.model;
-	}
-	entity.spaceShip = this;
-	entity.id = building.id;
+	this.entities[definition.id] = new Building(world, this, vec3.create(), quat.create(), definition);
+	if(!this.buildingsByTypeIds[definition.type_id]) this.buildingsByTypeIds[definition.type_id] = new Array();
+	this.buildingsByTypeIds[definition.type_id].push(definition.id);
 	
-	this.buildingPositions[building.id] = building.position;
-	this.buildingSizes    [building.id] = building.size;
-	this.buildingModels   [building.id] = building.model;
-	this.buildingTypeIds  [building.id] = building.type_id;
-	this.roomUnitBuildings[building.id] = building.is_position_by_room_unit;
-	this.entities       [building.id] = entity;
-	if(building.rotation[0] != 0 || building.rotation[1] != 0 || building.rotation[2] != 0) {
-		this.buildingInitialRotations[building.id] = building.rotation;
-	}
-	if(!this.buildingsByTypeIds[building.type_id]) this.buildingsByTypeIds[building.type_id] = new Array();
-	this.buildingsByTypeIds[building.type_id].push(building.id);
-	
-	this.refreshBuildingPositionAndRotation(entity.id);
-	this.world.add(entity);
+	this.world.add(this.entities[definition.id]);
 	this.updateAcceleration();
 };
 
@@ -226,11 +174,13 @@ SpaceShip.prototype._addBuilding = function(building) {
  * @param int Id of the building to delete
  */
 SpaceShip.prototype.deleteBuilding = function(id) {
+	var entity = this.entities[id];
+	
 	if(this.gapBuildings[id]) {
 		delete this.gapBuildings[id];
 		
-		var position = this.buildingPositions[id];
-		var size = this.buildingSizes[id];
+		var position = entity.positionInSpaceShip;
+		var size = entity.sizeInSpaceShip;
 		
 		// Determining building bounds
 		var beginX = position[0] - 0.5;
@@ -243,15 +193,15 @@ SpaceShip.prototype.deleteBuilding = function(id) {
 		// Recreates the rooms concerned by the deletion
 		for(var k in this.entities) {
 			var entity = this.entities[k];
-			if(entity instanceof CustomEntities.Room) {
-				var pos  = this.buildingPositions[k];
-				var size = this.buildingSizes[k];
+			if(entity.modelName == "Room") {
+				var pos  = entity.positionInSpaceShip;
+				var size = entity.sizeInSpaceShip;
 				
 				if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 					&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
 					&& !(pos[2] > endZ || (pos[2] + size[2]) < beginZ)
 				) {
-					entity.regenerate();
+					entity.regenerateMeshes();
 				}
 			}
 		}
@@ -259,59 +209,15 @@ SpaceShip.prototype.deleteBuilding = function(id) {
 	
 	var entity = this.entities[id];
 	
-	this.buildingsByTypeIds[this.buildingTypeIds[id]].splice(
-		this.buildingsByTypeIds[this.buildingTypeIds[id]].indexOf(id),
+	this.buildingsByTypeIds[entity.typeId].splice(
+		this.buildingsByTypeIds[entity.typeId].indexOf(id),
 		1
 	);
-	delete this.buildingPositions[id];
-	delete this.buildingInitialRotations[id];
-	delete this.buildingSizes[id];
-	delete this.buildingTypeIds[id];
-	delete this.buildingModels[id];
-	delete this.roomUnitBuildings[id];
 	delete this.entities[id];
 	
 	this._recalculateMinMaxBounds();
 	this.world.remove(entity);
 	this.updateAcceleration();
-};
-
-/**
- * Recalculates the position of the building
- * @param int The id of the building
- */
-SpaceShip.prototype.refreshBuildingPositionAndRotation = function(id) {
-	var entity = this.entities[id];
-	var position;
-	
-	if(this.roomUnitBuildings[id]) {
-		position = vec3.fromValues(
-			(this.buildingPositions[id][0] + (this.buildingSizes[id][0] / 2) - 0.5) * this.roomUnitSize[0], 
-			(this.buildingPositions[id][1] + (this.buildingSizes[id][1] / 2) - 0.5) * this.roomUnitSize[1], 
-			(this.buildingPositions[id][2] + (this.buildingSizes[id][2] / 2) - 0.5) * this.roomUnitSize[2]
-		);
-	} else {
-		position = vec3.clone(this.buildingPositions[id]);
-	}
-	
-	rotatePoint(position, [degToRad(this.rotation[0]), degToRad(this.rotation[1]), degToRad(this.rotation[2])]);
-	vec3.add(position, position, this._position);
-	
-	this.entities[id].setPosition(position);
-	
-	// Rotating the entity
-	var entityRotation = entity.getRotation();
-	quat.identity(entityRotation);
-	if(this.buildingInitialRotations[id]) {
-		var initialRotation = this.buildingInitialRotations[id];
-		quat.rotateX(entityRotation, entityRotation, degToRad(initialRotation[0]));
-		quat.rotateY(entityRotation, entityRotation, degToRad(initialRotation[1]));
-		quat.rotateZ(entityRotation, entityRotation, degToRad(initialRotation[2]));
-	}
-	if(this.rotation[0] != 0) quat.rotateX(entityRotation, entityRotation, degToRad(this.rotation[0]));
-	if(this.rotation[1] != 0) quat.rotateY(entityRotation, entityRotation, degToRad(this.rotation[1]));
-	if(this.rotation[2] != 0) quat.rotateZ(entityRotation, entityRotation, degToRad(this.rotation[2]));
-	entity.setRotation(entityRotation);
 };
 
 /**
@@ -379,7 +285,7 @@ SpaceShip.prototype.updatePosition = function() {
 	
 	// Updating entities positions and rotations
 	for(var k in this.entities) {
-		this.refreshBuildingPositionAndRotation(k);
+		this.entities[k].refreshPositionAndRotation();
 	}
 	this.world.lightManager.regenerateCache();
 };
@@ -427,13 +333,14 @@ SpaceShip.prototype.updateAcceleration = function() {
 	this._linearAcceleration = 0;
 	this._linearMaxSpeed = 0;
 	for(var k in this.entities) {
-		if(this.entities[k].exertThrust) {
-			var positionX = this.buildingPositions[k][0] + (this.buildingSizes[k][0] / 2 - 0.5);
-			var positionY = this.buildingPositions[k][1] + (this.buildingSizes[k][1] / 2 - 0.5);
+		var entity = this.entities[k];
+		if(entity.exertThrust) {
+			var positionX = entity.positionInSpaceShip[0] + (entity.sizeInSpaceShip[0] / 2 - 0.5);
+			var positionY = entity.positionInSpaceShip[1] + (entity.sizeInSpaceShip[1] / 2 - 0.5);
 			
-			var maxState = this.entities[k].maxState;
-			var state = this.entities[k].state;
-			var size = this.buildingSizes[k];
+			var maxState = entity.maxState;
+			var state = entity.getState();
+			var size = entity.sizeInSpaceShip;
 			var sizeMultiplicator = size[0] * size[1] * size[2];
 			
 			this.rotationSpeed[1] += (middleXY[0] - positionX) * state * sizeMultiplicator;
@@ -458,4 +365,4 @@ SpaceShip.prototype.destroy = function() {
 	this.world.remove(entitiesToRemove);
 };
 
-// TODO door bugs with transparency ?!?
+// TODO door bugs with transparency (+ window blinking on chrome when opening or closing) ?!?

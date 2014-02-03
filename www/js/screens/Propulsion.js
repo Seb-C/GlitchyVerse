@@ -34,14 +34,14 @@ Screens.Propulsion = {
 		var rightMenuButtonsHeight = height / 5;
 		
 		// Determining max and min positions of propellers and if selection still exists
-		var minX = ship.buildingPositions[propellers[0].id][0], maxX = minX;
-		var minY = ship.buildingPositions[propellers[0].id][1], maxY = minY;
+		var minX = ship.entities[propellers[0].id].positionInSpaceShip[0], maxX = minX;
+		var minY = ship.entities[propellers[0].id].positionInSpaceShip[1], maxY = minY;
 		var selectedContentExists = controlScreen.selectedContent == propellers[0].id;
 		var averageState = propellers[0].getPowerRate();
 		var selectionState = controlScreen.selectedContent == propellers[0].id ? propellers[0].getPowerRate() : null;
 		for(var i = 1 ; i < propellers.length ; i++) {
 			var propeller = propellers[i];
-			var propellerPosition = ship.buildingPositions[propeller.id];
+			var propellerPosition = ship.entities[propeller.id].positionInSpaceShip;
 			
 			if(propellerPosition[0] > maxX) {
 				maxX = propellerPosition[0];
@@ -163,8 +163,9 @@ Screens.Propulsion = {
 		var ratioX = (width  - this.rightMenuWidth - propellerUnitRadius * 2) / (maxX - minX);
 		var ratioY = (height                       - propellerUnitRadius * 2) / (maxY - minY);
 		propellers.map(function(propeller, i) {
-			var propellerPosition = ship.buildingPositions[propeller.id];
-			var propellerSize     = ship.buildingSizes    [propeller.id];
+			var entity = ship.entities[propeller.id];
+			var propellerPosition = entity.positionInSpaceShip;
+			var propellerSize     = entity.sizeInSpaceShip;
 			
 			var radiusX = propellerUnitRadius * propellerSize[0];
 			var radiusY = propellerUnitRadius * propellerSize[1];
