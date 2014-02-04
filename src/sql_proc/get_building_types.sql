@@ -11,4 +11,4 @@ SELECT
 	building_type_rotation_y_allowed_divisions,
 	building_type_rotation_z_allowed_divisions
 FROM building_type
-NATURAL INNER JOIN building_type_category
+NATURAL LEFT JOIN building_type_category

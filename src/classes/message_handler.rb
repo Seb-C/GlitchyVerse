@@ -61,8 +61,12 @@ class MessageHandler
 		}, user)
 		
 		if is_valid
-			# Sending spaceship data
+			# Sending types data
 			self.send_message("data_building_types_definition", $BUILDING_TYPES_DEFINITION, user)
+			self.send_message("data_item_groups_definition",    $ITEM_GROUPS_DEFINITION,    user)
+			self.send_message("data_item_types_definition",     $ITEM_TYPES_DEFINITION,     user)
+			
+			# Sending spaceship data
 			user.send_spaceship_data(self)
 			
 			# Sending space data

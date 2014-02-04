@@ -12,8 +12,6 @@ var Entity = function(world, model, position, rotation) {
 	this.position = position;
 	this.rotation = rotation;
 	
-	this.id = null; // Will be modified by the class which builds the entity
-	
 	this.lights = new Array(); // Lights associated to the entity (must be used when extended)
 	
 	// Used as cache by world to define draw order

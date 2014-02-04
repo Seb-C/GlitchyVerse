@@ -2,18 +2,23 @@
  * Keyboard and mouse controls
  */
 var Controls = {
-	_currentButton: null,
+	MOUSE_LEFT  : 0,
+	MOUSE_MIDDLE: 1,
+	MOUSE_RIGHT : 2,
+	
+	_mouseButton: [],
 	_dragging: false,
 	_lastPosition: null,
 	_current2DPosition: vec2.fromValues(0, 0),
 	_keys: {},
 	_rotationRate: vec3.create(),
+	_rotationSpeedMultiplicator: 0.0005,
+	_isPointerLocked: false,
 	hasFocus: true, // Setting to false stops the controls capture
 	
 	// TODO fullscreen with F11 (does default browser fullscreen handles css :fullscreen pseudo-class ?)
 	// TODO config to enable fullscreen on loading page (is it possible ? security restrictions ?)
 	// TODO only use keyboard to enable fullscreen and remove button ?
-	// TODO pointer lock with fullscreen
 	
 	/**
 	 * Initializing control callbacks
@@ -22,13 +27,13 @@ var Controls = {
 	init: function(canvas) {
 		var self = this;
 		
-		// TODO remove hasFocus as soon as tthe login window is standardized
+		// TODO remove hasFocus as soon as the login window is standardized
 		
 		// Mouse
 		canvas.addEventListener("mousedown", function(event) {
 			if(self.hasFocus && event.target.tagName != "INPUT") {
 				self._dragging = true;
-				self._currentButton = event.button;
+				self._mouseButton[event.button] = true;
 				event.preventDefault(); // Avoid scrolling
 			}
 		});
@@ -36,9 +41,18 @@ var Controls = {
 			if(self.hasFocus && event.target.tagName != "INPUT") {
 				self._dragging = false;
 				self._rotationRate = vec3.set(self._rotationRate, 0, 0, 0);
-				self._currentButton = null;
+				self._mouseButton[event.button] = false;
 				rotationAxis = vec3.fromValues(0, 0, 0);
 				event.preventDefault(); // Avoid scrolling
+				if(event.button == 1) {
+					if(self._isPointerLocked) {
+						document.exitPointerLock();
+						self._isPointerLocked = false;
+					} else {
+						canvas.requestPointerLock();
+						self._isPointerLocked = true;
+					}
+				}
 			}
 		});
 		canvas.addEventListener("mousemove", function(event) {
@@ -46,23 +60,26 @@ var Controls = {
 				// Inversing X and Y : 2D X axis is bound to 3D Y rotation
 				self._current2DPosition = vec2.fromValues(event.clientX, event.clientY);
 				var currentPosition = vec3.fromValues(event.clientY, event.clientX, event.clientX);
-
-				if(self._dragging && self._lastPosition) {
+				
+				if(self._isPointerLocked) {
+					var move = readPointerLockMovement(event);
+					var distance = vec3.fromValues(move[1], move[0], 0);
+					vec3.scale(self._rotationRate, distance, self._rotationSpeedMultiplicator);
+				} else if(self._dragging && self._lastPosition) {
 					// Determining axis to move
-					if(self._currentButton == 1) { // 1 = Middle click
-						var rotationAxis = vec3.fromValues(0, 0, 1);
-					} else if(self._currentButton == 2) { // 2 = Right click
-						var rotationAxis = vec3.fromValues(1, 1, 0);
-					} else {
-						var rotationAxis = vec3.fromValues(0, 0, 0);
+					var rotationAxis = vec3.fromValues(0, 0, 0);
+					if((self._mouseButton[self.MOUSE_RIGHT] && !self._mouseButton[self.MOUSE_LEFT])) {
+						rotationAxis[0] = 1;
+						rotationAxis[1] = 1;
 					}
-
+					if(self._mouseButton[self.MOUSE_LEFT] && self._mouseButton[self.MOUSE_RIGHT]) {
+						rotationAxis[2] = 1;
+					}
+					
 					var distance = vec3.create();
 					vec3.subtract(distance, currentPosition, self._lastPosition);
-
-					// TODO move in camera
 					vec3.multiply(distance, distance, rotationAxis);
-					vec3.multiply(distance, distance, vec3.fromValues(0.0005, 0.0005, 0.0005));
+					vec3.scale(distance, distance, self._rotationSpeedMultiplicator);
 					vec3.subtract(self._rotationRate, self._rotationRate, distance);
 				}
 				self._lastPosition = currentPosition;

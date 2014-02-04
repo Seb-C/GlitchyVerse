@@ -30,6 +30,8 @@ $DB = Database.new(
 
 # Loading some cache data
 $BUILDING_TYPES_DEFINITION = get_building_types_definition();
+$ITEM_GROUPS_DEFINITION = get_item_groups_definition();
+$ITEM_TYPES_DEFINITION = get_item_types_definition();
 
 $SPACESHIP_MAX_SPEED_PER_PROPELLER_UNIT = 20
 $MOVE_MAXIMUM_ERROR_RATE = 0.1 # The maximum difference rate when the client sends new position

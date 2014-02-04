@@ -304,44 +304,46 @@ Designer.prototype._createDesignerTree = function() {
 	
 	var tempCategoriesDOMSubElements = {};
 	this.types.map(function(building) {
-		if(!tempCategoriesDOMSubElements[building.category]) {
-			// Creating category li
-			var categoryDOMElement = document.createElement("li");
-			categoryDOMElement.appendChild(document.createTextNode(building.category));
-			categoryDOMElement.setAttribute("data-isOpened", false);
-			categoryDOMElement.addEventListener("click", function(event) {
-				if(event.target == this) {
-					this.setAttribute("data-isOpened", this.getAttribute("data-isOpened") == "false");
+		if(building.category != null) {
+			if(!tempCategoriesDOMSubElements[building.category]) {
+				// Creating category li
+				var categoryDOMElement = document.createElement("li");
+				categoryDOMElement.appendChild(document.createTextNode(building.category));
+				categoryDOMElement.setAttribute("data-isOpened", false);
+				categoryDOMElement.addEventListener("click", function(event) {
+					if(event.target == this) {
+						this.setAttribute("data-isOpened", this.getAttribute("data-isOpened") == "false");
+					}
+				});
+				tree.appendChild(categoryDOMElement);
+				
+				// Creating category ul where to put types
+				categoryDOMSubElement = document.createElement("ul");
+				categoryDOMElement.appendChild(categoryDOMSubElement);
+				tempCategoriesDOMSubElements[building.category] = categoryDOMSubElement;
+			}
+			
+			building.domElement = document.createElement("li");
+			building.domElement.appendChild(document.createTextNode(building.name));
+			building.domElement.addEventListener("click", function(event) {
+				if(self.selectedType != null) {
+					self.selectedType.domElement.setAttribute("data-isSelected", false);
 				}
+				if(self.selectedType == building) {
+					self.selectedType     = null;
+					self.selectedPosition = null;
+					self.selectedRotation = null;
+					self.canvas.style.cursor = "default";
+				} else {
+					this.setAttribute("data-isSelected", true);
+					self.selectedType = building;
+					self.canvas.style.cursor = "copy";
+				}
+				
+				self.sizeSelectorsContainer.style.display = (self.selectedType != null && self.selectedType.is_sizeable) ? "block" : "none";
 			});
-			tree.appendChild(categoryDOMElement);
-			
-			// Creating category ul where to put types
-			categoryDOMSubElement = document.createElement("ul");
-			categoryDOMElement.appendChild(categoryDOMSubElement);
-			tempCategoriesDOMSubElements[building.category] = categoryDOMSubElement;
+			tempCategoriesDOMSubElements[building.category].appendChild(building.domElement);
 		}
-		
-		building.domElement = document.createElement("li");
-		building.domElement.appendChild(document.createTextNode(building.name));
-		building.domElement.addEventListener("click", function(event) {
-			if(self.selectedType != null) {
-				self.selectedType.domElement.setAttribute("data-isSelected", false);
-			}
-			if(self.selectedType == building) {
-				self.selectedType     = null;
-				self.selectedPosition = null;
-				self.selectedRotation = null;
-				self.canvas.style.cursor = "default";
-			} else {
-				this.setAttribute("data-isSelected", true);
-				self.selectedType = building;
-				self.canvas.style.cursor = "copy";
-			}
-			
-			self.sizeSelectorsContainer.style.display = (self.selectedType != null && self.selectedType.is_sizeable) ? "block" : "none";
-		});
-		tempCategoriesDOMSubElements[building.category].appendChild(building.domElement);
 	});
 	
 	// TODO buildings names --> client only (in a lang singleton ? How to manage category names ?), then remove names from database

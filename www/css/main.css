@@ -338,3 +338,28 @@ ul.contextMenu li:hover {
 	color: red;
 }
 
+/********************
+ * Inventory system *
+ ********************/
+
+.inventory {
+	display: inline-block;
+	border: 1px solid black;
+	min-width: 100px;
+	min-height: 20px;
+}
+
+.item, .emptySlot {
+	border: 1px dashed gray;
+	width: 100px;
+	height: 20px;
+	margin: 1px;
+}
+
+.emptySlot {
+	color: gray;
+}
+
+.item {
+	
+}

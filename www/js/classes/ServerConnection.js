@@ -108,3 +108,15 @@ ServerConnection.prototype._update_propellers = function(data) {
 ServerConnection.prototype._delete_spaceship = function(data) {
 	this.world.remove(this.world.spaceShips[data]);
 };
+
+ServerConnection.prototype._data_item_groups_definition = function(data) {
+	Item.groups = data;
+};
+
+ServerConnection.prototype._data_item_types_definition = function(data) {
+	Item.types = {};
+	for(var i = 0 ; i < data.length ; i++) {
+		var it = new ItemType(data[i]);
+		Item.types[it.id] = it;
+	}
+};

@@ -30,4 +30,4 @@ AND (
 			OR (b.building_position_z + b.building_size_z - 1) < b.building_position_z
 		)
 	) = 0
-)
+) -- TODO bug when removing a room

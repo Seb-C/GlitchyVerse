@@ -18,6 +18,10 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	this.maxState            = definition.max_state;
 	this.id                  = definition.id;
 	
+	this.slots = definition.definition; // TODO group, when_building, maximum_amount, state_variation
+	
+	// TODO server side : send items (for each building ?)
+	
 	if(Building.builders[modelName]) {
 		this.parent(world, new Model(world, []), position, rotation);
 		Building.builders[modelName](this, definition.state);
@@ -35,6 +39,14 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	}
 	
 	this.refreshPositionAndRotation();
+	
+	// Inventory
+	/*this.items = [];
+	for(var i = 0 ; i < definition.length ; i++) {
+		this.items.push(new Item(this, definition[i]));
+	}
+	this.inventoryDom = null;
+	this.createDomInventory();*/
 };
 Building.extend(Entity);
 
@@ -72,4 +84,53 @@ Building.prototype.refreshPositionAndRotation = function() {
 	if(this.spaceShip.rotation[1] != 0) quat.rotateY(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[1]));
 	if(this.spaceShip.rotation[2] != 0) quat.rotateZ(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[2]));
 	this.setRotation(entityRotation);
+};
+
+Building.prototype.createDomInventory = function() {
+	this.inventoryDom = document.createElement("div");
+	this.inventoryDom.setAttribute("class", "inventory");
+	
+	var self = this;
+	this.inventoryDom.addEventListener("dragover", function(event) {
+		if(self.items.length < self.slotCount && Item.currentItemDragged.inventory != self) {
+			event.preventDefault();
+			event.dataTransfer.dropEffect = 'move';
+		}
+	});
+	this.inventoryDom.addEventListener("drop", function(event) {
+		if(self.items.length < self.slotCount && Item.currentItemDragged.inventory != self) {
+			Item.currentItemDragged.moveTo(self);
+		}
+	});
+	
+	this.regenDomInventoryItems();
+};
+
+Building.prototype.regenDomInventoryItems = function() {
+	while(this.inventoryDom.firstChild != null) {
+		this.inventoryDom.removeChild(this.inventoryDom.firstChild);
+	}
+	
+	for(var i = 0 ; i < this.items.length ; i++) {
+		this.inventoryDom.appendChild(this.items[i].inventoryDom);
+	}
+	for(var i = this.items.length ; i < this.slotCount ; i++) {
+		var emptySlot = document.createElement("div");
+		emptySlot.setAttribute("class", "emptySlot");
+		emptySlot.appendChild(document.createTextNode("vide"));
+		this.inventoryDom.appendChild(emptySlot);
+	}
+};
+
+Building.prototype.addItem = function(item) {
+	this.items.push(item);
+	this.regenDomInventoryItems();
+};
+
+Building.prototype.removeItem = function(item) {
+	var index = this.items.indexOf(item);
+	if(index >= 0) {
+		this.items.splice(index, 1);
+		this.regenDomInventoryItems();
+	}
 };
