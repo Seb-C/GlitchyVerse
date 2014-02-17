@@ -1,11 +1,9 @@
 /**
  * Interface allowing the player to modify his spaceship
- * @param Object containing building types definition
  */
-var Designer = function(world, definition) {
+var Designer = function(world) {
 	this.world = world;
 	this.spaceShip = null;
-	this.types     = definition;
 	
 	this.selectedType      = null; // When choosing a new building in a tree
 	this.selectedPosition  = null;
@@ -33,9 +31,9 @@ var Designer = function(world, definition) {
 	
 	// Creating designer button
 	this._DOMShowButton = document.createElement("div");
-	this._DOMShowButton.setAttribute("id",    "designerButton");
-	this._DOMShowButton.setAttribute("alt",   "Designer");
-	this._DOMShowButton.setAttribute("title", "Designer");
+	this._DOMShowButton.setAttribute("id", "designerButton");
+	this._DOMShowButton.setAttribute("class", "hudButton");
+	this._DOMShowButton.appendChild(document.createTextNode("Designer"));
 	var self = this;
 	this._DOMShowButton.addEventListener("click", function() {
 		if(self._DOMWindow) {
@@ -162,7 +160,7 @@ Designer.prototype._createDesignerCanvas = function() {
 			} else if(self.selectedType != null) {
 				var rotation = null;
 				if(self.selectedPosition == null) {
-					if(self.selectedType.is_gap) {
+					if(self.selectedType.isGap) {
 						self.selectedPosition = [mouseRoomCoordinates[0], self.scroll[1], mouseRoomCoordinates[1]];
 						if(isXInteger && !isYInteger) {
 							self.selectedRotation = [0, 0, 0];
@@ -173,7 +171,7 @@ Designer.prototype._createDesignerCanvas = function() {
 						}
 					} else {
 						self.selectedPosition = [Math.round(mouseRoomCoordinates[0]), self.scroll[1], Math.round(mouseRoomCoordinates[1])];
-						if(self.selectedType.rotation_allowed_divisions[1] == 0) {
+						if(self.selectedType.rotationAllowedDivisions[1] == 0) {
 							// TODO rotation for x and z ?
 							self.selectedRotation = [0, 0, 0];
 						}
@@ -182,7 +180,7 @@ Designer.prototype._createDesignerCanvas = function() {
 				
 				// (cannot be in "else" of the previous "if")
 				if(self.selectedPosition != null && self.selectedRotation != null) {
-					var size = (self.selectedType.is_sizeable ? [self.domSizeX.value, self.domSizeY.value, self.domSizeZ.value] : [1, 1, 1]);
+					var size = (self.selectedType.isSizeable ? [self.domSizeX.value, self.domSizeY.value, self.domSizeZ.value] : [1, 1, 1]);
 					
 					self.world.server.sendMessage("build_query", {
 						"type_id": self.selectedType.id,
@@ -235,7 +233,7 @@ Designer.prototype._createDesignerCanvas = function() {
 		}
 		
 		// Choosing angle when building
-		if(self.selectedType != null && self.selectedPosition != null && self.selectedType.rotation_allowed_divisions[1] != 0) {
+		if(self.selectedType != null && self.selectedPosition != null && self.selectedType.rotationAllowedDivisions[1] != 0) {
 			if(self.selectedRotation == null) self.selectedRotation = [0, 0, 0];
 			
 			var trueSize = self.roomUnitSize * self.zoom;
@@ -246,9 +244,9 @@ Designer.prototype._createDesignerCanvas = function() {
 			var rotation = Math.atan2(event.layerY - position[1], event.layerX - position[0]);
 			if(rotation < 0) rotation += Math.PI * 2;
 			
-			if(self.selectedType.rotation_allowed_divisions[1] > 0) {
+			if(self.selectedType.rotationAllowedDivisions[1] > 0) {
 				// Constraining the angle
-				var angleByPart = Math.PI * 2 / self.selectedType.rotation_allowed_divisions[1];
+				var angleByPart = Math.PI * 2 / self.selectedType.rotationAllowedDivisions[1];
 				var angleMod = (rotation % angleByPart);
 				rotation -= angleMod;
 				if(angleMod > angleByPart / 2) rotation += angleByPart;
@@ -303,7 +301,8 @@ Designer.prototype._createDesignerTree = function() {
 	this._DOMWindow.appendChild(tree);
 	
 	var tempCategoriesDOMSubElements = {};
-	this.types.map(function(building) {
+	Object.keys(Building.types).map(function(id) {
+		var building = Building.types[id];
 		if(building.category != null) {
 			if(!tempCategoriesDOMSubElements[building.category]) {
 				// Creating category li
@@ -340,7 +339,7 @@ Designer.prototype._createDesignerTree = function() {
 					self.canvas.style.cursor = "copy";
 				}
 				
-				self.sizeSelectorsContainer.style.display = (self.selectedType != null && self.selectedType.is_sizeable) ? "block" : "none";
+				self.sizeSelectorsContainer.style.display = (self.selectedType != null && self.selectedType.isSizeable) ? "block" : "none";
 			});
 			tempCategoriesDOMSubElements[building.category].appendChild(building.domElement);
 		}
@@ -412,8 +411,8 @@ Designer.prototype._createContextMenu = function() {
 		"Dismantle": function(event) {
 			// Determining selection type name
 			var buildingTypeName = null;
-			for(var i = 0 ; i < self.types.length ; i++) {
-				var type = self.types[i];
+			for(var k in Building.types) {
+				var type = Building.types[k];
 				
 				if(self.contextMenuTargetBuilding.modelName == type.modelName) {
 					buildingTypeName = type.name; // TODO better use of a lang/locale class
@@ -556,7 +555,7 @@ Designer.prototype.draw = function() {
 	}
 	
 	// Choosing the y angle of the new building
-	if(this.selectedType != null && this.selectedPosition != null && this.selectedType.rotation_allowed_divisions[1] != 0) {
+	if(this.selectedType != null && this.selectedPosition != null && this.selectedType.rotationAllowedDivisions[1] != 0) {
 		if(this.selectedRotation == null) this.selectedRotation = [0, 0, 0];
 		
 		var trueSize = this.roomUnitSize * this.zoom;
@@ -565,7 +564,7 @@ Designer.prototype.draw = function() {
 			trueSize * this.selectedPosition[2] + this.scroll[2] * trueSize
 		];
 		var circleRadius = trueSize / 2 - borderSize * 2;
-		var pointsNumber = this.selectedType.rotation_allowed_divisions[1];
+		var pointsNumber = this.selectedType.rotationAllowedDivisions[1];
 		var angleByPart = Math.PI * 2 / pointsNumber;
 		
 		this.context.fillStyle   = "black";
@@ -626,9 +625,9 @@ Designer.prototype.draw = function() {
 			hoverWalls = hoverRooms = true;
 			isSizeable = false;
 		} else {
-			hoverWalls = this.selectedType.is_gap;
-			hoverRooms = !this.selectedType.is_gap;
-			isSizeable = this.selectedType.is_sizeable;
+			hoverWalls = this.selectedType.isGap;
+			hoverRooms = !this.selectedType.isGap;
+			isSizeable = this.selectedType.isSizeable;
 		}
 		
 		var isXInteger = mouseRoomCoordinates[0] == Math.floor(mouseRoomCoordinates[0]);

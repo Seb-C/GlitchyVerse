@@ -24,11 +24,13 @@ Building.builders.Console = function(building, state) {
 				0,          heightRatio
 			];
 			
-			building.world.configurePickableMesh(mesh, function(x, y) {
-				building.spaceShip.screen.click(
-					Math.round(x * building.spaceShip.screen.screenWidth), 
-					Math.round(y * building.spaceShip.screen.screenHeight)
-				);
+			building.world.configurePickableContent(mesh, function(x, y) {
+				if(building.isBuilt) {
+					building.spaceShip.screen.click(
+						Math.round(x * building.spaceShip.screen.screenWidth), 
+						Math.round(y * building.spaceShip.screen.screenHeight)
+					);
+				}
 			}, true);
 			
 			break;

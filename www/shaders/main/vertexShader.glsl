@@ -2,9 +2,9 @@ precision mediump float;
 precision mediump int;
 
 // If these constants are changed, World.js and fragmentShader.glsl must be updated too.
-const int DRAW_MODE_NORMAL      = 0;
-const int DRAW_MODE_PICK_MESH   = 1;
-const int DRAW_MODE_PICK_SCREEN = 2;
+const int DRAW_MODE_NORMAL       = 0;
+const int DRAW_MODE_PICK_CONTENT = 1;
+const int DRAW_MODE_PICK_SCREEN  = 2;
 
 // TODO use uniforms instead of these constants ?
 // TODO values precision ?
@@ -51,7 +51,7 @@ void main(void) {
 			vLighting = uAmbientLight;
 		}
 		
-	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
+	} else /*if(uDrawMode == DRAW_MODE_PICK_CONTENT || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		vPickColor = aPickColor;
 	}
 }

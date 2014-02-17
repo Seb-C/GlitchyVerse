@@ -64,8 +64,6 @@ class User
 			"id"      => row["building_id"],
 			"type_id" => row["building_type_id"],
 			"model"   => row["building_type_model"],
-			"is_gap"  => row["building_type_is_gap"] == 1,
-			"is_position_by_room_unit" => row["building_type_is_position_by_room_unit"] == 1,
 			"position" => [
 				row["building_position_x"],
 				row["building_position_y"],
@@ -81,11 +79,10 @@ class User
 				row["building_size_y"],
 				row["building_size_z"]
 			],
-			"state"        => row["building_state"],
-			"min_state"    => row["building_type_min_state"],
-			"max_state"    => row["building_type_max_state"],
-			"exert_thrust" => row["building_type_can_exert_thrust"],
-			"is_controllable" => row["building_type_is_controllable"] == 1
+			"state"           => row["building_state"],
+			"is_built"        => row["building_is_built"] == 1,
+			"seed"            => row["building_seed"],
+			"items"           => []
 		}
 	end
 	
@@ -93,8 +90,21 @@ class User
 	# @param MessageHandler Object to use to send data
 	def send_spaceship_data(message_handler)
 		buildings = []
-		$DB.get_spaceship_buildings(:user_id => @user_id).each do |row|
-			buildings.push(self.format_building_row(row))
+		buildings_by_id = {}
+		$DB.get_buildings(:spaceship_id => @spaceship_id).each do |row|
+			current_row = self.format_building_row(row)
+			buildings.push(current_row)
+			buildings_by_id[current_row["id"]] = current_row
+		end
+		
+		# Adding items into each building
+		$DB.get_items(:spaceship_id => @spaceship_id).each do |row|
+			buildings_by_id[row["building_id"]]["items"].push({
+				"id"            => row["item_id"],
+				"type_id"       => row["item_type_id"],
+				"state"         => row["item_state"],
+				"slot_group_id" => row["item_slot_group_id"]
+			})
 		end
 		
 		# Preparing data to send
@@ -207,10 +217,10 @@ class User
 			$DB.commit()
 			
 			building = self.format_building_row(
-				$DB.get_spaceship_building(
-					:user_id => @user_id,
+				$DB.get_buildings(
+					:spaceship_id => @spaceship_id,
 					:building_id => $DB.last_inserted_id()
-				).next()
+				).next() # items array is always empty after creation
 			)
 			building["spaceship_id"] = @spaceship_id
 			
@@ -225,7 +235,6 @@ class User
 	# @param int The id of the building
 	# @return boolean True if the building has been deleted
 	def delete_building(message_handler, building_id)
-		
 		$DB.transaction()
 		
 		$DB.delete_building(
@@ -245,6 +254,29 @@ class User
 			})
 			
 			return true
+		end
+	end
+	
+	# Moves an item between two inventories
+	# @param MessageHandler Object to use to send data
+	# @param int The id of the item to move
+	# @param int The id of the targetted building
+	# @param int The id of the targetted slot group in the building inventory
+	def move_item(message_handler, item_id, building_id, slot_group_id)
+		$DB.move_item(
+			:spaceship_id         => @spaceship_id,
+			:item_id              => item_id,
+			:target_building_id   => building_id,
+			:target_slot_group_id => slot_group_id
+		)
+		
+		if $DB.affected_rows() > 0
+			message_handler.send_message("move_item", {
+				"spaceship_id"         => @spaceship_id,
+				"item_id"              => item_id,
+				"target_building_id"   => building_id,
+				"target_slot_group_id" => slot_group_id
+			}, self) # TODO broadcast ?!?
 		end
 	end
 end

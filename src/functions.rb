@@ -25,14 +25,21 @@ def get_building_types_definition()
 		definition.push({
 			"id"               => row["building_type_id"],
 			"name"             => row["building_type_name"],
-			"category"         => row["building_type_category_name"],
 			"model"            => row["building_type_model"],
+			"category"         => row["building_type_category_name"],
 			"is_gap"           => row["building_type_is_gap"] == 1,
 			"default_state"    => row["building_type_default_state"],
-			"allow_rotation_x" => row["building_type_allow_rotation_x"],
-			"allow_rotation_y" => row["building_type_allow_rotation_y"],
-			"allow_rotation_z" => row["building_type_allow_rotation_z"],
+			"allow_rotation"   => [
+				row["building_type_allow_rotation_x"],
+				row["building_type_allow_rotation_y"],
+				row["building_type_allow_rotation_z"]
+			],
 			"is_sizeable"      => row["building_type_is_sizeable"] == 1,
+			"is_position_by_room_unit" => row["building_type_is_position_by_room_unit"] == 1,
+			"min_state"        => row["building_type_min_state"],
+			"max_state"        => row["building_type_max_state"],
+			"can_exert_thrust" => row["building_type_can_exert_thrust"] == 1,
+			"is_controllable"  => row["building_type_is_controllable"],
 			"rotation_allowed_divisions" => [
 				row["building_type_rotation_x_allowed_divisions"],
 				row["building_type_rotation_y_allowed_divisions"],
@@ -69,12 +76,21 @@ end
 # @return Array Item types
 def get_item_types_definition()
 	definition = []
+	groups_by_item_type_id = {}
 	$DB.get_item_types().each do |row|
-		definition.push({
+		type = {
 			"id"        => row["item_type_id"],
 			"name"      => row["item_type_name"],
-			"max_state" => row["item_type_max_state"]
-		})
+			"max_state" => row["item_type_max_state"],
+			"groups"    => []
+		}
+		
+		definition.push(type)
+		groups_by_item_type_id[type["id"]] = type["groups"]
+	end
+	
+	$DB.get_item_types_in_item_groups().each do |row|
+		groups_by_item_type_id[row["item_type_id"]].push(row["item_group_id"])
 	end
 	
 	definition

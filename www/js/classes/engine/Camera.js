@@ -14,6 +14,7 @@ var Camera = function(world) {
 	this.fovy = 45;
 	this.viewDistance = 1000000;
 	this.targetBuilding = null;
+	this.controls = new Controls(this);
 	// TODO customizable fovy and view distance
 };
 
@@ -22,6 +23,10 @@ Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
 	this.projectionMatrix = mat4.create();
 	mat4.perspective(this.projectionMatrix, this.fovy, screenWidth / screenHeight, 0.45, this.viewDistance);
 	return this.projectionMatrix;
+};
+
+Camera.prototype.init = function(canvas) {
+	this.controls.init(canvas);
 };
 
 // TODO option to freeze z axis (and synchronize camera rotation with spaceship + gravity and walls)
@@ -81,10 +86,11 @@ Camera.prototype.getAbsolutePosition = function() { // TODO optimize by caching 
 Camera.prototype.update = function() {
 	var userSpaceShip = this.world.userSpaceShip;
 	
+	// TODO add an inventory button in hud
 	if(this.targetBuilding == null && userSpaceShip != null) {
 		for(var k in userSpaceShip.entities) {
-			if(userSpaceShip.entities[k].isControllable) {
-				this.targetBuilding = userSpaceShip.entity[k];
+			if(userSpaceShip.entities[k].type.isControllable) {
+				this.targetBuilding = userSpaceShip.entities[k];
 				break;
 			}
 		}
@@ -94,8 +100,8 @@ Camera.prototype.update = function() {
 	var invertedRotation = mat4.create();
 	
 	// TODO only for tests, remove it
-	if(Controls._keys[107]) this.moveSpeed *= 1.05;
-	if(Controls._keys[109]) this.moveSpeed /= 1.05;
+	if(this.controls._keys[107]) this.moveSpeed *= 1.05;
+	if(this.controls._keys[109]) this.moveSpeed /= 1.05;
 	
 	// Moves depends of elapsed time
 	var timeNow = TimerManager.lastUpdateTimeStamp;
@@ -106,7 +112,7 @@ Camera.prototype.update = function() {
 		 ********************* Moves **********************
 		 **************************************************/
 		
-		var movement = Controls.getMovement();
+		var movement = this.controls.getMovement();
 		var currentMove = vec3.create();
 		vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
 		vec3.transformQuat(currentMove, currentMove, this.rotation);
@@ -118,7 +124,7 @@ Camera.prototype.update = function() {
 		 ******************** Rotation ********************
 		 **************************************************/
 		
-		var rotationRate = Controls.getRotation();
+		var rotationRate = this.controls.getRotation();
 		
 		var tempQuat = quat.create();
 		quat.rotateX(tempQuat, tempQuat, degToRad(rotationRate[0] * elapsed));

@@ -272,7 +272,7 @@ Model.prototype.draw = function(shader, drawMode) {
 				this.gl.bindTexture(this.gl.TEXTURE_2D, this.mappedTexture);
 			}
 			
-			if(drawMode == this.world.DRAW_MODE_PICK_MESH) {
+			if(drawMode == this.world.DRAW_MODE_PICK_CONTENT) {
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._pickColorBuffer);
 			} else {
 				this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this._pickScreenColorBuffer);

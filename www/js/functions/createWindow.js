@@ -25,15 +25,17 @@ function createWindow(initialWidth, initialHeight, title, isResizable, closeCall
 	win.style.top    = Math.round((window.innerHeight - initialHeight) / 2) + "px";
 	win.style.zIndex = createWindow.nextZIndex++;
 	
+	var hideWindow = function() {
+		win.style.display = "none";
+		if(closeCallBack) closeCallBack();
+	};
+	
 	// Close button
 	var closeButton = document.createElement("div");
 	closeButton.setAttribute("class", "closeButton");
 	//closeButton.appendChild(document.createTextNode("+"));
 	closeButton.innerHTML = "&times;";
-	closeButton.addEventListener("click", function() {
-		win.style.display = "none";
-		if(closeCallBack) closeCallBack();
-	});
+	closeButton.addEventListener("click", hideWindow);
 	win.appendChild(closeButton);
 	
 	// Adding title
@@ -89,6 +91,14 @@ function createWindow(initialWidth, initialHeight, title, isResizable, closeCall
 	// Window can be opened after closing by calling the "showWindow" method on content
 	content.showWindow = function() {
 		win.style.display = "block";
+	};
+	content.hideWindow = hideWindow;
+	content.toggleWindow = function() {
+		if(win.style.display == "block") {
+			content.hideWindow();
+		} else {
+			content.showWindow();
+		}
 	};
 	
 	// Inserting window node in the document and returing content node

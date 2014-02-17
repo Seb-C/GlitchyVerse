@@ -5,7 +5,8 @@ var LoginForm = {
 	 * @param callback A function to call when the user tries to login. 
 	 *                 This callback has two parameters : login and password.
 	 */
-	open: function(callback) {
+	open: function(world, callback) {
+		this.world = world;
 		var div = this._getDOMForm();
 		var nameInput     = div.getElementsByClassName("nameInput"    )[0];
 		var passwordInput = div.getElementsByClassName("passwordInput")[0];
@@ -25,7 +26,7 @@ var LoginForm = {
 		};
 		
 		div.setAttribute("data-isVisible", true);
-		Controls.hasFocus = false;
+		this.world.camera.controls.hasFocus = false;
 	},
 	
 	/**
@@ -34,7 +35,7 @@ var LoginForm = {
 	close: function() {
 		var div = this._getDOMForm();
 		div.setAttribute("data-isVisible", false);
-		Controls.hasFocus = true;
+		this.world.camera.controls.hasFocus = true;
 	},
 	
 	/**

@@ -25,14 +25,14 @@ var World = function() {
 	this.userSpaceShip    = null; // Initialized by ServerConnection
 	this.userSpaceShipMoveTimer = null;
 	this.userSpaceShipMoveTimerDelay = 5000;
-	this.designer         = null; // Initialized by ServerConnection
+	this.designer         = new Designer(this);
 	this.spaceShips       = {};
 	this.spaceContent     = new SpaceContent(this);
 	
 	// Starts with 1 because 0 = not pickable
 	// TODO meshes in this array cannot be destroyed by garbage collector
 	this.nextPickableColor = [0, 0, 1];
-	this._pickableMeshes = {};
+	this._pickableContent = {}; // key = color, value = Mesh or Entity
 };
 
 /**
@@ -72,9 +72,10 @@ World.prototype.sortEntities = function() {
 		}
 	});
 	
+	// TODO bugs with sorting ?!?
 	this._entities.sort(function(a, b) {
-		var at = a.model.isTransparency();
-		var bt = b.model.isTransparency();
+		var at = a.isTransparency();
+		var bt = b.isTransparency();
 		
 		if(at && bt) {
 			return b.distanceFromCamera - a.distanceFromCamera;
@@ -112,32 +113,27 @@ World.prototype.setUserSpaceShip = function(spaceShip) {
 		}
 	}, this.userSpaceShipMoveTimerDelay, false);
 	
-	// TODO use first building with type.is_controllable as controlled by camera
+	this.designer.setSpaceShip(this.userSpaceShip);
 };
 
 /**
- * Creates the designer with the given definition
- * @see functions.rb : get_building_types_definition
- */
-World.prototype.setDesigner = function(definition) {
-	this.designer = new Designer(this, definition);
-	if(this.userSpaceShip != null) this.designer.setSpaceShip(this.userSpaceShip);
-};
-
-/**
- * Configures a mesh as a pickable mesh
- * @param Mesh The mesh which is pickable
- * @param callback The function to execute when Mesh is picked. "this" will reference the mesh
- * @param boolean True if the mesh is a screen. If true, x and y coordinates of the click 
+ * Configures an entity or a mesh as pickable
+ * @param Entity|Mesh The content which is pickable
+ * @param callback The function to execute when the content is picked. "this" will reference the Entity or the Mesh
+ * @param boolean True if content is a Mesh and if the mesh is a screen. If true, x and y coordinates of the click 
  *                on the screen will be passed to callback, as floats (0.0 .. 1.0)
  */
-World.prototype.configurePickableMesh = function(mesh, callBack, isScreen) {
-	mesh.pickColor    = this.nextPickableColor.slice(0); // = clone()
-	mesh.pickCallBack = callBack;
-	mesh.isScreen     = isScreen;
-	this._pickableMeshes[this._colorToObjectKey(this.nextPickableColor)] = mesh;
+World.prototype.configurePickableContent = function(content, callBack, isScreen) {
+	content.pickColor = [
+		1 / 255 * this.nextPickableColor[0],
+		1 / 255 * this.nextPickableColor[1],
+		1 / 255 * this.nextPickableColor[2]
+	];
+	content.pickCallBack = callBack;
+	if(content instanceof Mesh) content.isScreen = isScreen;
+	this._pickableContent[this._colorToObjectKey(this.nextPickableColor)] = content;
 	
-	// Incrementing
+	// Incrementing the color index
 	if(this.nextPickableColor[2] >= 255) {
 		if(this.nextPickableColor[1] >= 255) {
 			this.nextPickableColor[0]++;
@@ -149,16 +145,16 @@ World.prototype.configurePickableMesh = function(mesh, callBack, isScreen) {
 	} else {
 		this.nextPickableColor[2]++;
 	}
-};
+}; // TODO reuse a color for a group of meshes instead of having a different one for each mesh (example : doors locks)
 
 /**
- * Returns the pickable mesh associated to the given color
+ * Returns the pickable content (Mesh or Entity) associated to the given color
  * @param vec3 RGB Color
- * @return Mesh The Mesh
+ * @return Mesh|Entity The content
  */
-World.prototype.getPickableMeshByColor = function(color) {
+World.prototype.getPickableContentByColor = function(color) {
 	var key = this._colorToObjectKey(color);
-	return this._pickableMeshes[key] ? this._pickableMeshes[key] : null;
+	return this._pickableContent[key] ? this._pickableContent[key] : null;
 };
 
 /**
@@ -224,11 +220,13 @@ World.prototype.resize = function(screenWidth, screenHeight) {
 
 /**
  * Initializes the world
+ * @param Canvas The WebGL canvas
  * @param WebGL The WebGL context
  */
-World.prototype.init = function(gl) {
+World.prototype.init = function(canvas, gl) {
 	this.gl = gl;
 	
+	this.camera.init(canvas);
 	this.mainShader.init(this.gl);
 	this.gl.useProgram(this.mainShader.program);
 	
@@ -270,9 +268,9 @@ World.prototype.positionAbsoluteToRelative = function(absolutePosition) {
 };
 
 // If these constants are changed, main fragmentShader.glsl and vertexShader.glsl must be updated too.
-World.prototype.DRAW_MODE_NORMAL      = 0;
-World.prototype.DRAW_MODE_PICK_MESH   = 1;
-World.prototype.DRAW_MODE_PICK_SCREEN = 2;
+World.prototype.DRAW_MODE_NORMAL       = 0;
+World.prototype.DRAW_MODE_PICK_CONTENT = 1;
+World.prototype.DRAW_MODE_PICK_SCREEN  = 2;
 
 /**
  * Draws the world at each frame

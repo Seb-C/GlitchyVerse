@@ -6,9 +6,9 @@ const int MAX_LIGHTS_NUMBER = 16; // In case of change, it must be edited in Lig
 // TODO any way to use GL_MAX_VERTEX_UNIFORM_COMPONENTS to calculate this constant ?
 
 // If these constants are changed, World.js and vertexShader.glsl must be updated too.
-const int DRAW_MODE_NORMAL      = 0;
-const int DRAW_MODE_PICK_MESH   = 1;
-const int DRAW_MODE_PICK_SCREEN = 2;
+const int DRAW_MODE_NORMAL       = 0;
+const int DRAW_MODE_PICK_CONTENT = 1;
+const int DRAW_MODE_PICK_SCREEN  = 2;
 
 varying vec2 vTextureCoord;
 varying float vLighting;
@@ -24,6 +24,8 @@ uniform float uPointLightingMaxDistanceArray[MAX_LIGHTS_NUMBER];
 uniform int   uPointLightingAttenuationArray[MAX_LIGHTS_NUMBER];
 uniform float uPointLightingMaxLightningArray[MAX_LIGHTS_NUMBER];
 uniform int   uPointLightingArrayLength;
+uniform vec4  uColorMask;
+uniform vec3  uEntityPickColor;
 
 uniform sampler2D uTexture;
 uniform int uDrawMode;
@@ -66,8 +68,17 @@ void main(void) {
 		if(uHasMappedTexture == 1.0) {
 			texelColor *= texture2D(uMappedTexture, vTextureMapping);
 		}
+		if(uColorMask.a > 0.0) {
+			texelColor *= uColorMask;
+		}
 		gl_FragColor = vec4(texelColor.rgb * (vLighting + pointLights), texelColor.a);
-	} else /*if(uDrawMode == DRAW_MODE_PICK_MESH || uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
+	} else if(uDrawMode == DRAW_MODE_PICK_CONTENT) {
+		if(uEntityPickColor[0] != 0.0 || uEntityPickColor[1] != 0.0 || uEntityPickColor[2] != 0.0) {
+			gl_FragColor = vec4(uEntityPickColor, 1.0); // Pickable entity
+		} else {
+			gl_FragColor = vec4(vPickColor, 1.0); // Pickable mesh
+		}
+	} else /*if(uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		gl_FragColor = vec4(vPickColor, 1.0);
 	}
 }

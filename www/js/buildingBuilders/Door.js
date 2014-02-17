@@ -14,7 +14,7 @@ Building.builders.Door = function(building, state) {
 	var isOpened = state == 1;
 	
 	building.setOpened = function(newIsOpened) {
-		if(!isAnimationStarted && isOpened != newIsOpened) {
+		if(building.isBuilt && !isAnimationStarted && isOpened != newIsOpened) {
 			isAnimationStarted = true;
 			var animationToCall = newIsOpened && !isOpened ? "open" : "close";
 			building.world.animator.animate(building, animationToCall, function() {
@@ -27,14 +27,14 @@ Building.builders.Door = function(building, state) {
 	};
 	
 	building.isOpened = function() {
-		return setOpened;
+		return isOpened;
 	};
 	
 	for(var i = 0 ; i < building.model.meshes.length ; i++) {
 		var mesh = building.model.meshes[i];
 		
 		if(mesh.groups.indexOf("lock") != -1) {
-			building.world.configurePickableMesh(mesh, function() {
+			building.world.configurePickableContent(mesh, function() {
 				building.setOpened(!isOpened);
 			}, false);
 		}

@@ -10,13 +10,14 @@ var Configuration = {
 			this._musicVolume = 1;
 			this._soundVolume = 1;
 			this._keyboard    = {
-				"left":   37, // 37 = Left arrow
-				"right":  39, // 39 = Right arrow
-				"up":     38, // 38 = Up arrow
-				"down":   40, // 40 = Down arrow
-				"pgUp":   33, // 33 = Page up
-				"pgDown": 34  // 34 = Page down
-			};
+				"left"     : 37, // 37 = Left arrow
+				"right"    : 39, // 39 = Right arrow
+				"up"       : 38, // 38 = Up arrow
+				"down"     : 40, // 40 = Down arrow
+				"pgUp"     : 33, // 33 = Page up
+				"pgDown"   : 34, // 34 = Page down
+				"inventory": 73  // 73 = I
+			}; // TODO add a new key without removing local storage ?!?
 			this._save();
 		} else {
 			this._musicVolume = parseFloat(localStorage.getItem("musicVolume"));
@@ -26,12 +27,13 @@ var Configuration = {
 		
 		// Key labels to show
 		this._keyLabels = {
-			"left":   "Strafe left",
-			"right":  "Strafe right",
-			"up":     "Move frontward",
-			"down":   "Move backward",
-			"pgUp":   "Move upward",
-			"pgDown": "Move downward"
+			"left"     : "Strafe left",
+			"right"    : "Strafe right",
+			"up"       : "Move frontward",
+			"down"     : "Move backward",
+			"pgUp"     : "Move upward",
+			"pgDown"   : "Move downward",
+			"inventory": "Inventory"
 		};
 		
 		// Creating configuration button
@@ -92,8 +94,8 @@ var Configuration = {
 		// Creating button
 		this._DOMShowButton = document.createElement("div");
 		this._DOMShowButton.setAttribute("id", "configurationButton");
-		this._DOMShowButton.setAttribute("alt", "*");
-		this._DOMShowButton.setAttribute("title", "Configuration");
+		this._DOMShowButton.setAttribute("class", "hudButton");
+		this._DOMShowButton.appendChild(document.createTextNode("Configuration"));
 		this._DOMShowButton.addEventListener("click", function() {
 			if(self._DOMContainer) {
 				self._DOMContainer.showWindow();

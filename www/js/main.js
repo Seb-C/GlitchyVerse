@@ -23,11 +23,10 @@ if(gl) {
 	//gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
 	
 	Configuration.init();
-	Controls.init(canvas);
 	Materials.init(gl);
 	
 	var world = new World();
-	world.init(gl);
+	world.init(canvas, gl);
 	
 	// TODO remove last invisible webgl errors + fix min-capability-mode
 	var server = new ServerConnection(window.location.host, "play", world);
@@ -67,9 +66,9 @@ if(gl) {
 		TimerManager.update();
 		
 		// If the user tries to click on something in the world
-		var picking = Controls.getPicking();
+		var picking = world.camera.controls.getPicking();
 		if(picking) {
-			world.draw(world.DRAW_MODE_PICK_MESH);
+			world.draw(world.DRAW_MODE_PICK_CONTENT);
 			
 			// Translating mouse coordinates (0, 0 point is on the top left corner)
 			// to WebGL coordinates (0, 0 point is in the bottom left corner)
@@ -78,12 +77,14 @@ if(gl) {
 			var pixel = new Uint8Array(4);
 			gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 			
-			// Getting picked mesh and executing callback
-			var pickedMesh = world.getPickableMeshByColor([pixel[0], pixel[1], pixel[2]]);
+			// Getting picked content and executing callback
+			var pickedContent = world.getPickableContentByColor([pixel[0], pixel[1], pixel[2]]);
 			
-			if(pickedMesh) {
+			// TODO picking and FPS mode (with cursor lock) ?
+			
+			if(pickedContent) {
 				var xClick = null, yClick = null;
-				if(pickedMesh.isScreen) {
+				if(pickedContent instanceof Mesh && pickedContent.isScreen) {
 					world.draw(world.DRAW_MODE_PICK_SCREEN);
 					
 					// Translating mouse coordinates (0, 0 point is on the top left corner)
@@ -92,11 +93,13 @@ if(gl) {
 					var y = world.camera.screenSize[1] - picking[1];
 					var pixel = new Uint8Array(4);
 					gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
-					xClick = pixel[0] / 255;
-					yClick = pixel[1] / 255;
+					if(pixel[0] != 0 || pixel[1] != 0) {
+						xClick = pixel[0] / 255;
+						yClick = pixel[1] / 255;
+					}
 				}
 				
-				pickedMesh.pickCallBack(xClick, yClick);
+				pickedContent.pickCallBack(xClick, yClick);
 			}
 		}
 	};

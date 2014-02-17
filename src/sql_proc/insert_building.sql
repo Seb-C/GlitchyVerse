@@ -26,7 +26,9 @@ SELECT DISTINCT
 	data.building_size_x,
 	data.building_size_y,
 	data.building_size_z,
-	building_type.building_type_default_state
+	building_type.building_type_default_state,
+	0 AS building_is_built, -- TODO
+	NULL AS building_seed -- TODO
 FROM (
 	-- Data to save
 	SELECT

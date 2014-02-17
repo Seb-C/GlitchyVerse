@@ -41,7 +41,7 @@
 					}
 					
 					for(var i = 0 ; i < this.items.length ; i++) {
-						this.inventoryDom.appendChild(this.items[i].inventoryDom);
+						this.inventoryDom.appendChild(this.items[i].dom);
 					}
 					for(var i = this.items.length ; i < this.slotCount ; i++) {
 						var emptySlot = document.createElement("div");

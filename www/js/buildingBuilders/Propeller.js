@@ -26,9 +26,9 @@ Building.builders.Propeller = function(building, state) {
 		var state = forceValue ? forceValue : currentState;
 		var result;
 		if(state < 0) {
-			result = state / -building.minState;
+			result = state / -building.type.minState;
 		} else {
-			result = state / building.maxState;
+			result = state / building.type.maxState;
 		}
 		
 		return Math.round(result * 100) / 100;
@@ -40,8 +40,8 @@ Building.builders.Propeller = function(building, state) {
 	
 	var changeState = function(newState) {
 		currentState = newState;
-		if(currentState < building.minState) currentState = building.minState;
-		if(currentState > building.maxState) currentState = building.maxState;
+		if(currentState < building.type.minState) currentState = building.type.minState;
+		if(currentState > building.type.maxState) currentState = building.type.maxState;
 		
 		var powerRate = building.getPowerRate();
 		
@@ -83,10 +83,12 @@ Building.builders.Propeller = function(building, state) {
 	 * @param float The value to set (-1.0 .. 1.0)
 	 */
 	building.setPowerRate = function(powerRate) {
-		if(powerRate < 0) {
-			changeState(powerRate * -building.minState);
-		} else {
-			changeState(powerRate * building.maxState);
+		if(building.isBuilt) {
+			if(powerRate < 0) {
+				changeState(powerRate * -building.type.minState);
+			} else {
+				changeState(powerRate * building.type.maxState);
+			}
 		}
 	};
 	

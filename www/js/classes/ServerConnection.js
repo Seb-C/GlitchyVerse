@@ -47,7 +47,7 @@ ServerConnection.prototype.sendMessage = function(method, data) {
 
 ServerConnection.prototype._auth_query = function(data) {
 	var self = this;
-	LoginForm.open(function(name, password) {
+	LoginForm.open(this.world, function(name, password) {
 		self.sendMessage("auth_answer", {name: name, password: password});
 	});
 };
@@ -68,7 +68,11 @@ ServerConnection.prototype._data_spaceship = function(data) {
 };
 
 ServerConnection.prototype._data_building_types_definition = function(data) {
-	this.world.setDesigner(data);
+	Building.types = {};
+	for(var i = 0 ; i < data.length ; i++) {
+		var bt = new BuildingType(data[i]);
+		Building.types[bt.id] = bt;
+	}
 };
 
 ServerConnection.prototype._add_building = function(data) {
@@ -96,7 +100,7 @@ ServerConnection.prototype._update_propellers = function(data) {
 	var ss = this.world.spaceShips[data.spaceship_id];
 	if(data.id == null) {
 		for(var k in ss.entities) {
-			if(ss.entities[k].exertThrust) {
+			if(ss.entities[k].type.exertThrust) {
 				ss.entities[k].setPowerRate(data.power);
 			}
 		}
@@ -118,5 +122,26 @@ ServerConnection.prototype._data_item_types_definition = function(data) {
 	for(var i = 0 ; i < data.length ; i++) {
 		var it = new ItemType(data[i]);
 		Item.types[it.id] = it;
+	}
+};
+
+
+ServerConnection.prototype._move_item = function(data) { // TODO do this work outside this class ?
+	var ss = this.world.spaceShips[data.spaceship_id];
+	if(ss) {
+		var targetBuilding = ss.entities[data.target_building_id];
+		if(targetBuilding) {
+			// Searching from item in buildings
+			for(var k in ss.entities) {
+				var building = ss.entities[k];
+				for(var i = 0 ; i < building.items.length ; i++) {
+					var item = building.items[i];
+					if(item.id == data.item_id) {
+						item.moveTo(targetBuilding, data.target_slot_group_id);
+						return;
+					}
+				}
+			}
+		}
 	}
 };

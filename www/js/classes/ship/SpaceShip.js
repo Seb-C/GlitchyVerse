@@ -12,7 +12,7 @@
 var SpaceShip = function(world, id, name, position, rotation, definition, attributes) {
 	this.world = world;
 	this.id = id;
-	this.roomUnitSize = [4, 3.5, 4]; // TODO put everything in obj, and remove those constants
+	this.roomUnitSize = vec3.fromValues(4, 3.5, 4); // TODO put everything in obj, and remove those constants ?
 	this.edgeSize = 0.2;
 	this.lightAndClimEdgeSize = 0.58;
 	this.recoilMaxSpeedRate = 0.2; // Relative to the normal max speed
@@ -37,11 +37,9 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.minBounds = null;
 	this.maxBounds = null;
 	
-	this.buildingsByTypeIds       = {};
-	
-	this.gapBuildings             = {};
-	
-	this.entities                 = {}; // TODO is it useful to keep an id as key ? Should we replace it by a normal array ?
+	this.buildingsByTypeIds = {};
+	this.gapBuildings       = {};
+	this.entities           = {}; // TODO is it useful to keep an id as key ? Should we replace it by a normal array ?
 	
 	// TODO moving bug (rotating) when windows on the right (or left ?)
 	// TODO can't see spaceship without propeller ?!?
@@ -49,7 +47,7 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	// Initializing gap buildings list
 	for(var i = 0 ; i < definition.length ; i++) {
 		var building = definition[i];
-		if(building.is_gap) {
+		if(Building.types[building.type_id].isGap) {
 			this._addGapBuilding(building);
 		}
 	}
@@ -97,7 +95,7 @@ SpaceShip.prototype._recalculateMinMaxBounds = function() {
  * @param Object Definition received from server.
  */
 SpaceShip.prototype.addBuilding = function(building) {
-	if(building.is_gap) {
+	if(Building.types[building.type_id].isGap) {
 		this._addGapBuilding(building);
 	}
 	this._addBuilding(building);
@@ -228,7 +226,7 @@ SpaceShip.prototype.getEntitiesWhichExertsThrust = function(modelClass) {
 	var r = new Array();
 	for(var id in this.entities) {
 		var entity = this.entities[id];
-		if(entity.exertThrust) {
+		if(entity.type.exertThrust) {
 			r.push(entity);
 		}
 	}
@@ -334,11 +332,11 @@ SpaceShip.prototype.updateAcceleration = function() {
 	this._linearMaxSpeed = 0;
 	for(var k in this.entities) {
 		var entity = this.entities[k];
-		if(entity.exertThrust) {
+		if(entity.type.exertThrust) {
 			var positionX = entity.positionInSpaceShip[0] + (entity.sizeInSpaceShip[0] / 2 - 0.5);
 			var positionY = entity.positionInSpaceShip[1] + (entity.sizeInSpaceShip[1] / 2 - 0.5);
 			
-			var maxState = entity.maxState;
+			var maxState = entity.type.maxState;
 			var state = entity.getState();
 			var size = entity.sizeInSpaceShip;
 			var sizeMultiplicator = size[0] * size[1] * size[2];

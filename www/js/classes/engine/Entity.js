@@ -4,13 +4,16 @@
  * @param Model the model of the entity
  * @param vec3 The position of the entity in the world
  * @param quat The rotation to apply to the entity
+ * @param vec4 (optional) A color mask to apply to the entity
  */
-var Entity = function(world, model, position, rotation) {
+var Entity = function(world, model, position, rotation, colorMask) {
 	this.gl = null;
 	this.world = world;
 	this.model = model;
 	this.position = position;
 	this.rotation = rotation;
+	this.colorMask = colorMask || vec4.create();
+	this.pickColor = vec3.create(); // In case the entity is made pickable, else it stays to (0, 0, 0)
 	
 	this.lights = new Array(); // Lights associated to the entity (must be used when extended)
 	
@@ -42,6 +45,11 @@ Entity.prototype.getRelativePosition = function() {
 Entity.prototype.draw = function(gl, shader, drawMode) {
 	gl.uniform3fv(shader.getVar("uCurrentPosition"), this.getRelativePosition());
 	gl.uniform4fv(shader.getVar("uCurrentRotation"), this.getRotation());
+	gl.uniform4fv(shader.getVar("uColorMask"), this.colorMask);
+	
+	if(drawMode == this.world.DRAW_MODE_PICK_CONTENT) {
+		gl.uniform3fv(shader.getVar("uEntityPickColor"), this.pickColor);
+	}
 	
 	this.model.draw(shader, drawMode);
 };
@@ -62,6 +70,10 @@ Entity.prototype.setPosition = function(newPos) {
 	this.lights.map(function(light) {
 		vec3.add(light.position, light.position, difference);
 	});
+};
+
+Entity.prototype.isTransparency = function() {
+	return (this.colorMask[3] > 0 && this.colorMask[3] < 1) || this.model.isTransparency();
 };
 
 /**

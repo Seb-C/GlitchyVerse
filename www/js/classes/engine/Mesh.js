@@ -163,11 +163,7 @@ Mesh.prototype.getVertexPickColorArray = function() {
 	if(this.pickColor == null) {
 		color = [0, 0, 0];
 	} else {
-		color = [
-			1 / 255 * this.pickColor[0],
-			1 / 255 * this.pickColor[1],
-			1 / 255 * this.pickColor[2]
-		];
+		color = this.pickColor;
 	}
 	
 	var result = Array();
