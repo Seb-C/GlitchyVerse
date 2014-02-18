@@ -99,4 +99,8 @@ class MessageHandler
 	def move_item_query(data, user)
 		user.move_item(self, data["item_id"], data["building_id"], data["slot_group_id"])
 	end
+	
+	def achieve_building_query(data, user)
+		user.achieve_building(self, data)
+	end
 end

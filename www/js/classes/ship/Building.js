@@ -18,8 +18,6 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	
 	this.modelName = this.type.model;
 	
-	// TODO slots (this.type.getSlots(this.isBuilt))
-	
 	var colorMask = this.isBuilt ? null : vec4.fromValues(0.5, 0.5, 1, 0.5); // TODO blinking textures -> cull faces everywhere
 	
 	if(Building.builders[this.modelName]) {
@@ -48,7 +46,9 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	}
 	this.inventoryDom = null;
 	
-	if(this.type.getSlotsCount(this.isBuilt) > 0) {
+	// TODO do it again when it's built
+	this.slotSizeMultiplicator = this.sizeInSpaceShip[0] * this.sizeInSpaceShip[1] * this.sizeInSpaceShip[2];
+	if(this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator > 0) {
 		this.createDomInventory();
 		world.configurePickableContent(this, function() {
 			this.toggleDomInventory();
@@ -105,9 +105,14 @@ Building.prototype.toggleDomInventory = function() {
 	}
 };
 
-Building.prototype.createDomInventory = function() {
+Building.prototype._getInventoryWindowTitleName = function() {
 	var name = this.seed != null ? this.seed : this.type.name;
-	this.inventoryDom = createWindow(200, 300, "Invenvory - " + name, false);
+	var windowTitle = this.isBuilt ? "Inventory" : "Building requirements";
+	return windowTitle + " - " + name;
+};
+
+Building.prototype.createDomInventory = function() {
+	this.inventoryDom = createWindow(200, 300, this._getInventoryWindowTitleName(), false);
 	this.inventoryDom.hideWindow();
 	
 	this.regenDomInventoryItems();
@@ -133,7 +138,7 @@ Building.prototype.regenDomInventoryItems = function() {
 		var slot = slots[slotGroupId];
 		
 		// Determining remaining space in the slot
-		var slotsRemaining = slot.maximumAmount;
+		var slotsRemaining = slot.maximumAmount * self.slotSizeMultiplicator;
 		for(var i = 0 ; i < self.items.length ; i++) {
 			if(self.items[i].slotGroupId == slotGroupId) {
 				slotsRemaining--;
@@ -171,6 +176,10 @@ Building.prototype.regenDomInventoryItems = function() {
 Building.prototype.addItem = function(item) {
 	this.items.push(item);
 	this.regenDomInventoryItems();
+	
+	if(!this.isBuilt && this.items.length == this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator) {
+		this.world.server.sendMessage("achieve_building_query", this.id);
+	}
 };
 
 Building.prototype.removeItem = function(item) {
@@ -178,5 +187,17 @@ Building.prototype.removeItem = function(item) {
 	if(index >= 0) {
 		this.items.splice(index, 1);
 		this.regenDomInventoryItems();
+	}
+};
+
+Building.prototype.achieveBuilding = function() {
+	this.isBuilt = true;
+	this.items = [];
+	this.inventoryDom.changeWindowTitle(this._getInventoryWindowTitleName());
+	this.regenDomInventoryItems();
+	this.setColorMask(null);
+	if(this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator <= 0) {
+		this.inventoryDom.hideWindow();
+		this.inventoryDom = null;
 	}
 };

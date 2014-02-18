@@ -43,10 +43,8 @@ var Designer = function(world) {
 		}
 		self.isVisible = true;
 	});
-	document.body.appendChild(this._DOMShowButton);
 };
 
-// TODO "ghost" buildings while building
 // TODO history window
 
 Designer.prototype.setSpaceShip = function(spaceShip) {
@@ -60,6 +58,8 @@ Designer.prototype.setSpaceShip = function(spaceShip) {
 	this.scroll[0] += (this.canvasSize[0] / 2) / this.roomUnitSize;
 	this.scroll[1] = Math.round(this.scroll[1]);
 	this.scroll[2] = -this.scroll[2] + (this.canvasSize[1] / 2) / this.roomUnitSize;
+	
+	document.body.appendChild(this._DOMShowButton);
 };
 
 /**
@@ -260,7 +260,7 @@ Designer.prototype._createDesignerCanvas = function() {
 	this.context = this.canvas.getContext("2d");
 	this.context.imageSmoothingEnabled = true;
 	
-	// Current floor number (creating it at first because it's referenced bu button events)
+	// Current floor number (creating it at first because it's referenced by button events)
 	this.floorSelectorLabel = document.createElement("div");
 	this.floorSelectorLabel.setAttribute("class", "floorSelectorLabel");
 	this.floorSelectorLabel.innerHTML = this.scroll[1];

@@ -226,8 +226,8 @@ ul.contextMenu li:hover {
 	top: 20px;
 	transform-origin: top left;
 	transform: rotate(90deg);
-	overflow-y: hidden;
-	max-width: calc(100% - 40px); /* 50px = 20px (resize arrow) + 20px (close button) */
+	overflow: hidden;
+	/*max-width: calc(100% - 40px);*/ /* 50px = 20px (resize arrow) + 20px (close button) */
 	white-space: nowrap;
 }
 

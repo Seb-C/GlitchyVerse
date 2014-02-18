@@ -20,3 +20,5 @@ FROM spaceship
 NATURAL INNER JOIN building
 WHERE spaceship_id = :spaceship_id
 AND (:building_id IS NULL OR building_id = :building_id)
+
+-- TODO bug when : adding a building (shelf ?!?), and then reload the page : it only gets the last inserted row

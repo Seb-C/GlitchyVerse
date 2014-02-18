@@ -7,5 +7,5 @@ SELECT
 	building_id,
 	item_slot_group_id
 FROM item
-NATURAL INNER JOIN spaceship -- TODO join is useless ?
+NATURAL INNER JOIN building
 WHERE spaceship_id = :spaceship_id

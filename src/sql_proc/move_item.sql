@@ -22,6 +22,7 @@ AND (
 	INNER JOIN item_type_in_item_group ON item_type_in_item_group.item_group_id = item_slot.item_group_id
 	WHERE building.spaceship_id = :spaceship_id
 	AND building.building_id = :target_building_id
+	AND item_slot.item_slot_when_building = (1 - building.building_is_built)
 	AND item_type_in_item_group.item_type_id = (
 		SELECT item_type_id
 		FROM item

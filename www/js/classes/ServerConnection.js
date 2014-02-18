@@ -125,7 +125,6 @@ ServerConnection.prototype._data_item_types_definition = function(data) {
 	}
 };
 
-
 ServerConnection.prototype._move_item = function(data) { // TODO do this work outside this class ?
 	var ss = this.world.spaceShips[data.spaceship_id];
 	if(ss) {
@@ -142,6 +141,16 @@ ServerConnection.prototype._move_item = function(data) { // TODO do this work ou
 					}
 				}
 			}
+		}
+	}
+};
+
+ServerConnection.prototype._achieve_building = function(data) {
+	var ss = this.world.spaceShips[data.spaceship_id];
+	if(ss) {
+		var targetBuilding = ss.entities[data.building_id];
+		if(targetBuilding) {
+			targetBuilding.achieveBuilding();
 		}
 	}
 };

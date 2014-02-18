@@ -12,7 +12,7 @@ var Entity = function(world, model, position, rotation, colorMask) {
 	this.model = model;
 	this.position = position;
 	this.rotation = rotation;
-	this.colorMask = colorMask || vec4.create();
+	this.setColorMask(colorMask);
 	this.pickColor = vec3.create(); // In case the entity is made pickable, else it stays to (0, 0, 0)
 	
 	this.lights = new Array(); // Lights associated to the entity (must be used when extended)
@@ -26,6 +26,10 @@ var Entity = function(world, model, position, rotation, colorMask) {
 
 Entity.prototype.getRotation = function() {
 	return this.rotation;
+};
+
+Entity.prototype.setColorMask = function(colorMask) {
+	this.colorMask = colorMask || vec4.create();
 };
 
 Entity.prototype.setRotation = function(newRotation) {

@@ -26,9 +26,6 @@ var BuildingType = function(definition) {
 			stateVariation: slot.state_variation
 		};
 	}
-	
-	this.slotsCountWhenBuilt    = Object.keys(this.slotsWhenBuilt   ).length;
-	this.slotsCountWhenNotBuilt = Object.keys(this.slotsWhenNotBuilt).length;
 };
 
 /**
@@ -36,7 +33,12 @@ var BuildingType = function(definition) {
  * @return int The number of slots for this building type, depending if it's built or not
  */
 BuildingType.prototype.getSlotsCount = function(isBuilt) {
-	return isBuilt ? this.slotsCountWhenBuilt : this.slotsCountWhenNotBuilt;
+	var slots = isBuilt ? this.slotsWhenBuilt : this.slotsWhenNotBuilt;
+	var slotsCount = 0;
+	for(var k in slots) {
+		slotsCount += slots[k].maximumAmount;
+	}
+	return slotsCount;
 };
 
 /**

@@ -40,8 +40,7 @@ function createWindow(initialWidth, initialHeight, title, isResizable, closeCall
 	
 	// Adding title
 	var titleNode = document.createElement("h1");
-	var titleText = document.createTextNode(title);
-	titleNode.appendChild(titleText);
+	titleNode.innerHTML = title;
 	win.appendChild(titleNode);
 	
 	// Show the window at the top when clicking on it
@@ -99,6 +98,9 @@ function createWindow(initialWidth, initialHeight, title, isResizable, closeCall
 		} else {
 			content.showWindow();
 		}
+	};
+	content.changeWindowTitle = function(title) {
+		titleNode.innerHTML = title;
 	};
 	
 	// Inserting window node in the document and returing content node

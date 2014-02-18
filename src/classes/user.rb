@@ -279,4 +279,29 @@ class User
 			}, self) # TODO broadcast ?!?
 		end
 	end
+	
+	def achieve_building(message_handler, building_id)
+		$DB.transaction()
+		
+		$DB.set_building_built(
+			:spaceship_id => spaceship_id,
+			:building_id  => building_id
+		)
+		
+		if $DB.affected_rows() == 1
+			$DB.delete_items(
+				:spaceship_id => spaceship_id,
+				:building_id  => building_id
+			)
+			
+			message_handler.send_message("achieve_building", {
+				"spaceship_id" => @spaceship_id,
+				"building_id"  => building_id
+			}, self) # TODO broadcast ?!?
+			
+			$DB.commit()
+		else
+			$DB.rollback()
+		end
+	end
 end

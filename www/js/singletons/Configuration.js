@@ -10,13 +10,14 @@ var Configuration = {
 			this._musicVolume = 1;
 			this._soundVolume = 1;
 			this._keyboard    = {
-				"left"     : 37, // 37 = Left arrow
-				"right"    : 39, // 39 = Right arrow
-				"up"       : 38, // 38 = Up arrow
-				"down"     : 40, // 40 = Down arrow
-				"pgUp"     : 33, // 33 = Page up
-				"pgDown"   : 34, // 34 = Page down
-				"inventory": 73  // 73 = I
+				"left"     : 37, // 37  = Left arrow
+				"right"    : 39, // 39  = Right arrow
+				"up"       : 38, // 38  = Up arrow
+				"down"     : 40, // 40  = Down arrow
+				"pgUp"     : 33, // 33  = Page up
+				"pgDown"   : 34, // 34  = Page down
+				"inventory": 73, // 73  = I
+				"camera"   : 112 // 112 = F1
 			}; // TODO add a new key without removing local storage ?!?
 			this._save();
 		} else {
@@ -33,7 +34,8 @@ var Configuration = {
 			"down"     : "Move backward",
 			"pgUp"     : "Move upward",
 			"pgDown"   : "Move downward",
-			"inventory": "Inventory"
+			"inventory": "Inventory",
+			"camera"   : "Toggle camera"
 		};
 		
 		// Creating configuration button

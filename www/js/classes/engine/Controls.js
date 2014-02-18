@@ -46,15 +46,6 @@ Controls.prototype.init = function(canvas) {
 			self._mouseButton[event.button] = false;
 			rotationAxis = vec3.fromValues(0, 0, 0);
 			event.preventDefault(); // Avoid scrolling
-			if(event.button == 1) {
-				if(self._isPointerLocked) {
-					document.exitPointerLock();
-					self._isPointerLocked = false;
-				} else {
-					canvas.requestPointerLock();
-					self._isPointerLocked = true;
-				}
-			}
 		}
 	});
 	canvas.addEventListener("mousemove", function(event) {
@@ -107,8 +98,22 @@ Controls.prototype.init = function(canvas) {
 			var key = event.keyCode || event.which;
 			self._keys[key] = false;
 			event.preventDefault(); // Avoid scrolling, 116 = F5 for debugging
-			if(key == Configuration.getKeyboard("inventory") && self.camera.targetBuilding != null) {
-				self.camera.targetBuilding.toggleDomInventory();
+			switch(key) {
+				case Configuration.getKeyboard("inventory"):
+					if(self.camera.targetBuilding != null) {
+						self.camera.targetBuilding.toggleDomInventory();
+					}
+					break;
+				case Configuration.getKeyboard("camera"):
+					if(self._isPointerLocked) {
+						document.exitPointerLock();
+						self._isPointerLocked = false;
+					} else {
+						canvas.requestPointerLock();
+						self._isPointerLocked = true;
+					}
+					break;
+				//default: alert(key);
 			}
 		}
 	});

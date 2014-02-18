@@ -27,7 +27,17 @@ SELECT DISTINCT
 	data.building_size_y,
 	data.building_size_z,
 	building_type.building_type_default_state,
-	0 AS building_is_built, -- TODO
+	(CASE
+		WHEN (
+			-- If there are no required items to build, it's already built
+			SELECT COALESCE(SUM(item_slot.item_slot_maximum_amount), 0)
+			FROM item_slot
+			WHERE item_slot.building_type_id = building_type.building_type_id
+			AND item_slot.item_slot_when_building = 1
+		) = 0
+		THEN 1
+		ELSE 0
+	END) AS building_is_built,
 	NULL AS building_seed -- TODO
 FROM (
 	-- Data to save
