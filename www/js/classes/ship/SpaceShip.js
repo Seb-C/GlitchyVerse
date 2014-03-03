@@ -12,7 +12,7 @@
 var SpaceShip = function(world, id, name, position, rotation, definition, attributes) {
 	this.world = world;
 	this.id = id;
-	this.roomUnitSize = vec3.fromValues(4, 3.5, 4); // TODO put everything in obj, and remove those constants ?
+	this.roomUnitSize = vec3.fromValues(4, 3.5, 4); // TODO put everything in obj, and remove those constants ? + rename to grid unit size
 	this.edgeSize = 0.2;
 	this.lightAndClimEdgeSize = 0.58;
 	this.recoilMaxSpeedRate = 0.2; // Relative to the normal max speed
@@ -40,6 +40,9 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.buildingsByTypeIds = {};
 	this.gapBuildings       = {};
 	this.entities           = {}; // TODO is it useful to keep an id as key ? Should we replace it by a normal array ?
+	
+	// Each spaceship is a different physics world
+	this.physics = new Physics();
 	
 	// TODO moving bug (rotating) when windows on the right (or left ?)
 	// TODO can't see spaceship without propeller ?!?
@@ -71,8 +74,8 @@ SpaceShip.prototype._recalculateMinMaxBounds = function() {
 	this.maxBounds = null;
 	for(var k in this.entities) {
 		var entity = this.entities[k];
-		var position = entity.positionInSpaceShip;
-		var size = entity.sizeInSpaceShip;
+		var position = entity.gridPosition;
+		var size = entity.gridSize;
 		var positionEnd = [position[0] + size[0] - 1, position[1] + size[1] - 1, position[2] + size[2] - 1];
 		if(this.minBounds == null || this.maxBounds == null) {
 			// First iteration
@@ -136,8 +139,8 @@ SpaceShip.prototype._addGapBuilding = function(building) {
 	for(var k in this.entities) {
 		var entity = this.entities[k];
 		if(entity.modelName == "Room") {
-			var pos  = entity.positionInSpaceShip;
-			var size = entity.sizeInSpaceShip;
+			var pos  = entity.gridPosition;
+			var size = entity.gridSize;
 			
 			if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 				&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
@@ -177,8 +180,8 @@ SpaceShip.prototype.deleteBuilding = function(id) {
 	if(this.gapBuildings[id]) {
 		delete this.gapBuildings[id];
 		
-		var position = entity.positionInSpaceShip;
-		var size = entity.sizeInSpaceShip;
+		var position = entity.gridPosition;
+		var size = entity.gridSize;
 		
 		// Determining building bounds
 		var beginX = position[0] - 0.5;
@@ -192,8 +195,8 @@ SpaceShip.prototype.deleteBuilding = function(id) {
 		for(var k in this.entities) {
 			var entity = this.entities[k];
 			if(entity.modelName == "Room") {
-				var pos  = entity.positionInSpaceShip;
-				var size = entity.sizeInSpaceShip;
+				var pos  = entity.gridPosition;
+				var size = entity.gridSize;
 				
 				if(    !(pos[0] > endX || (pos[0] + size[0]) < beginX)
 					&& !(pos[1] > endY || (pos[1] + size[1]) < beginY)
@@ -283,7 +286,8 @@ SpaceShip.prototype.updatePosition = function() {
 	
 	// Updating entities positions and rotations
 	for(var k in this.entities) {
-		this.entities[k].refreshPositionAndRotation();
+		var entity = this.entities[k];
+		entity.refreshAbsolutePositionAndRotation();
 	}
 	this.world.lightManager.regenerateCache();
 };
@@ -333,12 +337,12 @@ SpaceShip.prototype.updateAcceleration = function() {
 	for(var k in this.entities) {
 		var entity = this.entities[k];
 		if(entity.type.exertThrust) {
-			var positionX = entity.positionInSpaceShip[0] + (entity.sizeInSpaceShip[0] / 2 - 0.5);
-			var positionY = entity.positionInSpaceShip[1] + (entity.sizeInSpaceShip[1] / 2 - 0.5);
+			var positionX = entity.gridPosition[0] + (entity.gridSize[0] / 2 - 0.5);
+			var positionY = entity.gridPosition[1] + (entity.gridSize[1] / 2 - 0.5);
 			
 			var maxState = entity.type.maxState;
 			var state = entity.getState();
-			var size = entity.sizeInSpaceShip;
+			var size = entity.gridSize;
 			var sizeMultiplicator = size[0] * size[1] * size[2];
 			
 			this.rotationSpeed[1] += (middleXY[0] - positionX) * state * sizeMultiplicator;

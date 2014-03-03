@@ -4,7 +4,7 @@ class User
 	attr_reader :name
 	attr_reader :position
 	attr_reader :rotation
-	attr_reader :id
+	attr_reader :user_id
 	attr_reader :spaceship_id
 	
 	# TODO block double login
@@ -29,12 +29,12 @@ class User
 	def connect?(name, password)
 		return false unless @user_id.nil?
 		hash_pass = Digest::SHA1.hexdigest(name + password).force_encoding('utf-8')
-		@user_id      = $DB.get_user_id(:name => name, :password => hash_pass).next()["user_id"]
+		@user_id = $DB.get_user_id(:name => name, :password => hash_pass).next()["user_id"]
 		unless @user_id.nil?
 			@spaceship_id = $DB.get_first_spaceship_id(:user_id => @user_id).next()["spaceship_id"]
 			
 			spaceship_attributes = $DB.get_spaceship(:spaceship_id => @spaceship_id).next()
-			@name     = spaceship_attributes["name"]
+			@name = spaceship_attributes["name"]
 			@position = [
 				spaceship_attributes["spaceship_position_x"],
 				spaceship_attributes["spaceship_position_y"],
@@ -54,6 +54,26 @@ class User
 		@send_lock.synchronize do
 			@websocket.send(message)
 		end
+	end
+	
+	def send_item_variation(message_handler)
+		new_states = []
+		$DB.item_variation_get_new_states(:spaceship_id => @spaceship_id).each do |row|
+			new_states.push({
+				"item_id"        => row["item_id"],
+				"new_item_state" => row["new_item_state"],
+				"building_id"    => row["building_id"]
+			})
+		end
+		
+		unless new_states.empty?
+			message_handler.send_message("update_items_states", {
+				"spaceship_id" => @spaceship_id,
+				"items"        => new_states
+			}, self)
+		end
+		
+		# TODO turn off here buildings where slots can't consume anymore
 	end
 	
 	# Formats a row from database (get_spaceship_building[s])
@@ -91,7 +111,10 @@ class User
 	def send_spaceship_data(message_handler)
 		buildings = []
 		buildings_by_id = {}
-		$DB.get_buildings(:spaceship_id => @spaceship_id).each do |row|
+		$DB.get_buildings(
+			:spaceship_id => @spaceship_id,
+			:building_id => nil
+		).each do |row|
 			current_row = self.format_building_row(row)
 			buildings.push(current_row)
 			buildings_by_id[current_row["id"]] = current_row

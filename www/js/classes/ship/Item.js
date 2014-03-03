@@ -7,6 +7,7 @@ var Item = function(definition, container) {
 	this.slotGroupId = definition.slot_group_id; // TODO
 	
 	this.dom = null;
+	this.domTooltipState = null;
 	this.createDom();
 };
 
@@ -61,12 +62,9 @@ Item.prototype.createDom = function() {
 		ttStateTitle.appendChild(document.createTextNode("State"));
 		tooltip.appendChild(ttStateTitle);
 		
-		var ttState = document.createElement("span");
-		ttState.appendChild(document.createTextNode(
-			this.state + " / " + this.type.maxState
-			+ " (" + Math.round(this.state / this.type.maxState * 100) + " %)"
-		));
-		tooltip.appendChild(ttState);
+		this.domTooltipState = document.createElement("span");
+		this._updateDomTooltipState();
+		tooltip.appendChild(this.domTooltipState);
 	}
 	
 	// TODO add attribute in item group to hide it from item description (+ use it instead of filter of the "any" group (3 times here))
@@ -90,6 +88,20 @@ Item.prototype.createDom = function() {
 		ttGroups.appendChild(document.createTextNode(groups));
 		tooltip.appendChild(ttGroups);
 	}
+};
+
+Item.prototype._updateDomTooltipState = function() {
+	if(this.type.maxState > 0) {
+		this.domTooltipState.innerHTML = (
+			Math.round(this.state) + " / " + this.type.maxState
+			+ " (" + Math.round(this.state / this.type.maxState * 100) + " %)"
+		);
+	}
+};
+
+Item.prototype.setState = function(newState) {
+	this.state = newState;
+	this._updateDomTooltipState();
 };
 
 Item.prototype.moveTo = function(newContainer, slotGroupId) {

@@ -2,17 +2,20 @@
  * A building is an entity which is a part of a spaceship
  */
 var Building = function(world, spaceShip, position, rotation, definition) {
-	var sizeInSpaceShip = definition.size;
+	this.spaceShip    = spaceShip;
+	this.gridSize     = definition.size;
+	this.gridPosition = definition.position;
+	this.typeId       = definition.type_id;
+	this.seed         = definition.seed;
+	this.id           = definition.id;
+	this.isBuilt      = definition.is_built; // TODO when not built (ghost), make it unusable (including picking, state changes and some other operations (propeller directions ?))
+	this.eulerRotationInSpaceShip = vec3.fromValues(
+		degToRad(definition.rotation[0]),
+		degToRad(definition.rotation[1]),
+		degToRad(definition.rotation[2])
+	);
 	
-	this.spaceShip           = spaceShip;
-	this.sizeInSpaceShip     = sizeInSpaceShip;
-	this.positionInSpaceShip = definition.position;
-	this.typeId              = definition.type_id;
-	this.initialRotation     = definition.rotation;
-	this.seed                = definition.seed;
-	this.id                  = definition.id;
-	
-	this.isBuilt             = definition.is_built; // TODO when not built (ghost), make it unusable (including picking, state changes and some other operations (propeller directions ?))
+	this.hitBoxes = [];
 	
 	this.type = Building.types[this.typeId];
 	
@@ -24,19 +27,28 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 		this.parent(world, new Model(world, []), position, rotation, colorMask);
 		Building.builders[this.modelName](this, definition.state);
 	} else {
-		var model;
-		if(Building.alreadyCreatedModels[this.modelName]) {
-			model = Building.alreadyCreatedModels[this.modelName];
-		} else {
-			model = new Model(world, []);
-			model.loadMeshesFromObj(this.modelName, sizeInSpaceShip);
+		if(!Building.alreadyCreatedModels[this.modelName]) {
+			var model = new Model(world, []);
+			model.loadMeshesFromObj(this.modelName, this.gridSize);
 			model.regenerateCache();
+			
+			Building.alreadyCreatedHitBoxes[this.modelName] = HitBoxDefinition.createFromModel(model);
 			Building.alreadyCreatedModels[this.modelName] = model;
 		}
-		this.parent(world, model, position, rotation, colorMask);
+		this.parent(world, Building.alreadyCreatedModels[this.modelName], position, rotation, colorMask);
+		this.hitBoxes.push(new HitBox(Building.alreadyCreatedHitBoxes[this.modelName]));
 	}
 	
-	this.refreshPositionAndRotation();
+	this.positionInSpaceShip = vec3.create();
+	this.rotationInSpaceShip = quat.create();
+	
+	this.refreshPositionAndRotationInSpaceShip();
+	
+	// Initializing hitboxes with position and rotation
+	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
+		this.hitBoxes[i].setPositionAndRotation(this.positionInSpaceShip, this.rotationInSpaceShip);
+	}
+	if(this.hitBoxes.length > 0) this.spaceShip.physics.add(this.hitBoxes);
 	
 	// Inventory
 	this.items = [];
@@ -47,7 +59,7 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	this.inventoryDom = null;
 	
 	// TODO do it again when it's built
-	this.slotSizeMultiplicator = this.sizeInSpaceShip[0] * this.sizeInSpaceShip[1] * this.sizeInSpaceShip[2];
+	this.slotSizeMultiplicator = this.gridSize[0] * this.gridSize[1] * this.gridSize[2];
 	if(this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator > 0) {
 		this.createDomInventory();
 		world.configurePickableContent(this, function() {
@@ -60,42 +72,95 @@ Building.extend(Entity);
 // TODO methods documentation here
 
 // TODO move it in BuildingType ?
-Building.alreadyCreatedModels = {}; // Static, cache of models created from obj
+Building.alreadyCreatedModels   = {}; // Static, cache of models created from obj
+Building.alreadyCreatedHitBoxes = {}; // Static, cache of hitboxes created from obj
 
 Building.builders = {}; // Static, files in js/buildingBuilders
 
 Building.types = null; // Set by ServerConnection, key = id
 
-Building.prototype.refreshPositionAndRotation = function() {
-	var position;
+/**
+ * Moves (translates the position) and rotates the entity
+ * @param vec3 Translation
+ * @param Euler rotation to apply
+ */
+Building.prototype.translateAndRotateInSpaceShip = function(translation, rotation) {
+	if(translation[0] != 0 || translation[1] != 0 || translation[2] != 0 || rotation[0] != 0 || rotation[1] != 0 || rotation[2] != 0) {
+		var translationToApply = vec3.clone(translation);
+		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
+			this.spaceShip.physics.preventCollision(this.hitBoxes[i], translationToApply);
+		}
+		
+		if(this.type.isRoomUnit) {
+			vec3.divide(translationToApply, translationToApply, this.spaceShip.roomUnitSize);
+		}
+		vec3.add(this.gridPosition, this.gridPosition, translationToApply);
+		
+		vec3.add(this.eulerRotationInSpaceShip, this.eulerRotationInSpaceShip, rotation);
+		
+		this.refreshPositionAndRotationInSpaceShip();
+	}
+};
+
+Building.prototype.refreshPositionAndRotationInSpaceShip = function() {
+	// Refreshing position
 	if(this.type.isRoomUnit) {
-		position = vec3.fromValues(
-			(this.positionInSpaceShip[0] + (this.sizeInSpaceShip[0] / 2) - 0.5) * this.spaceShip.roomUnitSize[0], 
-			(this.positionInSpaceShip[1] + (this.sizeInSpaceShip[1] / 2) - 0.5) * this.spaceShip.roomUnitSize[1], 
-			(this.positionInSpaceShip[2] + (this.sizeInSpaceShip[2] / 2) - 0.5) * this.spaceShip.roomUnitSize[2]
+		vec3.set(
+			this.positionInSpaceShip,
+			(this.gridPosition[0] + (this.gridSize[0] / 2) - 0.5) * this.spaceShip.roomUnitSize[0], 
+			(this.gridPosition[1] + (this.gridSize[1] / 2) - 0.5) * this.spaceShip.roomUnitSize[1], 
+			(this.gridPosition[2] + (this.gridSize[2] / 2) - 0.5) * this.spaceShip.roomUnitSize[2]
 		);
 	} else {
-		position = vec3.clone(this.positionInSpaceShip);
+		vec3.copy(this.positionInSpaceShip, this.gridPosition);
 	}
 	
+	// Refreshing rotation
+	quat.identity(this.rotationInSpaceShip);
+	if(this.eulerRotationInSpaceShip[0] != 0 || this.eulerRotationInSpaceShip[1] != 0 || this.eulerRotationInSpaceShip[2] != 0) {
+		quat.rotateY(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[1]);
+		quat.rotateX(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[0]);
+		quat.rotateZ(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[2]);
+	}
+	quat.invert(this.rotationInSpaceShip, this.rotationInSpaceShip);
+	
+	// Refreshing HitBoxes
+	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
+		this.hitBoxes[i].setPositionAndRotation(this.positionInSpaceShip, this.rotationInSpaceShip);
+	}
+	
+	// Refreshing absolute position and rotation
+	this.refreshAbsolutePositionAndRotation();
+};
+
+Building.prototype.refreshAbsolutePositionAndRotation = function() {
+	// Refreshing position
+	var position = vec3.clone(this.positionInSpaceShip);
 	rotatePoint(position, [degToRad(this.spaceShip.rotation[0]), degToRad(this.spaceShip.rotation[1]), degToRad(this.spaceShip.rotation[2])]);
 	vec3.add(position, position, this.spaceShip.getPosition());
-	
 	this.setPosition(position);
 	
-	// Rotating the building
+	// Refreshing rotation
 	var entityRotation = this.getRotation();
-	quat.identity(entityRotation);
-	if(this.initialRotation[0] != 0 || this.initialRotation[1] != 0 || this.initialRotation[2] != 0) {
-		var initialRotation = this.initialRotation;
-		quat.rotateX(entityRotation, entityRotation, degToRad(initialRotation[0]));
-		quat.rotateY(entityRotation, entityRotation, degToRad(initialRotation[1]));
-		quat.rotateZ(entityRotation, entityRotation, degToRad(initialRotation[2]));
-	}
+	quat.copy(entityRotation, this.rotationInSpaceShip);
 	if(this.spaceShip.rotation[0] != 0) quat.rotateX(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[0]));
 	if(this.spaceShip.rotation[1] != 0) quat.rotateY(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[1]));
 	if(this.spaceShip.rotation[2] != 0) quat.rotateZ(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[2]));
 	this.setRotation(entityRotation);
+};
+
+/**
+ * Returns an item by it's id
+ * @param int Id of the item to find
+ * @return Item or null if not found
+ */
+Building.prototype.getItemById = function(id) {
+	for(var i = 0 ; i < this.items.length ; i++) {
+		if(this.items[i].id == id) {
+			return this.items[i];
+		}
+	}
+	return null;
 };
 
 Building.prototype.toggleDomInventory = function() {

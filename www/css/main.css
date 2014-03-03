@@ -351,6 +351,9 @@ ul.contextMenu li:hover {
 	width: 100%;
 	height: 20px;
 	margin: 1px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .emptySlot, .item .slotGroup {
@@ -378,6 +381,10 @@ ul.contextMenu li:hover {
 
 .item:hover .tooltip {
 	display: block;
+}
+
+.item:hover {
+	overflow: inherit;
 }
 
 /* Hovering the tooltip */

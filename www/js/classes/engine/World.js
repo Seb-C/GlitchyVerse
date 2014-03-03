@@ -186,7 +186,7 @@ World.prototype.remove = function(o) {
 			this._removeSpaceShip(o[i]);
 		}
 	} else {
-		throw new Error("Cannot remove object type " + typeof(o) + " in world.");
+		throw new Error("Cannot remove object type " + typeof(o) + " from world.");
 	}
 };
 

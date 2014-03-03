@@ -40,4 +40,6 @@ Building.builders.Console = function(building, state) {
 	// TODO use a special named material for the screen ?
 	
 	building.model.regenerateCache();
+	
+	building.hitBoxes.push(new HitBox(HitBoxDefinition.createFromModel(building.model)));
 };

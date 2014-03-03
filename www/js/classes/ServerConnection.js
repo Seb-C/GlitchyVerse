@@ -132,13 +132,10 @@ ServerConnection.prototype._move_item = function(data) { // TODO do this work ou
 		if(targetBuilding) {
 			// Searching from item in buildings
 			for(var k in ss.entities) {
-				var building = ss.entities[k];
-				for(var i = 0 ; i < building.items.length ; i++) {
-					var item = building.items[i];
-					if(item.id == data.item_id) {
-						item.moveTo(targetBuilding, data.target_slot_group_id);
-						return;
-					}
+				var item = ss.entities[k].getItemById(data.item_id);
+				if(item != null) {
+					item.moveTo(targetBuilding, data.target_slot_group_id);
+					return;
 				}
 			}
 		}
@@ -151,6 +148,20 @@ ServerConnection.prototype._achieve_building = function(data) {
 		var targetBuilding = ss.entities[data.building_id];
 		if(targetBuilding) {
 			targetBuilding.achieveBuilding();
+		}
+	}
+};
+
+ServerConnection.prototype._update_items_states = function(data) {
+	var ss = this.world.spaceShips[data.spaceship_id];
+	if(ss) {
+		for(var i = 0 ; i < data.items.length ; i++) {
+			var itemData = data.items[i];
+			var building = ss.entities[itemData.building_id];
+			var item = building.getItemById(itemData.item_id);
+			if(item != null) {
+				item.setState(itemData.new_item_state);
+			}
 		}
 	}
 };

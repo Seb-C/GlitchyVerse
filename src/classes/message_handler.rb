@@ -3,9 +3,42 @@ require 'json'
 # Handles the messages received and does the necessary actions
 class MessageHandler
 	# Initializes the message handler
-	# @param Array[User] An array of all users (has to be always up to date))
-	def initialize(users)
-		@users = users
+	def initialize()
+		@users = []
+		
+		# Item production / consumption thread
+		@item_variation_delay = 3 # Seconds
+		@item_variation_thread = Thread.new(@users, @item_variation_delay) do |users, delay|
+			item_variation_last_update_time = Time.new()
+			loop do
+				sleep delay
+				
+				current_time = Time.new()
+				passed_time = current_time - item_variation_last_update_time
+				item_variation_last_update_time = current_time
+				
+				$DB.item_variation_put_data_into_temp(:passed_time => passed_time)
+				
+				$DB.item_variation_update_from_temp()
+				
+				users.each do |user|
+					user.send_item_variation(self)
+				end
+				
+				$DB.item_variation_truncate_temp_table()
+			end
+		end
+	end
+	
+	def add_user(user)
+		@users.push(user)
+		self.send_message("auth_query", nil, user)
+	end
+	
+	def delete_user(user)
+		self.send_message_broadcast("delete_spaceship", user.spaceship_id, user);
+		$DB.online_delete_user_from_temp(:user_id => user.user_id)
+		@users.delete(user)
 	end
 	
 	def handle_message(message, user)
@@ -61,6 +94,11 @@ class MessageHandler
 		}, user)
 		
 		if is_valid
+			$DB.online_insert_user_into_temp(
+				:user_id => user.user_id,
+				:spaceship_id => user.spaceship_id
+			)
+			
 			# Sending types data
 			self.send_message("data_building_types_definition", $BUILDING_TYPES_DEFINITION, user)
 			self.send_message("data_item_groups_definition",    $ITEM_GROUPS_DEFINITION,    user)

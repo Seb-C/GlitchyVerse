@@ -29,28 +29,27 @@ $DB = Database.new(
 )
 
 # Loading some cache data
-$BUILDING_TYPES_DEFINITION = get_building_types_definition();
-$ITEM_GROUPS_DEFINITION = get_item_groups_definition();
-$ITEM_TYPES_DEFINITION = get_item_types_definition();
+$BUILDING_TYPES_DEFINITION = get_building_types_definition()
+$ITEM_GROUPS_DEFINITION = get_item_groups_definition()
+$ITEM_TYPES_DEFINITION = get_item_types_definition()
 
 $SPACESHIP_MAX_SPEED_PER_PROPELLER_UNIT = 20
 $MOVE_MAXIMUM_ERROR_RATE = 0.1 # The maximum difference rate when the client sends new position
 
 # Loading paths for serving normal http files
-static         = Rack::File.new("./www", {
+static = Rack::File.new("./www", {
 	"Cache-Control" => "no-cache, no-store, must-revalidate",
 	"Pragma"        => "no-cache",
 	"Expires"       => "0"
 })
-static_index   = Rack::File.new("./www/index.html", {
+static_index = Rack::File.new("./www/index.html", {
 	"Cache-Control" => "no-cache, no-store, must-revalidate",
 	"Pragma"        => "no-cache",
 	"Expires"       => "0"
 })
 
 # Initializing some useful stuff
-users = []
-message_handler = MessageHandler.new(users)
+message_handler = MessageHandler.new()
 $SPACE = Space.new(message_handler)
 
 # Starting the server
@@ -61,24 +60,21 @@ App = lambda do |env|
 		user = User.new(ws)
 		
 		ws.onopen = lambda do |event|
-			users.push(user)
-			message_handler.send_message("auth_query", nil, user)
+			message_handler.add_user(user)
 		end
 		
 		ws.onmessage = lambda do |event|
-			message_handler.handle_message(event.data, user);
+			message_handler.handle_message(event.data, user)
 		end
 		
 		ws.onclose = lambda do |event|
-			message_handler.send_message_broadcast("delete_spaceship", user.spaceship_id, user);
-			users.delete(user)
-			user = nil
+			message_handler.delete_user(user)
+			user = nil # TODO useless ?
 		end
 		
 		ws.onerror = lambda do |event|
-			message_handler.send_message_broadcast("delete_spaceship", user.spaceship_id, user);
-			users.delete(user)
-			user = nil
+			message_handler.delete_user(user)
+			user = nil # TODO useless ?
 		end
 		
 		ws.rack_response

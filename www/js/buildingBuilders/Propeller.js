@@ -5,8 +5,10 @@
  *               - edgeSize : The side of the room edges
  */
 Building.builders.Propeller = function(building, state) {
-	building.model.loadMeshesFromObj("propeller.obj", building.sizeInSpaceShip);
+	building.model.loadMeshesFromObj("propeller.obj", building.gridSize);
 	building.model.regenerateCache();
+	
+	building.hitBoxes.push(new HitBox(HitBoxDefinition.createFromModel(building.model)));
 	
 	var currentState = state;
 	
@@ -55,7 +57,7 @@ Building.builders.Propeller = function(building, state) {
 				building.position[0], 
 				building.position[1], 
 				building.position[2] + 3
-			], lightColor, 30 * powerRate * Math.max.apply(null, building.sizeInSpaceShip), true);
+			], lightColor, 30 * powerRate * Math.max.apply(null, building.gridSize), true);
 			building.world.add(building.lights[0]);
 		}
 		

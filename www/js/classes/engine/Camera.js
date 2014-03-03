@@ -3,10 +3,10 @@
  */
 var Camera = function(world) {
 	this.world = world;
-	this.rotation = quat.create();
+	this._rotation = quat.create();
 	this.moveSpeed = 0.003;
 	//this.moveSpeed = 0.15; // TODO only for tests, remove it
-	this.position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
+	this._position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
 	this.projectionMatrix = null;
@@ -15,13 +15,14 @@ var Camera = function(world) {
 	this.viewDistance = 1000000;
 	this.targetBuilding = null;
 	this.controls = new Controls(this);
+	this.clipMode = false;
 	// TODO customizable fovy and view distance
 };
 
 Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
 	this.screenSize = vec2.fromValues(screenWidth, screenHeight);
 	this.projectionMatrix = mat4.create();
-	mat4.perspective(this.projectionMatrix, this.fovy, screenWidth / screenHeight, 0.45, this.viewDistance);
+	mat4.perspective(this.projectionMatrix, this.fovy, screenWidth / screenHeight, 0.1, this.viewDistance);
 	return this.projectionMatrix;
 };
 
@@ -32,7 +33,7 @@ Camera.prototype.init = function(canvas) {
 // TODO option to freeze z axis (and synchronize camera rotation with spaceship + gravity and walls)
 
 /*Camera.prototype.getPosition = function() {
-	return vec3.clone(this.position); // TODO is it useful to clone it ?
+	return vec3.clone(this._position); // TODO is it useful to clone it ?
 };*/
 
 /**
@@ -46,15 +47,20 @@ Camera.prototype.notifyBuildingRemoved = function(building) {
 };
 
 Camera.prototype.getRotation = function() {
-	var rotation = quat.clone(this.rotation);
-	quat.invert(rotation, rotation);
-	
-	if(this.world.userSpaceShip != null) {
-		var ssRotation = quat.create();
-		quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
-		quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
-		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
-		quat.multiply(rotation, rotation, ssRotation);
+	var rotation = quat.create();
+	if(this.clipMode || this.targetBuilding == null) {
+		quat.copy(rotation, this._rotation);
+		quat.invert(rotation, rotation);
+		
+		if(this.world.userSpaceShip != null) {
+			var ssRotation = quat.create();
+			quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
+			quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
+			quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
+			quat.multiply(rotation, rotation, ssRotation);
+		}
+	} else {
+		quat.copy(rotation, this.targetBuilding.rotation);
 	}
 	
 	return rotation;
@@ -64,16 +70,22 @@ Camera.prototype.getRotation = function() {
  * @return The camera absolute position in the world
  */
 Camera.prototype.getAbsolutePosition = function() { // TODO optimize by caching it for each frame
-	var pos = vec3.clone(this.position);
-	if(this.world.userSpaceShip != null) {
-		var ssRotation = quat.create();
-		quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
-		quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
-		quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
-		quat.invert(ssRotation, ssRotation);
-		vec3.transformQuat(pos, pos, ssRotation);
+	var pos = vec3.create();
+	if(this.clipMode || this.targetBuilding == null) {
+		vec3.copy(pos, this._position);
 		
-		vec3.add(pos, pos, this.world.userSpaceShip.getPosition());
+		if(this.world.userSpaceShip != null) {
+			var ssRotation = quat.create();
+			quat.rotateX(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[0]));
+			quat.rotateY(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[1]));
+			quat.rotateZ(ssRotation, ssRotation, degToRad(this.world.userSpaceShip.rotation[2]));
+			quat.invert(ssRotation, ssRotation);
+			vec3.transformQuat(pos, pos, ssRotation);
+			
+			vec3.add(pos, pos, this.world.userSpaceShip.getPosition());
+		}
+	} else {
+		vec3.copy(pos, this.targetBuilding.position);
 	}
 	
 	return pos;
@@ -87,6 +99,7 @@ Camera.prototype.update = function() {
 	var userSpaceShip = this.world.userSpaceShip;
 	
 	// TODO add an inventory button in hud
+	
 	if(this.targetBuilding == null && userSpaceShip != null) {
 		for(var k in userSpaceShip.entities) {
 			if(userSpaceShip.entities[k].type.isControllable) {
@@ -96,8 +109,8 @@ Camera.prototype.update = function() {
 		}
 	}
 	
-	var negatedPosition = vec3.create();
 	var invertedRotation = mat4.create();
+	var negatedPosition = vec3.create();
 	
 	// TODO only for tests, remove it
 	if(this.controls._keys[107]) this.moveSpeed *= 1.05;
@@ -108,35 +121,73 @@ Camera.prototype.update = function() {
 	if(this.lastAnimationTime != 0) {
 		var elapsed = timeNow - this.lastAnimationTime;
 		
-		/**************************************************
-		 ********************* Moves **********************
-		 **************************************************/
-		
 		var movement = this.controls.getMovement();
-		var currentMove = vec3.create();
-		vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
-		vec3.transformQuat(currentMove, currentMove, this.rotation);
-		vec3.add(this.position, this.position, currentMove);
-		
-		vec3.negate(negatedPosition, this.position);
-		
-		/**************************************************
-		 ******************** Rotation ********************
-		 **************************************************/
-		
 		var rotationRate = this.controls.getRotation();
 		
-		var tempQuat = quat.create();
-		quat.rotateX(tempQuat, tempQuat, degToRad(rotationRate[0] * elapsed));
-		quat.rotateY(tempQuat, tempQuat, degToRad(rotationRate[1] * elapsed));
-		quat.rotateZ(tempQuat, tempQuat, degToRad(rotationRate[2] * elapsed));
-		quat.normalize(tempQuat, tempQuat);
-		quat.multiply(this.rotation, this.rotation, tempQuat);
-		
-		mat4.fromQuat(invertedRotation, this.rotation);
-		mat4.invert(invertedRotation, invertedRotation);
+		if(this.clipMode || this.targetBuilding == null) {
+			// Moves
+			var currentMove = vec3.create();
+			vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
+			vec3.transformQuat(currentMove, currentMove, this._rotation);
+			vec3.add(this._position, this._position, currentMove);
+			
+			vec3.negate(negatedPosition, this._position);
+			
+			// Rotation
+			
+			var tempQuat = quat.create();
+			quat.rotateX(tempQuat, tempQuat, degToRad(rotationRate[0] * elapsed));
+			quat.rotateY(tempQuat, tempQuat, degToRad(rotationRate[1] * elapsed));
+			quat.rotateZ(tempQuat, tempQuat, degToRad(rotationRate[2] * elapsed));
+			
+			quat.normalize(tempQuat, tempQuat);
+			quat.multiply(this._rotation, this._rotation, tempQuat);
+			
+			mat4.fromQuat(invertedRotation, this._rotation);
+			mat4.invert(invertedRotation, invertedRotation);
+		} else {
+			var halfPI = Math.PI / 2;
+			
+			var targetEuler = this.targetBuilding.eulerRotationInSpaceShip;
+			
+			// First person euler rotation
+			var eulerRotation = vec3.fromValues(
+				degToRad(rotationRate[0] * elapsed),
+				degToRad(rotationRate[1] * elapsed),
+				0
+			);
+			// Constraints X
+			if(targetEuler[0] + eulerRotation[0] >  halfPI) eulerRotation[0] =  halfPI - targetEuler[0];
+			if(targetEuler[0] + eulerRotation[0] < -halfPI) eulerRotation[0] = -halfPI - targetEuler[0];
+			
+			// Moves
+			var currentMove = vec3.create();
+			vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
+			var translation = vec3.fromValues(
+				Math.sin(targetEuler[1]) * currentMove[2] + Math.sin(targetEuler[1] + halfPI) * currentMove[0],
+				0,
+				Math.cos(targetEuler[1]) * currentMove[2] + Math.cos(targetEuler[1] + halfPI) * currentMove[0]
+			);
+			
+			// Camera rotation
+			mat4.identity(invertedRotation);
+			mat4.rotateY(invertedRotation, invertedRotation, targetEuler[1]);
+			mat4.rotateX(invertedRotation, invertedRotation, targetEuler[0]);
+			mat4.invert(invertedRotation, invertedRotation);
+			
+			this.targetBuilding.translateAndRotateInSpaceShip(translation, eulerRotation);
+			
+			vec3.negate(negatedPosition, this.targetBuilding.positionInSpaceShip);
+			
+			// TODO building moves (db + multiplayer)
+			// TODO hide building controlled by the player
+			// TODO stairs/ladders in physics
+			// TODO gravity in physics
+			// TODO in builders, create hitboxes (door + room)
+		}
 	}
 	this.lastAnimationTime = timeNow;
+	
 	
 	mat4.identity(this.lastModelViewMatrix);
 	

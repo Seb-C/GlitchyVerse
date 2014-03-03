@@ -129,8 +129,8 @@ Designer.prototype._createDesignerCanvas = function() {
 				for(var i = keys.length - 1 ; i >= 0 ; i--) {
 					var k = keys[i];
 					var entity   = self.spaceShip.entities[k];
-					var position = entity.positionInSpaceShip;
-					var size     = entity.sizeInSpaceShip;
+					var position = entity.gridPosition;
+					var size     = entity.gridSize;
 					
 					if(
 						(
@@ -449,8 +449,8 @@ Designer.prototype.draw = function() {
 	var buildingsKeysToDraw = new Array();
 	for(var k in this.spaceShip.entities) {
 		var entity   = this.spaceShip.entities[k];
-		var size     = entity.sizeInSpaceShip;
-		var position = entity.positionInSpaceShip;
+		var size     = entity.gridSize;
+		var position = entity.gridPosition;
 		
 		if(entity.modelName == "Room" && (
 			position[1] == this.scroll[1]
@@ -524,16 +524,16 @@ Designer.prototype.draw = function() {
 		var k        = buildingsKeysToDraw[i];
 		var entity   = this.spaceShip.entities[k];
 		var model    = entity.modelName;
-		var size     = entity.sizeInSpaceShip;
-		var position = entity.positionInSpaceShip;
-		var rotation = entity.initialRotation;
+		var size     = entity.gridSize;
+		var position = entity.gridPosition;
+		var rotation = entity.eulerRotationInSpaceShip;
 		
 		this.context.save();
 		this.context.translate(
 			trueSize * (position[0] + this.scroll[0] + size[0] / 2 - 0.5),
 			trueSize * (position[2] + this.scroll[2] + size[2] / 2 - 0.5)
 		);
-		if(rotation) this.context.rotate(degToRad(rotation[1]));
+		if(rotation) this.context.rotate(rotation[1]);
 		
 		this.context.scale(size[0], size[2]);
 		

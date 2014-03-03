@@ -34,40 +34,40 @@ Building.builders.Room = function(building, state) {
 			if(gap.isLeftOrRight) {
 				// Checking that Y and Z points are in this room
 				if(
-					   gap.position[1] >= building.positionInSpaceShip[1] && gap.position[1] < building.positionInSpaceShip[1] + building.sizeInSpaceShip[1]
-					&& gap.position[2] >= building.positionInSpaceShip[2] && gap.position[2] < building.positionInSpaceShip[2] + building.sizeInSpaceShip[2]
+					   gap.position[1] >= building.gridPosition[1] && gap.position[1] < building.gridPosition[1] + building.gridSize[1]
+					&& gap.position[2] >= building.gridPosition[2] && gap.position[2] < building.gridPosition[2] + building.gridSize[2]
 				) {
-					if(Math.ceil(gap.position[0]) == building.positionInSpaceShip[0]) {
+					if(Math.ceil(gap.position[0]) == building.gridPosition[0]) {
 						side = "left";
 						pos = [
-							(building.positionInSpaceShip[2] + building.sizeInSpaceShip[2] - 1) - gap.position[2],
-							(building.positionInSpaceShip[1] + building.sizeInSpaceShip[1] - 1) - gap.position[1]
+							(building.gridPosition[2] + building.gridSize[2] - 1) - gap.position[2],
+							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
 						];
-					} else if(Math.floor(gap.position[0]) == building.positionInSpaceShip[0] + building.sizeInSpaceShip[0] - 1) {
+					} else if(Math.floor(gap.position[0]) == building.gridPosition[0] + building.gridSize[0] - 1) {
 						side = "right";
 						pos = [
-							gap.position[2] - building.positionInSpaceShip[2],
-							(building.positionInSpaceShip[1] + building.sizeInSpaceShip[1] - 1) - gap.position[1]
+							gap.position[2] - building.gridPosition[2],
+							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
 						];
 					}
 				}
 			} else {
 				// Checking that X and Y points are in this room
 				if(
-					   gap.position[0] >= building.positionInSpaceShip[0] && gap.position[0] < building.positionInSpaceShip[0] + building.sizeInSpaceShip[0]
-					&& gap.position[1] >= building.positionInSpaceShip[1] && gap.position[1] < building.positionInSpaceShip[1] + building.sizeInSpaceShip[1]
+					   gap.position[0] >= building.gridPosition[0] && gap.position[0] < building.gridPosition[0] + building.gridSize[0]
+					&& gap.position[1] >= building.gridPosition[1] && gap.position[1] < building.gridPosition[1] + building.gridSize[1]
 				) {
-					if(Math.ceil(gap.position[2]) == building.positionInSpaceShip[2]) {
+					if(Math.ceil(gap.position[2]) == building.gridPosition[2]) {
 						side = "back";
 						pos = [
-							gap.position[0] - building.positionInSpaceShip[0],
-							(building.positionInSpaceShip[1] + building.sizeInSpaceShip[1] - 1) - gap.position[1]
+							gap.position[0] - building.gridPosition[0],
+							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
 						];
-					} else if(Math.floor(gap.position[2]) == building.positionInSpaceShip[2] + building.sizeInSpaceShip[2] - 1) {
+					} else if(Math.floor(gap.position[2]) == building.gridPosition[2] + building.gridSize[2] - 1) {
 						side = "front";
 						pos = [
-							(building.positionInSpaceShip[0] + building.sizeInSpaceShip[0] - 1) - gap.position[0],
-							(building.positionInSpaceShip[1] + building.sizeInSpaceShip[1] - 1) - gap.position[1]
+							(building.gridPosition[0] + building.gridSize[0] - 1) - gap.position[0],
+							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
 						];
 					}
 				}
@@ -81,29 +81,29 @@ Building.builders.Room = function(building, state) {
 		
 		// Calculating rectangles to create at each face, to fill the surface without the gaps
 		var surfaces = {
-			front  : [{position: [0, 0], size: [building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]]}],
-			back   : [{position: [0, 0], size: [building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]]}],
-			left   : [{position: [0, 0], size: [building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]]}],
-			right  : [{position: [0, 0], size: [building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]]}]//,
-			//top    : [{position: [0, 0], size: [building.sizeInSpaceShip[0], building.sizeInSpaceShip[2]]}],
-			//bottom : [{position: [0, 0], size: [building.sizeInSpaceShip[0], building.sizeInSpaceShip[2]]}]
+			front  : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[1]]}],
+			back   : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[1]]}],
+			left   : [{position: [0, 0], size: [building.gridSize[2], building.gridSize[1]]}],
+			right  : [{position: [0, 0], size: [building.gridSize[2], building.gridSize[1]]}]//,
+			//top    : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[2]]}],
+			//bottom : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[2]]}]
 		};
 		
-		if(gaps.front ) surfaces.front  = splitSurfaceNotOptimized([building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]], gaps.front );
-		if(gaps.back  ) surfaces.back   = splitSurfaceNotOptimized([building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]], gaps.back  );
-		if(gaps.left  ) surfaces.left   = splitSurfaceNotOptimized([building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]], gaps.left  );
-		if(gaps.right ) surfaces.right  = splitSurfaceNotOptimized([building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]], gaps.right );
-		//if(gaps.top   ) surfaces.top    = splitSurfaceNotOptimized([building.sizeInSpaceShip[0], building.sizeInSpaceShip[2]], gaps.top   );
-		//if(gaps.bottom) surfaces.bottom = splitSurfaceNotOptimized([building.sizeInSpaceShip[0], building.sizeInSpaceShip[2]], gaps.bottom);
+		if(gaps.front ) surfaces.front  = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[1]], gaps.front );
+		if(gaps.back  ) surfaces.back   = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[1]], gaps.back  );
+		if(gaps.left  ) surfaces.left   = splitSurfaceNotOptimized([building.gridSize[2], building.gridSize[1]], gaps.left  );
+		if(gaps.right ) surfaces.right  = splitSurfaceNotOptimized([building.gridSize[2], building.gridSize[1]], gaps.right );
+		//if(gaps.top   ) surfaces.top    = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[2]], gaps.top   );
+		//if(gaps.bottom) surfaces.bottom = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[2]], gaps.bottom);
 		
 		// Misc dimensions
 		var edgeSize = building.spaceShip.edgeSize;
 		var lightAndClimEdgeSize = building.spaceShip.lightAndClimEdgeSize;
 		
 		// Walls positions
-		var x2 = unitSize[0] * building.sizeInSpaceShip[0] / 2;
-		var y2 = unitSize[1] * building.sizeInSpaceShip[1] / 2;
-		var z2 = unitSize[2] * building.sizeInSpaceShip[2] / 2;
+		var x2 = unitSize[0] * building.gridSize[0] / 2;
+		var y2 = unitSize[1] * building.gridSize[1] / 2;
+		var z2 = unitSize[2] * building.gridSize[2] / 2;
 		var x1 = x2 - edgeSize;
 		var y1 = y2 - edgeSize;
 		var z1 = z2 - edgeSize;
@@ -324,10 +324,10 @@ Building.builders.Room = function(building, state) {
 		};
 		
 		// Creating faces
-		createFace("front", [unitSize[0], unitSize[1]], [building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]], [x1, y1, z1], [x2, y2, z2], 0  );
-		createFace("right", [unitSize[2], unitSize[1]], [building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]], [z1, y1, x1], [z2, y2, x2], 90 );
-		createFace("back",  [unitSize[0], unitSize[1]], [building.sizeInSpaceShip[0], building.sizeInSpaceShip[1]], [x1, y1, z1], [x2, y2, z2], 180);
-		createFace("left",  [unitSize[2], unitSize[1]], [building.sizeInSpaceShip[2], building.sizeInSpaceShip[1]], [z1, y1, x1], [z2, y2, x2], 270);
+		createFace("front", [unitSize[0], unitSize[1]], [building.gridSize[0], building.gridSize[1]], [x1, y1, z1], [x2, y2, z2], 0  );
+		createFace("right", [unitSize[2], unitSize[1]], [building.gridSize[2], building.gridSize[1]], [z1, y1, x1], [z2, y2, x2], 90 );
+		createFace("back",  [unitSize[0], unitSize[1]], [building.gridSize[0], building.gridSize[1]], [x1, y1, z1], [x2, y2, z2], 180);
+		createFace("left",  [unitSize[2], unitSize[1]], [building.gridSize[2], building.gridSize[1]], [z1, y1, x1], [z2, y2, x2], 270);
 		
 		// Outer top and bottom, Inner ground and ceil
 		meshes.push(new Mesh(material_METAL_BOLT, [
@@ -510,11 +510,11 @@ Building.builders.Room = function(building, state) {
 	building.regenerateMeshes();
 	
 	var distance = Math.max.apply(Math, [
-		building.spaceShip.roomUnitSize[0] * building.sizeInSpaceShip[0] - (building.spaceShip.edgeSize / 2),
-		building.spaceShip.roomUnitSize[1] * building.sizeInSpaceShip[1] - (building.spaceShip.edgeSize / 2),
-		building.spaceShip.roomUnitSize[2] * building.sizeInSpaceShip[2] - (building.spaceShip.edgeSize / 2)
+		building.spaceShip.roomUnitSize[0] * building.gridSize[0] - (building.spaceShip.edgeSize / 2),
+		building.spaceShip.roomUnitSize[1] * building.gridSize[1] - (building.spaceShip.edgeSize / 2),
+		building.spaceShip.roomUnitSize[2] * building.gridSize[2] - (building.spaceShip.edgeSize / 2)
 	]);
-	building.lights.push(new Light(vec3.clone(building.positionInSpaceShip), [1, 1, 1], distance, true, 0.8));
+	building.lights.push(new Light(vec3.clone(building.gridPosition), [1, 1, 1], distance, true, 0.8));
 	
 	building.world.add(building.lights);
 };

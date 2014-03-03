@@ -1,0 +1,1 @@
+DELETE FROM temp_item_variation;

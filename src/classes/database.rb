@@ -23,14 +23,33 @@ class Database
 		@connection.create_function("SQRT", 1, :numeric) do |func, x|
 			func.result = Math.sqrt(x)
 		end
+		@connection.create_function("CLAMP", 1, :numeric) do |func, val, min, max|
+			if val > max
+				func.result = max
+			elsif val < min
+				func.result = min
+			else
+				func.result = val
+			end
+		end
 		
 		# Setting pragmas
 		@connection.execute("PRAGMA locking_mode = #{locking_mode_exclusive ? "EXCLUSIVE" : "NORMAL"};");
 		
+		# Loading content in init directory (temp tables ...)
+		Dir["#{@sql_proc_directory}/init/*.sql"].each do |file|
+			@connection.execute(File.read(file))
+		end
+		
 		# Loading and preparing stored procedures
 		Dir["#{@sql_proc_directory}/*.sql"].each do |file|
-			proc_name_sym = File.basename(file, ".sql").to_sym
-			@prepared_proc[proc_name_sym] = @connection.prepare(File.read(file))
+			proc_name = File.basename(file, ".sql")
+			begin
+				@prepared_proc[proc_name.to_sym] = @connection.prepare(File.read(file))
+			rescue SQLite3::SQLException => e
+				$stderr.print "Error preparing SQL procedure " + proc_name + " : " + e.message + "\n"
+				raise e
+			end
 		end
 	end
 	

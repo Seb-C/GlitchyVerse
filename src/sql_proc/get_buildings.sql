@@ -1,6 +1,6 @@
 -- Returns the buildings defining the spaceship
 -- @param INTEGER :spaceship_id The id of the spaceship
--- @param INTEGER :building_id (optional) The id of the building
+-- @param INTEGER :building_id (nullable) The id of the building
 SELECT
 	building_id,
 	building_type_id,
@@ -20,5 +20,3 @@ FROM spaceship
 NATURAL INNER JOIN building
 WHERE spaceship_id = :spaceship_id
 AND (:building_id IS NULL OR building_id = :building_id)
-
--- TODO bug when : adding a building (shelf ?!?), and then reload the page : it only gets the last inserted row
