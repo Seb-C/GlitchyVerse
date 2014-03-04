@@ -42,8 +42,14 @@ Camera.prototype.init = function(canvas) {
  */
 Camera.prototype.notifyBuildingRemoved = function(building) {
 	if(building == this.targetBuilding) {
-		this.targetBuilding = null;
+		this.setTargetBuilding(null);
 	}
+};
+
+Camera.prototype.setTargetBuilding = function(newTarget) {
+	if(this.targetBuilding != null) this.targetBuilding.isVisible = true;
+	if(newTarget != null) newTarget.isVisible = false;
+	this.targetBuilding = newTarget;
 };
 
 Camera.prototype.getRotation = function() {
@@ -103,7 +109,7 @@ Camera.prototype.update = function() {
 	if(this.targetBuilding == null && userSpaceShip != null) {
 		for(var k in userSpaceShip.entities) {
 			if(userSpaceShip.entities[k].type.isControllable) {
-				this.targetBuilding = userSpaceShip.entities[k];
+				this.setTargetBuilding(userSpaceShip.entities[k]);
 				break;
 			}
 		}
@@ -180,14 +186,15 @@ Camera.prototype.update = function() {
 			vec3.negate(negatedPosition, this.targetBuilding.positionInSpaceShip);
 			
 			// TODO building moves (db + multiplayer)
-			// TODO hide building controlled by the player
 			// TODO stairs/ladders in physics
 			// TODO gravity in physics
-			// TODO in builders, create hitboxes (door + room)
+			// TODO in Room, create hitboxes
 		}
 	}
 	this.lastAnimationTime = timeNow;
 	
+	// TODO separate mtl files ?
+	// TODO clean door obj file
 	
 	mat4.identity(this.lastModelViewMatrix);
 	

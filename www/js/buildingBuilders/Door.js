@@ -13,6 +13,19 @@ Building.builders.Door = function(building, state) {
 	
 	var isOpened = state == 1;
 	
+	// hitboxes definitions (TODO definition file + use door size ?)
+	var hbdLeft  = new HitBoxDefinition(vec3.fromValues(-1.8,   -1.55, -0.2), vec3.fromValues(-0.675, 1.55, 0.2));
+	var hbdRight = new HitBoxDefinition(vec3.fromValues( 0.675, -1.55, -0.2), vec3.fromValues( 1.8,   1.55, 0.2));
+	var hbdTop   = new HitBoxDefinition(vec3.fromValues(-0.675,  0.97, -0.2), vec3.fromValues(0.675,  1.5,  0.2));
+	var hbdDoor  = new HitBoxDefinition(vec3.fromValues(-0.675, -1.55, -0.2), vec3.fromValues(0.675,  0.97, 0.2));
+	
+	// Hitboxes
+	var hbLeft  = new HitBox(hbdLeft );
+	var hbRight = new HitBox(hbdRight);
+	var hbTop   = new HitBox(hbdTop  );
+	var hbDoor  = new HitBox(hbdDoor );
+	building.hitBoxes.push(hbLeft, hbRight, hbTop, hbDoor);
+	
 	building.setOpened = function(newIsOpened) {
 		if(building.isBuilt && !isAnimationStarted && isOpened != newIsOpened) {
 			isAnimationStarted = true;
@@ -23,6 +36,12 @@ Building.builders.Door = function(building, state) {
 			
 			building.world.server.sendMessage("update_doors", {"id": building.id, "state": newIsOpened ? 1 : 0});
 			isOpened = newIsOpened;
+			
+			if(newIsOpened) {
+				building.spaceShip.physics.remove(hbDoor);
+			} else {
+				building.spaceShip.physics.add(hbDoor);
+			}
 		}
 	};
 	
@@ -47,5 +66,6 @@ Building.builders.Door = function(building, state) {
 		building.world.animator.animate(building, "open", function() {
 			isAnimationStarted = false;
 		});
+		building.spaceShip.physics.remove(hbDoor);
 	}
 };

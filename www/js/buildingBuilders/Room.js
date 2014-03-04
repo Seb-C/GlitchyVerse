@@ -14,6 +14,8 @@ Building.builders.Room = function(building, state) {
 	// Loading required textures
 	Materials.loadMtl("materials/main.mtl");
 	
+	// TODO use obj files ?
+	
 	/**
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
@@ -23,9 +25,13 @@ Building.builders.Room = function(building, state) {
 		var material_METAL_BOLT     = Materials.get("METAL_BOLT");
 		var material_METAL_WALL     = Materials.get("METAL_WALL");
 		var material_LINO_TILE      = Materials.get("LINO_TILE");
-		var material_LIGHT_AND_CLIM = Materials.get("LIGHT_AND_CLIM");
 		
-		var gaps = {};
+		var gaps = {
+			front: [],
+			back : [],
+			left : [],
+			right: []
+		};
 		for(var k in building.spaceShip.gapBuildings) {
 			var gap = building.spaceShip.gapBuildings[k];
 			
@@ -79,26 +85,8 @@ Building.builders.Room = function(building, state) {
 			}
 		}
 		
-		// Calculating rectangles to create at each face, to fill the surface without the gaps
-		var surfaces = {
-			front  : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[1]]}],
-			back   : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[1]]}],
-			left   : [{position: [0, 0], size: [building.gridSize[2], building.gridSize[1]]}],
-			right  : [{position: [0, 0], size: [building.gridSize[2], building.gridSize[1]]}]//,
-			//top    : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[2]]}],
-			//bottom : [{position: [0, 0], size: [building.gridSize[0], building.gridSize[2]]}]
-		};
-		
-		if(gaps.front ) surfaces.front  = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[1]], gaps.front );
-		if(gaps.back  ) surfaces.back   = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[1]], gaps.back  );
-		if(gaps.left  ) surfaces.left   = splitSurfaceNotOptimized([building.gridSize[2], building.gridSize[1]], gaps.left  );
-		if(gaps.right ) surfaces.right  = splitSurfaceNotOptimized([building.gridSize[2], building.gridSize[1]], gaps.right );
-		//if(gaps.top   ) surfaces.top    = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[2]], gaps.top   );
-		//if(gaps.bottom) surfaces.bottom = splitSurfaceNotOptimized([building.gridSize[0], building.gridSize[2]], gaps.bottom);
-		
 		// Misc dimensions
 		var edgeSize = building.spaceShip.edgeSize;
-		var lightAndClimEdgeSize = building.spaceShip.lightAndClimEdgeSize;
 		
 		// Walls positions
 		var x2 = unitSize[0] * building.gridSize[0] / 2;
@@ -113,203 +101,211 @@ Building.builders.Room = function(building, state) {
 		
 		// Inner & outer walls
 		var self = this;
-		var createFace = function(faceName, unitSize, size, coord1, coord2, yRotation) {
-			// Meshes for faces parts where there are not gaps
-			for(var i = 0 ; i < surfaces[faceName].length ; i++) {
-				var s = surfaces[faceName][i];
-				
-				// Calculating texture bounds
-				var textureBounds = [
-					0,
-					0,
-					s.size[0] * unitSize[0],
-					s.size[1] * unitSize[1]
-				];
-				if(s.position[0] == 0) textureBounds[0] += edgeSize;
-				if(s.position[1] == 0) textureBounds[1] += edgeSize;
-				if(s.position[0] + s.size[0] == size[0]) textureBounds[2] -= edgeSize;
-				if(s.position[1] + s.size[1] == size[1]) textureBounds[3] -= edgeSize;
-				if(s.position[1] % 2 == 1) {
-					textureBounds[1] += 0.5;
-					textureBounds[3] += 0.5;
-				}
-				
-				textureBounds = [
-					textureBounds[0], textureBounds[1],
-					textureBounds[2], textureBounds[1],
-					textureBounds[2], textureBounds[3],
-					textureBounds[0], textureBounds[3]
-				]
-				
-				// Sides additions
-				var leftAdd   = s.position[0] == 0 ? edgeSize : 0;
-				var topAdd    = s.position[1] == 0 ? edgeSize : 0;
-				var rightAdd  = s.position[0] + s.size[0] == size[0] ? edgeSize : 0;
-				var bottomAdd = s.position[1] + s.size[1] == size[1] ? edgeSize : 0;
-				
-				// Exterior (face), hull
-				var hull = new Mesh(material_METAL_BOLT, [
-					coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord2[2],
-					coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord2[2],
-					coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord2[2],
-					coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord2[2]
-				], [0, 0, 1], textureBounds);
-				
-				// Interior (Wall)
-				var wall = new Mesh(material_METAL_WALL, [
-					coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord1[2],
-					coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] -  s.position[1]              * unitSize[1] - topAdd,    coord1[2],
-					coord2[0] - (s.position[0] + s.size[0]) * unitSize[0] + rightAdd, coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord1[2],
-					coord2[0] -  s.position[0]              * unitSize[0] - leftAdd,  coord2[1] - (s.position[1] + s.size[1]) * unitSize[1] + bottomAdd, coord1[2]
-				], [0, 0, -1], textureBounds);
-				
-				meshes.push(hull);
-				meshes.push(wall);
-				
-				if(yRotation && yRotation != 0) {
-					hull.rotateY(yRotation);
-					wall.rotateY(yRotation);
-				}
-			}
-			
-			// For parts where there are gaps, we have to draw just the frame
-			if(gaps[faceName]) {
-				for(var i = 0 ; i < gaps[faceName].length ; i++) {
-					var s = gaps[faceName][i];
-					
-					// Calculating texture bounds
-					var textureBounds = [
-						0,
-						0,
-						unitSize[0],
-						unitSize[1]
-					];
-					if(s[0]     ==      0 ) textureBounds[0] += edgeSize;
-					if(s[1]     ==      0 ) textureBounds[1] += edgeSize;
-					if(s[0] + 1 == size[0]) textureBounds[2] -= edgeSize;
-					if(s[1] + 1 == size[1]) textureBounds[3] -= edgeSize;
-					if(s[1] % 2 == 1) {
-						textureBounds[1] += 0.5;
-						textureBounds[3] += 0.5;
+		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, yRotation, width, height) {
+			for(var x = 0 ; x < width ; x++) {
+				for(var y = 0 ; y < height ; y++) {
+					var isGap = false;
+					for(var i = 0 ; i < faceGaps.length ; i++) {
+						var part = faceGaps[i];
+						if(part[0] == x && part[1] == y) {
+							isGap = true;
+							break;
+						}
 					}
 					
-					// Sides addition
-					var leftAdd   = s[0] == 0 ? -edgeSize : 0;
-					var topAdd    = s[1] == 0 ? -edgeSize : 0;
-					var rightAdd  = s[0] + 1 == size[0] ? edgeSize : 0;
-					var bottomAdd = s[1] + 1 == size[1] ? edgeSize : 0;
-					
-					if(s[1] > 0) {
-						// Top
-						var texture = [
+					if(isGap) {
+						// For parts where there are gaps, we have to draw just the frame
+						for(var i = 0 ; i < faceGaps.length ; i++) { // TODO remove this loop ?
+							var s = faceGaps[i];
+							
+							// Calculating texture bounds
+							var textureBounds = [
+								0,
+								0,
+								unitWidth,
+								unitHeight
+							];
+							if(s[0]     ==      0 ) textureBounds[0] += edgeSize;
+							if(s[1]     ==      0 ) textureBounds[1] += edgeSize;
+							if(s[0] + 1 == width ) textureBounds[2] -= edgeSize;
+							if(s[1] + 1 == height) textureBounds[3] -= edgeSize;
+							if(s[1] % 2 == 1) {
+								textureBounds[1] += 0.5;
+								textureBounds[3] += 0.5;
+							}
+							
+							// Sides addition
+							var leftAdd   = s[0] == 0 ? -edgeSize : 0;
+							var topAdd    = s[1] == 0 ? -edgeSize : 0;
+							var rightAdd  = s[0] + 1 == width  ? edgeSize : 0;
+							var bottomAdd = s[1] + 1 == height ? edgeSize : 0;
+							
+							if(s[1] > 0) {
+								// Top
+								var texture = [
+									textureBounds[0], textureBounds[1],
+									textureBounds[2], textureBounds[1],
+									textureBounds[2], textureBounds[1] + edgeSize,
+									textureBounds[0], textureBounds[1] + edgeSize
+								];
+								
+								var hull = new Mesh(material_METAL_BOLT, [
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight,            coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight,            coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight - edgeSize, coord2[2],
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight - edgeSize, coord2[2]
+								], [0, 0, 1], texture);
+								var wall = new Mesh(material_METAL_WALL, [
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight,            coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight,            coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight - edgeSize, coord1[2],
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight - edgeSize, coord1[2]
+								], [0, 0, -1], texture);
+								
+								meshes.push(hull);
+								meshes.push(wall);
+								
+								if(yRotation && yRotation != 0) {
+									hull.rotateY(yRotation);
+									wall.rotateY(yRotation);
+								}
+							}
+							if(s[1] < height - 1) {
+								// Bottom
+								var texture = [
+									textureBounds[0], textureBounds[3] + edgeSize,
+									textureBounds[2], textureBounds[3] + edgeSize,
+									textureBounds[2], textureBounds[3],
+									textureBounds[0], textureBounds[3]
+								];
+								
+								var hull = new Mesh(material_METAL_BOLT, [
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight,            coord2[2],
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight,            coord2[2]
+								], [0, 0, 1], texture);
+								var wall = new Mesh(material_METAL_WALL, [
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight,            coord1[2],
+									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight,            coord1[2]
+								], [0, 0, -1], texture);
+								
+								meshes.push(hull);
+								meshes.push(wall);
+								
+								if(yRotation && yRotation != 0) {
+									hull.rotateY(yRotation);
+									wall.rotateY(yRotation);
+								}
+							}
+							if(s[0] > 0) {
+								// Left
+								var texture = [
+									textureBounds[0],            textureBounds[1],
+									textureBounds[0] + edgeSize, textureBounds[1],
+									textureBounds[0] + edgeSize, textureBounds[3],
+									textureBounds[0],            textureBounds[3]
+								];
+								
+								var hull = new Mesh(material_METAL_BOLT, [
+									coord2[0] - s[0] * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
+									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
+									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2],
+									coord2[0] - s[0] * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2]
+								], [0, 0, 1], texture);
+								var wall = new Mesh(material_METAL_WALL, [
+									coord2[0] - s[0] * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
+									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
+									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2],
+									coord2[0] - s[0] * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2]
+								], [0, 0, -1], texture);
+								
+								meshes.push(hull);
+								meshes.push(wall);
+								
+								if(yRotation && yRotation != 0) {
+									hull.rotateY(yRotation);
+									wall.rotateY(yRotation);
+								}
+							}
+							if(s[0] < width - 1) {
+								// Right
+								var texture = [
+									textureBounds[2] - edgeSize, textureBounds[1],
+									textureBounds[2],            textureBounds[1],
+									textureBounds[2],            textureBounds[3],
+									textureBounds[2] - edgeSize, textureBounds[3]
+								];
+								
+								var hull = new Mesh(material_METAL_BOLT, [
+									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2],
+									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2]
+								], [0, 0, 1], texture);
+								var wall = new Mesh(material_METAL_WALL, [
+									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2],
+									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2]
+								], [0, 0, -1], texture);
+								
+								meshes.push(hull);
+								meshes.push(wall);
+								
+								if(yRotation && yRotation != 0) {
+									hull.rotateY(yRotation);
+									wall.rotateY(yRotation);
+								}
+							}
+						}
+					} else {
+						// Meshes for faces parts where there are not gaps
+						var textureBounds = [
+							0,
+							0,
+							unitWidth,
+							unitHeight
+						];
+						if(x == 0) textureBounds[0] += edgeSize;
+						if(y == 0) textureBounds[1] += edgeSize;
+						if(x + 1 == 1) textureBounds[2] -= edgeSize;
+						if(y + 1 == 1) textureBounds[3] -= edgeSize;
+						if(y % 2 == 1) {
+							textureBounds[1] += 0.5;
+							textureBounds[3] += 0.5;
+						}
+						
+						textureBounds = [
 							textureBounds[0], textureBounds[1],
 							textureBounds[2], textureBounds[1],
-							textureBounds[2], textureBounds[1] + edgeSize,
-							textureBounds[0], textureBounds[1] + edgeSize
-						];
-						
-						var hull = new Mesh(material_METAL_BOLT, [
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1],            coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1],            coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1] - edgeSize, coord2[2],
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1] - edgeSize, coord2[2]
-						], [0, 0, 1], texture);
-						var wall = new Mesh(material_METAL_WALL, [
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1],            coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1],            coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - s[1] * unitSize[1] - edgeSize, coord1[2],
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - s[1] * unitSize[1] - edgeSize, coord1[2]
-						], [0, 0, -1], texture);
-						
-						meshes.push(hull);
-						meshes.push(wall);
-						
-						if(yRotation && yRotation != 0) {
-							hull.rotateY(yRotation);
-							wall.rotateY(yRotation);
-						}
-					}
-					if(s[1] < size[1] - 1) {
-						// Bottom
-						var texture = [
-							textureBounds[0], textureBounds[3] + edgeSize,
-							textureBounds[2], textureBounds[3] + edgeSize,
 							textureBounds[2], textureBounds[3],
 							textureBounds[0], textureBounds[3]
-						];
+						]
 						
+						// Sides additions
+						var leftAdd   = x == 0 ? edgeSize : 0;
+						var topAdd    = y == 0 ? edgeSize : 0;
+						var rightAdd  = x + 1 == width  ? edgeSize : 0;
+						var bottomAdd = y + 1 == height ? edgeSize : 0;
+						
+						// Exterior (face), hull
 						var hull = new Mesh(material_METAL_BOLT, [
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1],            coord2[2],
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1],            coord2[2]
-						], [0, 0, 1], texture);
+							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] -  y      * unitHeight - topAdd,    coord2[2],
+							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] -  y      * unitHeight - topAdd,    coord2[2],
+							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] - (y + 1) * unitHeight + bottomAdd, coord2[2],
+							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord2[2]
+						], [0, 0, 1], textureBounds);
+						
+						// Interior (Wall)
 						var wall = new Mesh(material_METAL_WALL, [
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1] + edgeSize, coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + rightAdd, coord2[1] - (s[1] + 1) * unitSize[1],            coord1[2],
-							coord2[0] -  s[0]      * unitSize[0] + leftAdd,  coord2[1] - (s[1] + 1) * unitSize[1],            coord1[2]
-						], [0, 0, -1], texture);
-						
-						meshes.push(hull);
-						meshes.push(wall);
-						
-						if(yRotation && yRotation != 0) {
-							hull.rotateY(yRotation);
-							wall.rotateY(yRotation);
-						}
-					}
-					if(s[0] > 0) {
-						// Left
-						var texture = [
-							textureBounds[0],            textureBounds[1],
-							textureBounds[0] + edgeSize, textureBounds[1],
-							textureBounds[0] + edgeSize, textureBounds[3],
-							textureBounds[0],            textureBounds[3]
-						];
-						
-						var hull = new Mesh(material_METAL_BOLT, [
-							coord2[0] - s[0] * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
-							coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
-							coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2],
-							coord2[0] - s[0] * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2]
-						], [0, 0, 1], texture);
-						var wall = new Mesh(material_METAL_WALL, [
-							coord2[0] - s[0] * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
-							coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
-							coord2[0] - s[0] * unitSize[0] - edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2],
-							coord2[0] - s[0] * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2]
-						], [0, 0, -1], texture);
-						
-						meshes.push(hull);
-						meshes.push(wall);
-						
-						if(yRotation && yRotation != 0) {
-							hull.rotateY(yRotation);
-							wall.rotateY(yRotation);
-						}
-					}
-					if(s[0] < size[0] - 1) {
-						// Right
-						var texture = [
-							textureBounds[2] - edgeSize, textureBounds[1],
-							textureBounds[2],            textureBounds[1],
-							textureBounds[2],            textureBounds[3],
-							textureBounds[2] - edgeSize, textureBounds[3]
-						];
-						
-						var hull = new Mesh(material_METAL_BOLT, [
-							coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord2[2]
-						], [0, 0, 1], texture);
-						var wall = new Mesh(material_METAL_WALL, [
-							coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] -  s[1]      * unitSize[1] + topAdd,    coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0],            coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2],
-							coord2[0] - (s[0] + 1) * unitSize[0] + edgeSize, coord2[1] - (s[1] + 1) * unitSize[1] + bottomAdd, coord1[2]
-						], [0, 0, -1], texture);
+							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] -  y      * unitHeight - topAdd,    coord1[2],
+							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] -  y      * unitHeight - topAdd,    coord1[2],
+							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2],
+							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2]
+						], [0, 0, -1], textureBounds);
 						
 						meshes.push(hull);
 						meshes.push(wall);
@@ -324,10 +320,10 @@ Building.builders.Room = function(building, state) {
 		};
 		
 		// Creating faces
-		createFace("front", [unitSize[0], unitSize[1]], [building.gridSize[0], building.gridSize[1]], [x1, y1, z1], [x2, y2, z2], 0  );
-		createFace("right", [unitSize[2], unitSize[1]], [building.gridSize[2], building.gridSize[1]], [z1, y1, x1], [z2, y2, x2], 90 );
-		createFace("back",  [unitSize[0], unitSize[1]], [building.gridSize[0], building.gridSize[1]], [x1, y1, z1], [x2, y2, z2], 180);
-		createFace("left",  [unitSize[2], unitSize[1]], [building.gridSize[2], building.gridSize[1]], [z1, y1, x1], [z2, y2, x2], 270);
+		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0  , building.gridSize[0], building.gridSize[1]);
+		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 180, building.gridSize[0], building.gridSize[1]);
+		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 270, building.gridSize[2], building.gridSize[1]);
+		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 90 , building.gridSize[2], building.gridSize[1]);
 		
 		// Outer top and bottom, Inner ground and ceil
 		meshes.push(new Mesh(material_METAL_BOLT, [
@@ -349,10 +345,10 @@ Building.builders.Room = function(building, state) {
 			-x1, -y1, -z1
 		], [0, 1, 0])); // Ground
 		meshes.push(new Mesh(material_METAL_WALL, [
-			-x1+lightAndClimEdgeSize, y1, -z1+lightAndClimEdgeSize,
-			 x1-lightAndClimEdgeSize, y1, -z1+lightAndClimEdgeSize,
-			 x1-lightAndClimEdgeSize, y1,  z1-lightAndClimEdgeSize,
-			-x1+lightAndClimEdgeSize, y1,  z1-lightAndClimEdgeSize
+			-x1, y1, -z1,
+			 x1, y1, -z1,
+			 x1, y1,  z1,
+			-x1, y1,  z1
 		], [0, -1, 0])); // Ceil
 		
 		// Outer diagonals top
@@ -476,32 +472,6 @@ Building.builders.Room = function(building, state) {
 			 x1, -y1,  z2,
 			 x2, -y1,  z1
 		], [1, -1, 1])); // Right front bottom
-		
-		// Inner lights + clims
-		meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
-			-x1+lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
-			-x1+lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
-			-x1,                       y1-lightAndClimEdgeSize, -z1,
-			-x1,                       y1-lightAndClimEdgeSize,  z1
-		], [1, -1, 0])); // Left
-		meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
-			 x1-lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
-			 x1-lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
-			 x1,                       y1-lightAndClimEdgeSize,  z1,
-			 x1,                       y1-lightAndClimEdgeSize, -z1
-		], [-1, -1, 0])); // Right
-		meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
-			 x1-lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
-			-x1+lightAndClimEdgeSize,  y1,                       z1-lightAndClimEdgeSize,
-			-x1,                       y1-lightAndClimEdgeSize,  z1,
-			 x1,                       y1-lightAndClimEdgeSize,  z1
-		], [0, -1, -1])); // Front
-		meshes.push(new Mesh(material_LIGHT_AND_CLIM, [
-			 x1-lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
-			-x1+lightAndClimEdgeSize,  y1,                      -z1+lightAndClimEdgeSize,
-			-x1,                       y1-lightAndClimEdgeSize, -z1,
-			 x1,                       y1-lightAndClimEdgeSize, -z1
-		], [0, -1, 1])); // Back
 					
 		building.model.meshes = meshes;
 		building.model.regenerateCache();

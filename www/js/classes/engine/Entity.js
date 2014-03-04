@@ -14,6 +14,7 @@ var Entity = function(world, model, position, rotation, colorMask) {
 	this.rotation = rotation;
 	this.setColorMask(colorMask);
 	this.pickColor = vec3.create(); // In case the entity is made pickable, else it stays to (0, 0, 0)
+	this.isVisible = true;
 	
 	this.lights = new Array(); // Lights associated to the entity (must be used when extended)
 	
@@ -47,15 +48,17 @@ Entity.prototype.getRelativePosition = function() {
  * @param int Draw mode, see World.prototype.DRAW_MODE_XXX
  */
 Entity.prototype.draw = function(gl, shader, drawMode) {
-	gl.uniform3fv(shader.getVar("uCurrentPosition"), this.getRelativePosition());
-	gl.uniform4fv(shader.getVar("uCurrentRotation"), this.getRotation());
-	gl.uniform4fv(shader.getVar("uColorMask"), this.colorMask);
-	
-	if(drawMode == this.world.DRAW_MODE_PICK_CONTENT) {
-		gl.uniform3fv(shader.getVar("uEntityPickColor"), this.pickColor);
+	if(this.isVisible) {
+		gl.uniform3fv(shader.getVar("uCurrentPosition"), this.getRelativePosition());
+		gl.uniform4fv(shader.getVar("uCurrentRotation"), this.getRotation());
+		gl.uniform4fv(shader.getVar("uColorMask"), this.colorMask);
+		
+		if(drawMode == this.world.DRAW_MODE_PICK_CONTENT) {
+			gl.uniform3fv(shader.getVar("uEntityPickColor"), this.pickColor);
+		}
+		
+		this.model.draw(shader, drawMode);
 	}
-	
-	this.model.draw(shader, drawMode);
 };
 
 /**
