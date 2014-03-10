@@ -41,5 +41,7 @@ Building.builders.Console = function(building, state) {
 	
 	building.model.regenerateCache();
 	
-	building.hitBoxes.push(new HitBox(HitBoxDefinition.createFromModel(building.model)));
+	var hitBox = HitBox.createFromModel(building.model);
+	building.hitBoxes.push(hitBox);
+	building.spaceShip.physics.add(hitBox);
 };

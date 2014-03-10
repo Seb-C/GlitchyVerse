@@ -1,17 +1,21 @@
 /**
  * AABB HitBox. setPositionAndRotation MUST be called before using the HitBox.
- * @param HitBoxDefinition Definition of the HitBox
+ * @param vec3 The minimum x, y and z coordinates of the hitbox, relative to position
+ * @param vec3 The maximum x, y and z coordinates of the hitbox, relative to position
  */
-var HitBox = function(definition) {
-	this.definition = definition;
+var HitBox = function(min, max) {
+	this.min = min;
+	this.max = max;
+	this.bounds = [this.min, this.max];
 	
 	// Absolute min and max in the world
 	this.absMin = vec3.create();
 	this.absMax = vec3.create();
 	this.absMiddle = vec3.create();
 	
-	// The size depends on the rotation, it must not be a part of HitBoxDefinition
 	this.halfSize = vec3.create();
+	
+	this.isInitialized = false;
 };
 
 /**
@@ -20,15 +24,14 @@ var HitBox = function(definition) {
  * @param quat Rotation of the HitBox
  */
 HitBox.prototype.setPositionAndRotation = function(position, rotation) {
-	if(rotation[0] == 0 && rotation[1] == 0 && rotation[2] == 0) {
-		// Empty rotation
-		vec3.copy(this.absMin, this.definition.min);
-		vec3.copy(this.absMax, this.definition.max);
-	} else {
+	//if(rotation[0] == 0 && rotation[1] == 0 && rotation[2] == 0) {
+	//	// Empty rotation
+	//	vec3.copy(this.absMin, this.min);
+	//	vec3.copy(this.absMax, this.max);
+	//} else {
 		var temp = vec3.create();
-		var b = [this.definition.min, this.definition.max];
 		for(var i = 0 ; i < 8 ; i++) { // Vertices of the box, looping bounds index from 000 to 111 for XYZ
-			vec3.set(temp, b[(i&4)>>2][0], b[(i&2)>>1][1], b[i&1][2]);
+			vec3.set(temp, this.bounds[(i&4)>>2][0], this.bounds[(i&2)>>1][1], this.bounds[i&1][2]);
 			vec3.transformQuat(temp, temp, rotation);
 			if(i == 0) {
 				vec3.copy(this.absMin, temp);
@@ -38,7 +41,7 @@ HitBox.prototype.setPositionAndRotation = function(position, rotation) {
 				vec3.max(this.absMax, this.absMax, temp);
 			}
 		}
-	}
+	//}
 	
 	// Translating to the position
 	vec3.add(this.absMin, this.absMin, position);
@@ -48,6 +51,8 @@ HitBox.prototype.setPositionAndRotation = function(position, rotation) {
 	vec3.subtract(this.halfSize, this.absMax, this.absMin);
 	vec3.scale(this.halfSize, this.halfSize, 0.5);
 	vec3.add(this.absMiddle, this.absMin, this.halfSize);
+	
+	this.isInitialized = true;
 };
 
 /**
@@ -58,9 +63,9 @@ HitBox.prototype.setPositionAndRotation = function(position, rotation) {
  */
 HitBox.prototype.isCollision = function(b, movement) {
 	return (
-		   !(this.absMin[0] + movement[0] >= b.absMax[0] || this.absMax[0] + movement[0] <= b.absMin[0])
-		&& !(this.absMin[1] + movement[1] >= b.absMax[1] || this.absMax[1] + movement[1] <= b.absMin[1])
-		&& !(this.absMin[2] + movement[2] >= b.absMax[2] || this.absMax[2] + movement[2] <= b.absMin[2])
+		   !(this.absMin[0] + movement[0] > b.absMax[0] || this.absMax[0] + movement[0] < b.absMin[0])
+		&& !(this.absMin[1] + movement[1] > b.absMax[1] || this.absMax[1] + movement[1] < b.absMin[1])
+		&& !(this.absMin[2] + movement[2] > b.absMax[2] || this.absMax[2] + movement[2] < b.absMin[2])
 	);
 };
 
@@ -96,4 +101,32 @@ HitBox.prototype.getPenetrationVector = function(b, movement) {
 	}
 	
 	return r;
+};
+
+/**
+ * (static) Creates a hitbox from the vertices of a model
+ * @param Model A model, which has already been initialized
+ * @return HitBox The created hitbox
+ */
+HitBox.createFromModel = function(model) {
+	var min = null;
+	var max = null;
+	for(var i = 0 ; i < model.meshes.length ; i++) {
+		var vertices = model.meshes[i].vertices;
+		for(var j = 0 ; j < vertices.length ; j += 3) {
+			if(min == null && max == null) {
+				min = vec3.fromValues(vertices[j], vertices[j + 1], vertices[j + 2]);
+				max = vec3.fromValues(vertices[j], vertices[j + 1], vertices[j + 2]);
+			} else {
+				if(vertices[j    ] < min[0]) min[0] = vertices[j    ];
+				if(vertices[j + 1] < min[1]) min[1] = vertices[j + 1];
+				if(vertices[j + 2] < min[2]) min[2] = vertices[j + 2];
+				if(vertices[j    ] > max[0]) max[0] = vertices[j    ];
+				if(vertices[j + 1] > max[1]) max[1] = vertices[j + 1];
+				if(vertices[j + 2] > max[2]) max[2] = vertices[j + 2];
+			}
+		}
+	}
+	
+	return new HitBox(min, max);
 };

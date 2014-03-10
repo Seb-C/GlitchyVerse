@@ -106,7 +106,7 @@ if(gl) {
 	
 	// TODO login screen : enter key to validate
 	var mainLoop = function() {
-		updateAll();
+		updateAll(); // TODO separate logic from draw ? Causes lags, even with setZeroTimeout.js
 		
 		world.draw();
 		

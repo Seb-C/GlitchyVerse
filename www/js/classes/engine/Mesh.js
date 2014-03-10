@@ -201,7 +201,7 @@ Mesh.prototype.getVertexPickScreenColorArray = function() {
 
 /**
  * Applies a rotation to the 3 axis of the Mesh (one axis after the other)
- * @param Array(3) Vector(3) The rotation to apply to each axis, as degrees.
+ * @param vec3 The euler rotation to apply to each axis.
  */
 Mesh.prototype.rotate = function(rotation) {
 	if(rotation[0] != 0) this.rotateX(rotation[0]);
@@ -211,10 +211,9 @@ Mesh.prototype.rotate = function(rotation) {
 
 /**
  * Applies a rotation to the X axis of the Mesh
- * @param float The rotation to apply to X axis, as degrees.
+ * @param float The rotation to apply to X axis (radians).
  */
-Mesh.prototype.rotateX = function(deg) {
-	var rad = degToRad(-deg);
+Mesh.prototype.rotateX = function(rad) {
 	var cos = Math.cos(rad);
 	var sin = Math.sin(rad);
 	
@@ -230,17 +229,16 @@ Mesh.prototype.rotateX = function(deg) {
 	
 	if(this.normals != null) {
 		var rotation = quat.create();
-		quat.rotateX(rotation, rotation, degToRad(deg));
+		quat.rotateX(rotation, rotation, -rad);
 		vec3.transformQuat(this.normals, this.normals, rotation);
 	}
 };
 
 /**
  * Applies a rotation to the Y axis of the Mesh
- * @param float The rotation to apply to Y axis, as degrees.
+ * @param float The rotation to apply to Y axis (radians).
  */
-Mesh.prototype.rotateY = function(deg) {
-	var rad = degToRad(-deg);
+Mesh.prototype.rotateY = function(rad) {
 	var cos = Math.cos(rad);
 	var sin = Math.sin(rad);
 	
@@ -256,17 +254,16 @@ Mesh.prototype.rotateY = function(deg) {
 	
 	if(this.normals != null) {
 		var rotation = quat.create();
-		quat.rotateY(rotation, rotation, degToRad(deg));
+		quat.rotateY(rotation, rotation, -rad);
 		vec3.transformQuat(this.normals, this.normals, rotation);
 	}
 };
 
 /**
  * Applies a rotation to the Z axis of the Mesh
- * @param float The rotation to apply to Z axis, as degrees.
+ * @param float The rotation to apply to Z axis (radians).
  */
 Mesh.prototype.rotateZ = function(deg) {
-	var rad = degToRad(-deg);
 	var cos = Math.cos(rad);
 	var sin = Math.sin(rad);
 	
@@ -283,7 +280,7 @@ Mesh.prototype.rotateZ = function(deg) {
 	
 	if(this.normals != null) {
 		var rotation = quat.create();
-		quat.rotateZ(rotation, rotation, degToRad(deg));
+		quat.rotateZ(rotation, rotation, -rad);
 		vec3.transformQuat(this.normals, this.normals, rotation);
 	}
 };

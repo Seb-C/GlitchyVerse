@@ -11,12 +11,14 @@ var Physics = function() {
  * @param vec3 The required movement. If it can't be applied, it will be modified to the optimal movement
  */
 Physics.prototype.preventCollision = function(hitBox, requiredMovement) {
-	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
-		var currentHitBox = this.hitBoxes[i];
-		if(currentHitBox != hitBox) {
-			if(hitBox.isCollision(currentHitBox, requiredMovement)) {
-				var penetration = hitBox.getPenetrationVector(currentHitBox, requiredMovement);
-				vec3.subtract(requiredMovement, requiredMovement, penetration);
+	if(hitBox.isInitialized) {
+		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
+			var currentHitBox = this.hitBoxes[i];
+			if(currentHitBox != hitBox && currentHitBox.isInitialized) {
+				if(hitBox.isCollision(currentHitBox, requiredMovement)) {
+					var penetration = hitBox.getPenetrationVector(currentHitBox, requiredMovement);
+					vec3.subtract(requiredMovement, requiredMovement, penetration);
+				}
 			}
 		}
 	}

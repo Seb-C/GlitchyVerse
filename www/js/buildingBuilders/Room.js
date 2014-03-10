@@ -20,11 +20,13 @@ Building.builders.Room = function(building, state) {
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
 	building.regenerateMeshes = function() {
+		if(building.hitBoxes.length > 0) building.spaceShip.physics.remove(building.hitBoxes);
+		
 		var unitSize = building.spaceShip.roomUnitSize;
 		
-		var material_METAL_BOLT     = Materials.get("METAL_BOLT");
-		var material_METAL_WALL     = Materials.get("METAL_WALL");
-		var material_LINO_TILE      = Materials.get("LINO_TILE");
+		var material_METAL_BOLT = Materials.get("METAL_BOLT");
+		var material_METAL_WALL = Materials.get("METAL_WALL");
+		var material_LINO_TILE  = Materials.get("LINO_TILE");
 		
 		var gaps = {
 			front: [],
@@ -106,8 +108,7 @@ Building.builders.Room = function(building, state) {
 				for(var y = 0 ; y < height ; y++) {
 					var isGap = false;
 					for(var i = 0 ; i < faceGaps.length ; i++) {
-						var part = faceGaps[i];
-						if(part[0] == x && part[1] == y) {
+						if(faceGaps[i][0] == x && faceGaps[i][1] == y) {
 							isGap = true;
 							break;
 						}
@@ -307,12 +308,39 @@ Building.builders.Room = function(building, state) {
 							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2]
 						], [0, 0, -1], textureBounds);
 						
+						var hitBox = new HitBox(
+							vec3.fromValues(
+								coord2[0] - x * unitWidth,
+								coord2[1] - y * unitHeight,
+								coord2[2]
+							), vec3.fromValues(
+								coord2[0] - (x + 1) * unitWidth,
+								coord2[1] - (y + 1) * unitHeight,
+								coord1[2]
+							)
+						);
+						building.hitBoxes.push(hitBox);
+						
+						// TODO + remove corners and extend doors and windows hitboxes ?
+						
 						meshes.push(hull);
 						meshes.push(wall);
 						
 						if(yRotation && yRotation != 0) {
 							hull.rotateY(yRotation);
 							wall.rotateY(yRotation);
+							
+							// Rotating hitbox
+							var cos = Math.cos(yRotation);
+							var sin = Math.sin(yRotation);
+							var minX = hitBox.min[0] * cos - hitBox.min[2] * sin;
+							var minZ = hitBox.min[2] * cos + hitBox.min[0] * sin;
+							hitBox.min[0] = minX;
+							hitBox.min[2] = minZ;
+							var maxX = hitBox.max[0] * cos - hitBox.max[2] * sin;
+							var maxZ = hitBox.max[2] * cos + hitBox.max[0] * sin;
+							hitBox.max[0] = maxX;
+							hitBox.max[2] = maxZ;
 						}
 					}
 				}
@@ -320,10 +348,10 @@ Building.builders.Room = function(building, state) {
 		};
 		
 		// Creating faces
-		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0  , building.gridSize[0], building.gridSize[1]);
-		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 180, building.gridSize[0], building.gridSize[1]);
-		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 270, building.gridSize[2], building.gridSize[1]);
-		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 90 , building.gridSize[2], building.gridSize[1]);
+		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,             building.gridSize[0], building.gridSize[1]);
+		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], -Math.PI,       building.gridSize[0], building.gridSize[1]);
+		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], -Math.PI * 1.5, building.gridSize[2], building.gridSize[1]);
+		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], -Math.PI * 0.5, building.gridSize[2], building.gridSize[1]);
 		
 		// Outer top and bottom, Inner ground and ceil
 		meshes.push(new Mesh(material_METAL_BOLT, [
@@ -350,6 +378,10 @@ Building.builders.Room = function(building, state) {
 			 x1, y1,  z1,
 			-x1, y1,  z1
 		], [0, -1, 0])); // Ceil
+		
+		// ceil and groud hitboxes
+		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1,  y1, -z1), vec3.fromValues(x1,  y2, z1)));
+		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1, -y2, -z1), vec3.fromValues(x1, -y1, z1)));
 		
 		// Outer diagonals top
 		meshes.push(new Mesh(material_METAL_BOLT, [
@@ -475,6 +507,9 @@ Building.builders.Room = function(building, state) {
 					
 		building.model.meshes = meshes;
 		building.model.regenerateCache();
+		
+		// No hitboxes if there are buildings on each wall
+		if(building.hitBoxes.length > 0) building.spaceShip.physics.add(building.hitBoxes);
 	};
 	
 	building.regenerateMeshes();

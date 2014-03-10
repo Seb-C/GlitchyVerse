@@ -32,11 +32,13 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 			model.loadMeshesFromObj(this.modelName, this.gridSize);
 			model.regenerateCache();
 			
-			Building.alreadyCreatedHitBoxes[this.modelName] = HitBoxDefinition.createFromModel(model);
 			Building.alreadyCreatedModels[this.modelName] = model;
 		}
-		this.parent(world, Building.alreadyCreatedModels[this.modelName], position, rotation, colorMask);
-		this.hitBoxes.push(new HitBox(Building.alreadyCreatedHitBoxes[this.modelName]));
+		var model = Building.alreadyCreatedModels[this.modelName];
+		this.parent(world, model, position, rotation, colorMask);
+		var hitBox = HitBox.createFromModel(model);
+		this.hitBoxes.push(hitBox);
+		this.spaceShip.physics.add(hitBox);
 	}
 	
 	this.positionInSpaceShip = vec3.create();
@@ -48,7 +50,6 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
 		this.hitBoxes[i].setPositionAndRotation(this.positionInSpaceShip, this.rotationInSpaceShip);
 	}
-	if(this.hitBoxes.length > 0) this.spaceShip.physics.add(this.hitBoxes);
 	
 	// Inventory
 	this.items = [];
@@ -73,7 +74,6 @@ Building.extend(Entity);
 
 // TODO move it in BuildingType ?
 Building.alreadyCreatedModels   = {}; // Static, cache of models created from obj
-Building.alreadyCreatedHitBoxes = {}; // Static, cache of hitboxes created from obj
 
 Building.builders = {}; // Static, files in js/buildingBuilders
 

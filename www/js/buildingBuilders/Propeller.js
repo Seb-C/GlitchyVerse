@@ -8,7 +8,9 @@ Building.builders.Propeller = function(building, state) {
 	building.model.loadMeshesFromObj("propeller.obj", building.gridSize);
 	building.model.regenerateCache();
 	
-	building.hitBoxes.push(new HitBox(HitBoxDefinition.createFromModel(building.model)));
+	var hitBox = HitBox.createFromModel(building.model);
+	building.hitBoxes.push(hitBox);
+	building.spaceShip.physics.add(hitBox);
 	
 	var currentState = state;
 	
