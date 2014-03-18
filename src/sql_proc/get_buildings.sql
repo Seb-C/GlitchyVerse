@@ -15,7 +15,8 @@ SELECT
     building_size_z,
 	building_state,
 	building_is_built,
-	building_seed
+	building_seed,
+	building_is_enabled
 FROM spaceship
 NATURAL INNER JOIN building
 WHERE spaceship_id = :spaceship_id

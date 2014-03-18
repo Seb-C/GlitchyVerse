@@ -25,7 +25,7 @@ Building.builders.Console = function(building, state) {
 			];
 			
 			building.world.configurePickableContent(mesh, function(x, y) {
-				if(building.isBuilt) {
+				if(building.isBuilt && building.isEnabled) {
 					building.spaceShip.screen.click(
 						Math.round(x * building.spaceShip.screen.screenWidth), 
 						Math.round(y * building.spaceShip.screen.screenHeight)

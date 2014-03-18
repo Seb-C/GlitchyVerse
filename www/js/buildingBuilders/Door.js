@@ -24,10 +24,8 @@ Building.builders.Door = function(building, state) {
 	building.spaceShip.physics.add(hbTop);
 	if(!isOpened) building.spaceShip.physics.add(hbDoor);
 	
-	// TODO ne pas ajouter si ouvert
-	
 	building.setOpened = function(newIsOpened) {
-		if(building.isBuilt && !isAnimationStarted && isOpened != newIsOpened) {
+		if(building.isBuilt && building.isEnabled && !isAnimationStarted && isOpened != newIsOpened) {
 			isAnimationStarted = true;
 			
 			var animationToCall;

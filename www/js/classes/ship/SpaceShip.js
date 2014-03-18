@@ -42,7 +42,7 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.entities           = {}; // TODO is it useful to keep an id as key ? Should we replace it by a normal array ?
 	
 	// Each spaceship is a different physics world
-	this.physics = new Physics();
+	this.physics = new Physics(vec3.fromValues(0, -1.8, 0));
 	
 	// TODO moving bug (rotating) when windows on the right (or left ?)
 	// TODO can't see spaceship without propeller ?!?
@@ -229,7 +229,7 @@ SpaceShip.prototype.getEntitiesWhichExertsThrust = function(modelClass) {
 	var r = new Array();
 	for(var id in this.entities) {
 		var entity = this.entities[id];
-		if(entity.type.exertThrust) {
+		if(entity.type.exertThrust && entity.isBuilt) {
 			r.push(entity);
 		}
 	}
@@ -250,6 +250,11 @@ SpaceShip.prototype.getPosition = function() {
  */
 SpaceShip.prototype.setPosition = function(position) {
 	vec3.copy(this._position, position);
+};
+
+SpaceShip.prototype.update = function() {
+	this.physics.update();
+	this.updatePosition();
 };
 
 SpaceShip.prototype.updatePosition = function() {
@@ -336,7 +341,7 @@ SpaceShip.prototype.updateAcceleration = function() {
 	this._linearMaxSpeed = 0;
 	for(var k in this.entities) {
 		var entity = this.entities[k];
-		if(entity.type.exertThrust) {
+		if(entity.type.exertThrust && entity.isBuilt && entity.isEnabled) {
 			var positionX = entity.gridPosition[0] + (entity.gridSize[0] / 2 - 0.5);
 			var positionY = entity.gridPosition[1] + (entity.gridSize[1] / 2 - 0.5);
 			

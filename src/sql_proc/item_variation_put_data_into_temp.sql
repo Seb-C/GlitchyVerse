@@ -12,6 +12,8 @@ SELECT
 			* building_size_y
 			* building_size_z
 			* CASE
+				WHEN building_is_enabled = 0
+				THEN 0
 				WHEN building_state IS NULL
 				THEN 1
 				ELSE (

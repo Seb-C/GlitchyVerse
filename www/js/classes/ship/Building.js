@@ -1,14 +1,20 @@
 /**
  * A building is an entity which is a part of a spaceship
+ * @param World The world where the spaceship is
+ * @param SpaceShip The spaceship containing the building
+ * @param vec3 TODO it's useless here ?!?
+ * @param quat TODO it's useless here ?!?
+ * @param Object The definition of the building
  */
 var Building = function(world, spaceShip, position, rotation, definition) {
 	this.spaceShip    = spaceShip;
 	this.gridSize     = definition.size;
 	this.gridPosition = definition.position;
 	this.typeId       = definition.type_id;
+	this.isEnabled    = definition.is_enabled;
 	this.seed         = definition.seed;
 	this.id           = definition.id;
-	this.isBuilt      = definition.is_built; // TODO when not built (ghost), make it unusable (including picking, state changes and some other operations (propeller directions ?))
+	this.isBuilt      = definition.is_built;
 	this.eulerRotationInSpaceShip = vec3.fromValues(
 		degToRad(definition.rotation[0]),
 		degToRad(definition.rotation[1]),
@@ -48,7 +54,7 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	
 	// Initializing hitboxes with position and rotation
 	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
-		this.hitBoxes[i].setPositionAndRotation(this.positionInSpaceShip, this.rotationInSpaceShip);
+		this.hitBoxes[i].linkToBuilding(this);
 	}
 	
 	// Inventory
@@ -69,8 +75,6 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	}
 };
 Building.extend(Entity);
-
-// TODO methods documentation here
 
 // TODO move it in BuildingType ?
 Building.alreadyCreatedModels   = {}; // Static, cache of models created from obj
@@ -102,6 +106,10 @@ Building.prototype.translateAndRotateInSpaceShip = function(translation, rotatio
 	}
 };
 
+/**
+ * Refreshes the position and rotation of the building in the spaceship, based on it's grid position.
+ * Also refreshes it's absolute position and rotation.
+ */
 Building.prototype.refreshPositionAndRotationInSpaceShip = function() {
 	// Refreshing position
 	if(this.type.isRoomUnit) {
@@ -126,13 +134,16 @@ Building.prototype.refreshPositionAndRotationInSpaceShip = function() {
 	
 	// Refreshing HitBoxes
 	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
-		this.hitBoxes[i].setPositionAndRotation(this.positionInSpaceShip, this.rotationInSpaceShip);
+		this.hitBoxes[i].linkToBuilding(this);
 	}
 	
 	// Refreshing absolute position and rotation
 	this.refreshAbsolutePositionAndRotation();
 };
 
+/**
+ * Refreshes the absolute position and rotation of the building in the world.
+ */
 Building.prototype.refreshAbsolutePositionAndRotation = function() {
 	// Refreshing position
 	var position = vec3.clone(this.positionInSpaceShip);
@@ -163,6 +174,9 @@ Building.prototype.getItemById = function(id) {
 	return null;
 };
 
+/**
+ * Hides or shows the inveotory window of the building inventory
+ */
 Building.prototype.toggleDomInventory = function() {
 	if(this.inventoryDom != null) { // TODO delay between two toggles (in case of picking on the screen) ? Only showable via picking ?
 		// TODO minimum distance to open an inventory (+ do it server side) ? How to handle big buildings (size > 1) ?
@@ -170,12 +184,18 @@ Building.prototype.toggleDomInventory = function() {
 	}
 };
 
+/**
+ * Generates the name of the inventory window (which is different when it's a building requirements window)
+ */
 Building.prototype._getInventoryWindowTitleName = function() {
 	var name = this.seed != null ? this.seed : this.type.name;
 	var windowTitle = this.isBuilt ? "Inventory" : "Building requirements";
 	return windowTitle + " - " + name;
 };
 
+/**
+ * Creates the DOM inventory window of the building.
+ */
 Building.prototype.createDomInventory = function() {
 	this.inventoryDom = createWindow(200, 300, this._getInventoryWindowTitleName(), false);
 	this.inventoryDom.hideWindow();
@@ -183,6 +203,9 @@ Building.prototype.createDomInventory = function() {
 	this.regenDomInventoryItems();
 };
 
+/**
+ * Regenerates the DOM inventory contents
+ */
 Building.prototype.regenDomInventoryItems = function() {
 	var self = this;
 	
@@ -238,6 +261,10 @@ Building.prototype.regenDomInventoryItems = function() {
 	});
 };
 
+/**
+ * Adds an item to the building inventory
+ * @param Item The item to add
+ */
 Building.prototype.addItem = function(item) {
 	this.items.push(item);
 	this.regenDomInventoryItems();
@@ -247,6 +274,10 @@ Building.prototype.addItem = function(item) {
 	}
 };
 
+/**
+ * Removes an item from the building inventory
+ * @param Item The item to remove
+ */
 Building.prototype.removeItem = function(item) {
 	var index = this.items.indexOf(item);
 	if(index >= 0) {
@@ -255,6 +286,10 @@ Building.prototype.removeItem = function(item) {
 	}
 };
 
+/**
+ * Transforms the building requirements window to an inventory one.
+ * Must be called only when a building is achieved.
+ */
 Building.prototype.achieveBuilding = function() {
 	this.isBuilt = true;
 	this.items = [];

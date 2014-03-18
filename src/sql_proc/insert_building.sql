@@ -38,7 +38,8 @@ SELECT DISTINCT
 		THEN 1
 		ELSE 0
 	END) AS building_is_built,
-	NULL AS building_seed -- TODO
+	NULL AS building_seed, -- TODO
+	1 AS building_is_enabled
 FROM (
 	-- Data to save
 	SELECT

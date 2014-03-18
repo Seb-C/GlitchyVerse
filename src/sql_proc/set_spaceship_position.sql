@@ -36,6 +36,8 @@ AND (
 		FROM building
 		NATURAL INNER JOIN building_type
 		WHERE spaceship_id = :spaceship_id
+		AND building_is_built = 1
+		AND building_is_enabled = 1
 		AND building_type_can_exert_thrust = 1
 	)
 )

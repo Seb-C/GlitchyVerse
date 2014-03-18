@@ -1,23 +1,29 @@
+/**
+ * An item in the inventory
+ * @param Object Definition of the item
+ * @param Building The building where the item is
+ */
 var Item = function(definition, container) {
 	this.id          = definition.id;
 	this.typeId      = definition.type_id;
 	this.type        = Item.types[this.typeId];
 	this.state       = definition.state;
 	this.container   = container;
-	this.slotGroupId = definition.slot_group_id; // TODO
+	this.slotGroupId = definition.slot_group_id;
 	
 	this.dom = null;
 	this.domTooltipState = null;
 	this.createDom();
 };
 
-// TODO methods documentations here
-
 Item.groups = null; // Static (key = id, value = name), set by ServerConnection
 Item.types  = null; // Static (key = id, value = Object), set by ServerConnection
 
 Item.currentItemDragged = null; // Static
 
+/**
+ * Creates the DOM Element of the item
+ */
 Item.prototype.createDom = function() {
 	this.dom = document.createElement("div");
 	this.dom.setAttribute("class", "item");
@@ -90,6 +96,9 @@ Item.prototype.createDom = function() {
 	}
 };
 
+/**
+ * Updates the state of the item in the DOM tooltip
+ */
 Item.prototype._updateDomTooltipState = function() {
 	if(this.type.maxState > 0) {
 		this.domTooltipState.innerHTML = (
@@ -99,11 +108,17 @@ Item.prototype._updateDomTooltipState = function() {
 	}
 };
 
+/**
+ * Changes the state of the item
+ */
 Item.prototype.setState = function(newState) {
 	this.state = newState;
 	this._updateDomTooltipState();
 };
 
+/**
+ * Moves the item to another building inventory
+ */
 Item.prototype.moveTo = function(newContainer, slotGroupId) {
 	this.slotGroupId = slotGroupId;
 	this.container.removeItem(this);

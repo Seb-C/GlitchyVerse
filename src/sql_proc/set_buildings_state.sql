@@ -15,4 +15,5 @@ AND building_type_id IN (
 	AND :state <= building_type_max_state
 )
 AND building_is_built = 1
+AND building_is_enabled = 1
 AND (:building_id IS NULL OR building_id = :building_id)

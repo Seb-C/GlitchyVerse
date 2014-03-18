@@ -246,7 +246,7 @@ World.prototype.init = function(canvas, gl) {
  */
 World.prototype.update = function() {
 	for(var k in this.spaceShips) {
-		this.spaceShips[k].updatePosition();
+		this.spaceShips[k].update();
 	}
 	this.lastMvMatrix = this.camera.update();
 	

@@ -72,9 +72,22 @@ class User
 				"items"        => new_states
 			}, self)
 		end
-		
-		# TODO turn off here buildings where slots can't consume anymore
 	end
+	
+	def send_disabled_buildings(message_handler)
+		buildings = []
+		$DB.item_variation_get_new_states(:spaceship_id => @spaceship_id).each do |row|
+			buildings.push(row["building_id"])
+		end
+		
+		unless buildings.empty?
+			message_handler.send_message("disable_buildings", {
+				"spaceship_id" => @spaceship_id,
+				"building_ids" => buildings
+			}, self)
+		end
+	end
+	
 	
 	# Formats a row from database (get_spaceship_building[s])
 	# @param Object row from database
@@ -101,6 +114,7 @@ class User
 			],
 			"state"           => row["building_state"],
 			"is_built"        => row["building_is_built"] == 1,
+			"is_enabled"      => row["building_is_enabled"] == 1,
 			"seed"            => row["building_seed"],
 			"items"           => []
 		}
@@ -292,6 +306,11 @@ class User
 			:target_building_id   => building_id,
 			:target_slot_group_id => slot_group_id
 		)
+		$DB.set_building_enabled(
+			:spaceship_id => @spaceship_id,
+			:building_id  => building_id,
+			:is_enabled   => 1
+		) # NOTE : the enabled state is implicitly updated client side by the "move_item" action
 		
 		if $DB.affected_rows() > 0
 			message_handler.send_message("move_item", {

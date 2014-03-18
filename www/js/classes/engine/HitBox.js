@@ -1,12 +1,15 @@
 /**
- * AABB HitBox. setPositionAndRotation MUST be called before using the HitBox.
+ * AABB HitBox. linkToBuilding MUST be called before using the HitBox.
  * @param vec3 The minimum x, y and z coordinates of the hitbox, relative to position
  * @param vec3 The maximum x, y and z coordinates of the hitbox, relative to position
+ * @param boolean (optional) Default false. True if the hitbox can be moved.
  */
-var HitBox = function(min, max) {
+var HitBox = function(min, max, isDynamic) {
 	this.min = min;
 	this.max = max;
 	this.bounds = [this.min, this.max];
+	this.building = null;
+	this.isDynamic = isDynamic || false;
 	
 	// Absolute min and max in the world
 	this.absMin = vec3.create();
@@ -15,15 +18,20 @@ var HitBox = function(min, max) {
 	
 	this.halfSize = vec3.create();
 	
-	this.isInitialized = false;
+	// Function called before each move. Transforms the movement (vec3) passed as first argument
+	this.movementTransformer = null;
 };
 
 /**
- * Sets the position and rotation of the hitbox
- * @param vec3 The position of the hitbox
- * @param quat Rotation of the HitBox
+ * Changes or sets the Building linked to the HitBox
+ * @param Building The building linked to this HitBox
  */
-HitBox.prototype.setPositionAndRotation = function(position, rotation) {
+HitBox.prototype.linkToBuilding = function(building) {
+	this.building = building;
+	
+	var position = this.building.positionInSpaceShip;
+	var rotation = this.building.rotationInSpaceShip;
+	
 	//if(rotation[0] == 0 && rotation[1] == 0 && rotation[2] == 0) {
 	//	// Empty rotation
 	//	vec3.copy(this.absMin, this.min);
@@ -51,8 +59,6 @@ HitBox.prototype.setPositionAndRotation = function(position, rotation) {
 	vec3.subtract(this.halfSize, this.absMax, this.absMin);
 	vec3.scale(this.halfSize, this.halfSize, 0.5);
 	vec3.add(this.absMiddle, this.absMin, this.halfSize);
-	
-	this.isInitialized = true;
 };
 
 /**

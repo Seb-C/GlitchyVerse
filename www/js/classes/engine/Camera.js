@@ -6,7 +6,7 @@ var Camera = function(world) {
 	this._rotation = quat.create();
 	this.moveSpeed = 0.003;
 	//this.moveSpeed = 0.15; // TODO only for tests, remove it
-	this._position = vec3.fromValues(0, 0, 0); // TODO initial position should be dynamic
+	this._position = vec3.fromValues(0, 0, 0);
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
 	this.projectionMatrix = null;
@@ -29,12 +29,6 @@ Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
 Camera.prototype.init = function(canvas) {
 	this.controls.init(canvas);
 };
-
-// TODO option to freeze z axis (and synchronize camera rotation with spaceship + gravity and walls)
-
-/*Camera.prototype.getPosition = function() {
-	return vec3.clone(this._position); // TODO is it useful to clone it ?
-};*/
 
 /**
  * Resets the camera if the building which has been removed is the one targetted by the camera.
@@ -185,10 +179,15 @@ Camera.prototype.update = function() {
 			
 			vec3.negate(negatedPosition, this.targetBuilding.positionInSpaceShip);
 			
-			// TODO building moves (db + multiplayer)
-			// TODO stairs/ladders in physics
-			// TODO gravity in physics
-			// TODO in Room, create hitboxes
+			var eye = this.targetBuilding.model.meshGroups["eye"];
+			if(eye) {
+				var vertices = eye[0].vertices;
+				negatedPosition[0] -= vertices[0];
+				negatedPosition[1] -= vertices[1];
+				negatedPosition[2] -= vertices[2];
+			}
+			
+			// TODO send building moves to server and other players
 		}
 	}
 	this.lastAnimationTime = timeNow;

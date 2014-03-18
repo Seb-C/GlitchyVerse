@@ -135,6 +135,7 @@ ServerConnection.prototype._move_item = function(data) { // TODO do this work ou
 				var item = ss.entities[k].getItemById(data.item_id);
 				if(item != null) {
 					item.moveTo(targetBuilding, data.target_slot_group_id);
+					targetBuilding.isEnabled = true;
 					return;
 				}
 			}
@@ -165,3 +166,15 @@ ServerConnection.prototype._update_items_states = function(data) {
 		}
 	}
 };
+
+ServerConnection.prototype._disable_buildings = function(data) {
+	var ss = this.world.spaceShips[data.spaceship_id];
+	if(ss) {
+		for(var i = 0 ; i < data.building_ids.length ; i++) {
+			ss.entities[data.building_ids[i]].isEnabled = false;
+		}
+		ss.updateAcceleration();
+	}
+};
+
+

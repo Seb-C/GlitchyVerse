@@ -16,6 +16,8 @@ Screens.Propulsion = {
 	
 	// TODO screens should extend an abstract class ?
 	
+	// TODO propeller with !isEnabled ==> print as red (and which color for reverse thrust ?)
+	
 	// Right menu size
 	rightMenuWidth:        140,
 	rightMenuBorderMargin: 15,

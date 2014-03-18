@@ -91,7 +91,7 @@ Function.prototype.extend = function(Parent) {
  * Debug function. Unlimited number of parameters can be passed
  */
 function print(/* any objects, any type, any quantity */) {
-	var s = ""; // TODO move print text to an unused corner ?
+	var s = "";
 	var seen = [];
 	for(i = 0 ; i < arguments.length ; i++) {
 		if(i != 0) {

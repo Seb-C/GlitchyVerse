@@ -17,15 +17,23 @@ class MessageHandler
 				passed_time = current_time - item_variation_last_update_time
 				item_variation_last_update_time = current_time
 				
-				$DB.item_variation_put_data_into_temp(:passed_time => passed_time)
+				$DB.transaction()
 				
+				$DB.item_variation_put_data_into_temp(:passed_time => passed_time)
 				$DB.item_variation_update_from_temp()
+				
+				$DB.emptied_buildings_insert_from_item_variation()
+				$DB.emptied_buildings_update_from_temp()
 				
 				users.each do |user|
 					user.send_item_variation(self)
+					user.send_disabled_buildings(self)
 				end
 				
 				$DB.item_variation_truncate_temp_table()
+				$DB.emptied_buildings_truncate_temp_table()
+				
+				$DB.commit()
 			end
 		end
 	end

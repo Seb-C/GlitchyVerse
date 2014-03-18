@@ -20,7 +20,10 @@ Building.builders.Room = function(building, state) {
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
 	building.regenerateMeshes = function() {
-		if(building.hitBoxes.length > 0) building.spaceShip.physics.remove(building.hitBoxes);
+		if(building.hitBoxes.length > 0) {
+			building.spaceShip.physics.remove(building.hitBoxes);
+			building.hitBoxes = [];
+		}
 		
 		var unitSize = building.spaceShip.roomUnitSize;
 		
@@ -380,8 +383,17 @@ Building.builders.Room = function(building, state) {
 		], [0, -1, 0])); // Ceil
 		
 		// ceil and groud hitboxes
+		var groundGlitchAddition = 0.1; // Dirty way to avoid falling on the hole between two rooms
 		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1,  y1, -z1), vec3.fromValues(x1,  y2, z1)));
-		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1, -y2, -z1), vec3.fromValues(x1, -y1, z1)));
+		building.hitBoxes.push(new HitBox(vec3.fromValues(
+			-x1 - groundGlitchAddition,
+			-y2,
+			-z1 - groundGlitchAddition
+		), vec3.fromValues(
+			x1 + groundGlitchAddition,
+			-y1,
+			z1 + groundGlitchAddition
+		)));
 		
 		// Outer diagonals top
 		meshes.push(new Mesh(material_METAL_BOLT, [
