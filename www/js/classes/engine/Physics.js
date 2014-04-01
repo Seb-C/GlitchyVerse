@@ -6,6 +6,7 @@ var Physics = function(gravity) {
 	this.hitBoxes = [];
 	this.gravity = gravity || vec3.create();
 	this.lastUpdateTime = null;
+	this.maxAlphaToAvoidLag = 0.1;
 };
 
 /**
@@ -15,6 +16,7 @@ Physics.prototype.update = function() {
 	// TODO gravity boxes instead of a uniform one ?
 	if(this.lastUpdateTime != null) {
 		var alpha = (TimerManager.lastUpdateTimeStamp - this.lastUpdateTime) / 1000;
+		if(alpha > this.maxAlphaToAvoidLag) alpha = this.maxAlphaToAvoidLag;
 		var gravityToApply = vec3.scale(vec3.create(), this.gravity, alpha); // TODO don't create a vector here
 		var emptyRotation = vec3.create();
 		// TODO optimize this loop by caching static/dynamic hitboxes ?

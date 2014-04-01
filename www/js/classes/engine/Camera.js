@@ -5,7 +5,6 @@ var Camera = function(world) {
 	this.world = world;
 	this._rotation = quat.create();
 	this.moveSpeed = 0.003;
-	//this.moveSpeed = 0.15; // TODO only for tests, remove it
 	this._position = vec3.fromValues(0, 0, 0);
 	this.lastAnimationTime = 0;
 	this.screenSize = null;
