@@ -383,7 +383,7 @@ Building.builders.Room = function(building, state) {
 		], [0, -1, 0])); // Ceil
 		
 		// ceil and groud hitboxes
-		var groundGlitchAddition = 0.1; // Dirty way to avoid falling on the hole between two rooms
+		var groundGlitchAddition = 0.2; // Dirty way to avoid falling on the hole between two rooms
 		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1,  y1, -z1), vec3.fromValues(x1,  y2, z1)));
 		building.hitBoxes.push(new HitBox(vec3.fromValues(
 			-x1 - groundGlitchAddition,
