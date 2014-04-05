@@ -11,7 +11,7 @@ Building.builders.Console = function(building, state) {
 	for(var i = 0 ; i < building.model.meshes.length ; i++) {
 		var mesh = building.model.meshes[i];
 		if(mesh.texture == material_BLACK) {
-			// TODO add a small light to the screen
+			// TODO add a small light to the screen (done ? to check)
 			mesh.texture = building.spaceShip.screen.canvasTexture;
 			
 			var widthRatio  = building.spaceShip.screen.widthRatio;
@@ -36,8 +36,6 @@ Building.builders.Console = function(building, state) {
 			break;
 		}
 	}
-	
-	// TODO use a special named material for the screen ?
 	
 	building.model.regenerateCache();
 	

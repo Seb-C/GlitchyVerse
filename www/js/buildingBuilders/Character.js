@@ -10,4 +10,5 @@ Building.builders.Character = function(building, state) {
 	// TODO texture
 	// TODO animations
 	// TODO avoid X rotation of the character when controlled by the camera
+	// TODO face
 };

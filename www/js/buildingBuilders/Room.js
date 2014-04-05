@@ -20,8 +20,9 @@ Building.builders.Room = function(building, state) {
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
 	building.regenerateMeshes = function() {
+		var oldHitBoxes = null;
 		if(building.hitBoxes.length > 0) {
-			building.spaceShip.physics.remove(building.hitBoxes);
+			oldHitBoxes = building.hitBoxes;
 			building.hitBoxes = [];
 		}
 		
@@ -522,6 +523,7 @@ Building.builders.Room = function(building, state) {
 		
 		// No hitboxes if there are buildings on each wall
 		if(building.hitBoxes.length > 0) building.spaceShip.physics.add(building.hitBoxes);
+		if(oldHitBoxes != null) building.spaceShip.physics.remove(oldHitBoxes); // TODO pass through the ground when updating a room (by adding a door/window for example) ?
 	};
 	
 	building.regenerateMeshes();

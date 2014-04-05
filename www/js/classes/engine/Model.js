@@ -349,7 +349,7 @@ Model.prototype.loadMeshesFromObj = function(fileName, scale) {
 				break;
 			case "vt":
 				texturesPartsList.push(parseFloat(line[1]));
-				texturesPartsList.push(parseFloat(line[2]));
+				texturesPartsList.push(1 - parseFloat(line[2]));
 				break;
 			case "usemtl":
 				currentMaterial = Materials.get(line[1]);

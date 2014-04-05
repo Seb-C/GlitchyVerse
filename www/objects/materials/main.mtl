@@ -75,6 +75,9 @@ newmtl STAR
 
 newmtl TREE_BARK
 	map_Kd textures/treeBark.png
+	
+newmtl CHARACTER
+	map_Kd textures/character.png
 
 newmtl TREE_LEAF
 	map_Kd textures/treeLeaf.png
