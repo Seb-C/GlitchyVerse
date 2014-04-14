@@ -14,8 +14,6 @@ Building.builders.Room = function(building, state) {
 	// Loading required textures
 	Materials.loadMtl("materials/main.mtl");
 	
-	// TODO use obj files ?
-	
 	/**
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
@@ -30,7 +28,6 @@ Building.builders.Room = function(building, state) {
 		
 		var material_METAL_BOLT = Materials.get("METAL_BOLT");
 		var material_METAL_WALL = Materials.get("METAL_WALL");
-		var material_LINO_TILE  = Materials.get("LINO_TILE");
 		
 		var gaps = {
 			front: [],
@@ -314,18 +311,16 @@ Building.builders.Room = function(building, state) {
 						
 						var hitBox = new HitBox(
 							vec3.fromValues(
-								coord2[0] - x * unitWidth,
-								coord2[1] - y * unitHeight,
+								coord2[0] - x * unitWidth + edgeSize,
+								coord2[1] - y * unitHeight + edgeSize,
 								coord2[2]
 							), vec3.fromValues(
-								coord2[0] - (x + 1) * unitWidth,
-								coord2[1] - (y + 1) * unitHeight,
+								coord2[0] - (x + 1) * unitWidth - edgeSize,
+								coord2[1] - (y + 1) * unitHeight - edgeSize,
 								coord1[2]
 							)
 						);
 						building.hitBoxes.push(hitBox);
-						
-						// TODO + remove corners and extend doors and windows hitboxes ?
 						
 						meshes.push(hull);
 						meshes.push(wall);
@@ -370,7 +365,7 @@ Building.builders.Room = function(building, state) {
 			 x1, -y2,  z1,
 			-x1, -y2,  z1
 		], [0, -1, 0])); // Out bottom
-		meshes.push(new Mesh(material_LINO_TILE, [
+		meshes.push(new Mesh(material_METAL_WALL, [
 			-x1, -y1,  z1,
 			 x1, -y1,  z1,
 			 x1, -y1, -z1,

@@ -4,7 +4,7 @@
  */
 var Physics = function(gravity) {
 	this.hitBoxes = [];
-	this.gravity = gravity || vec3.create();
+	this.gravity = gravity || vec3.create(); // Always relative to the building rotation
 	this.lastUpdateTime = null;
 	this.maxAlphaToAvoidLag = 0.1;
 };
@@ -13,7 +13,6 @@ var Physics = function(gravity) {
  * Applies gravity to every dynamic hitbox in the physics world
  */
 Physics.prototype.update = function() {
-	// TODO gravity boxes instead of a uniform one ?
 	if(this.lastUpdateTime != null) {
 		var alpha = (TimerManager.lastUpdateTimeStamp - this.lastUpdateTime) / 1000;
 		if(alpha > this.maxAlphaToAvoidLag) alpha = this.maxAlphaToAvoidLag;
@@ -23,7 +22,7 @@ Physics.prototype.update = function() {
 		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
 			var a = this.hitBoxes[i];
 			if(a.building != null && a.isDynamic) {
-				a.building.translateAndRotateInSpaceShip(gravityToApply, emptyRotation);
+				a.building.translateAndRotateInSpaceShip(gravityToApply, emptyRotation, true);
 			}
 		}
 	}

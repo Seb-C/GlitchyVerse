@@ -29,6 +29,8 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	
 	var colorMask = this.isBuilt ? null : vec4.fromValues(0.5, 0.5, 1, 0.5); // TODO blinking textures -> cull faces everywhere
 	
+	this.onMoveInSpaceShip = null;
+	
 	if(Building.builders[this.modelName]) {
 		this.parent(world, new Model(world, []), position, rotation, colorMask);
 		Building.builders[this.modelName](this, definition.state);
@@ -87,10 +89,17 @@ Building.types = null; // Set by ServerConnection, key = id
  * Moves (translates the position) and rotates the entity
  * @param vec3 Translation
  * @param Euler rotation to apply
+ * @param boolean True if the translation is relative to the entity rotation and must be transformed. Default false
+ * @return boolean true if the rotation or position in spaceship has changed
  */
-Building.prototype.translateAndRotateInSpaceShip = function(translation, rotation) {
+Building.prototype.translateAndRotateInSpaceShip = function(translation, rotation, isTranslationRelative) {
 	if(translation[0] != 0 || translation[1] != 0 || translation[2] != 0 || rotation[0] != 0 || rotation[1] != 0 || rotation[2] != 0) {
 		var translationToApply = vec3.clone(translation);
+		
+		if(isTranslationRelative) {
+			vec3.transformQuat(translationToApply, translationToApply, this.rotationInSpaceShip);
+		}
+		
 		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
 			this.spaceShip.physics.preventCollision(this.hitBoxes[i], translationToApply);
 		}
@@ -103,7 +112,25 @@ Building.prototype.translateAndRotateInSpaceShip = function(translation, rotatio
 		vec3.add(this.eulerRotationInSpaceShip, this.eulerRotationInSpaceShip, rotation);
 		
 		this.refreshPositionAndRotationInSpaceShip();
+		
+		return true;
 	}
+	
+	return false;
+};
+
+/**
+ * It's basically the same method than translateAndRotateInSpaceShip, but it also throws some events like walk animations.
+ */
+Building.prototype.moveAndRotateInSpaceShip = function(translation, rotation, isTranslationRelative) {
+	if(this.translateAndRotateInSpaceShip(translation, rotation, isTranslationRelative)) {
+		if(this.onMoveInSpaceShip != null) {
+			this.onMoveInSpaceShip();
+		}
+		
+		return true;
+	}
+	return false;
 };
 
 /**

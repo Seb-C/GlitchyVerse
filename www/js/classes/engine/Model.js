@@ -95,7 +95,7 @@ Model.prototype.regenerateCache = function() {
 			if(iB == null && b.texture === currentTexture) iB = i;
 			if(iA != null && iB != null) return iA - iB;
 		}
-	});
+	}); // TODO sort it to have transparent textures at last
 	
 	// Determining the number of vertices and triangles in the model
 	var verticesCount = 0;

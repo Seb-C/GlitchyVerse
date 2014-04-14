@@ -4,6 +4,7 @@
 var Camera = function(world) {
 	this.world = world;
 	this._rotation = quat.create();
+	this._eulerRotation = vec3.create(); // FPS mode
 	this.moveSpeed = 0.003;
 	this._position = vec3.fromValues(0, 0, 0);
 	this.lastAnimationTime = 0;
@@ -59,7 +60,7 @@ Camera.prototype.getRotation = function() {
 			quat.multiply(rotation, rotation, ssRotation);
 		}
 	} else {
-		quat.copy(rotation, this.targetBuilding.rotation);
+		quat.copy(rotation, this._eulerRotation);
 	}
 	
 	return rotation;
@@ -147,8 +148,6 @@ Camera.prototype.update = function() {
 		} else {
 			var halfPI = Math.PI / 2;
 			
-			var targetEuler = this.targetBuilding.eulerRotationInSpaceShip;
-			
 			// First person euler rotation
 			var eulerRotation = vec3.fromValues(
 				degToRad(rotationRate[0] * elapsed),
@@ -156,25 +155,28 @@ Camera.prototype.update = function() {
 				0
 			);
 			// Constraints X
-			if(targetEuler[0] + eulerRotation[0] >  halfPI) eulerRotation[0] =  halfPI - targetEuler[0];
-			if(targetEuler[0] + eulerRotation[0] < -halfPI) eulerRotation[0] = -halfPI - targetEuler[0];
+			if(this._eulerRotation[0] + eulerRotation[0] >  halfPI) eulerRotation[0] =  halfPI - this._eulerRotation[0];
+			if(this._eulerRotation[0] + eulerRotation[0] < -halfPI) eulerRotation[0] = -halfPI - this._eulerRotation[0];
+			
+			vec3.add(this._eulerRotation, this._eulerRotation, eulerRotation);
 			
 			// Moves
 			var currentMove = vec3.create();
 			vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
 			var translation = vec3.fromValues(
-				Math.sin(targetEuler[1]) * currentMove[2] + Math.sin(targetEuler[1] + halfPI) * currentMove[0],
+				Math.sin(this._eulerRotation[1]) * currentMove[2] + Math.sin(this._eulerRotation[1] + halfPI) * currentMove[0],
 				0,
-				Math.cos(targetEuler[1]) * currentMove[2] + Math.cos(targetEuler[1] + halfPI) * currentMove[0]
+				Math.cos(this._eulerRotation[1]) * currentMove[2] + Math.cos(this._eulerRotation[1] + halfPI) * currentMove[0]
 			);
 			
 			// Camera rotation
 			mat4.identity(invertedRotation);
-			mat4.rotateY(invertedRotation, invertedRotation, targetEuler[1]);
-			mat4.rotateX(invertedRotation, invertedRotation, targetEuler[0]);
+			mat4.rotateY(invertedRotation, invertedRotation, this._eulerRotation[1]);
+			mat4.rotateX(invertedRotation, invertedRotation, this._eulerRotation[0]);
 			mat4.invert(invertedRotation, invertedRotation);
 			
-			this.targetBuilding.translateAndRotateInSpaceShip(translation, eulerRotation);
+			// Only rotating the character over the Y axis
+			this.targetBuilding.moveAndRotateInSpaceShip(translation, vec3.fromValues(0, eulerRotation[1], 0));
 			
 			vec3.negate(negatedPosition, this.targetBuilding.positionInSpaceShip);
 			
@@ -186,7 +188,8 @@ Camera.prototype.update = function() {
 				negatedPosition[2] -= vertices[2];
 			}
 			
-			// TODO send building moves to server and other players
+			// TODO send building moves to server and other players (+ animate on other clients)
+			// TODO stop animation when the character stops walking
 		}
 	}
 	this.lastAnimationTime = timeNow;
@@ -210,6 +213,8 @@ Camera.prototype.update = function() {
 		//mat4.translate(this.lastModelViewMatrix, this.lastModelViewMatrix, negatedPosition);
 		mat4.multiply(this.lastModelViewMatrix, this.lastModelViewMatrix, invertedRotation);
 	}
+	
+	// TODO is character rotation inverted ?
 	
 	return this.lastModelViewMatrix;
 };
