@@ -18,9 +18,10 @@ var HitBox = function(min, max, isDynamic) {
 	
 	this.halfSize = vec3.create();
 	
-	// Function called before each move. Transforms the movement (vec3) passed as first argument
-	this.movementTransformer = null;
+	this.onCollide = null;
 };
+
+// TODO all times --> seconds instead of milliseconds ?
 
 /**
  * Changes or sets the Building linked to the HitBox

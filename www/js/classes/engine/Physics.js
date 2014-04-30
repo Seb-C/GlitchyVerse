@@ -17,12 +17,12 @@ Physics.prototype.update = function() {
 		var alpha = (TimerManager.lastUpdateTimeStamp - this.lastUpdateTime) / 1000;
 		if(alpha > this.maxAlphaToAvoidLag) alpha = this.maxAlphaToAvoidLag;
 		var gravityToApply = vec3.scale(vec3.create(), this.gravity, alpha); // TODO don't create a vector here
-		var emptyRotation = vec3.create();
+		var emptyRotation = quat.create(); // TODO null param ?
 		// TODO optimize this loop by caching static/dynamic hitboxes ?
 		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
 			var a = this.hitBoxes[i];
 			if(a.building != null && a.isDynamic) {
-				a.building.translateAndRotateInSpaceShip(gravityToApply, emptyRotation, true);
+				a.building.translateAndLookInSpaceShip(gravityToApply, emptyRotation);
 			}
 		}
 	}
@@ -42,8 +42,8 @@ Physics.prototype.preventCollision = function(hitBox, requiredMovement) {
 				if(hitBox.isCollision(currentHitBox, requiredMovement)) {
 					var penetration = hitBox.getPenetrationVector(currentHitBox, requiredMovement);
 					vec3.subtract(requiredMovement, requiredMovement, penetration);
-					if(currentHitBox.movementTransformer != null) {
-						currentHitBox.movementTransformer(requiredMovement);
+					if(currentHitBox.onCollide != null) {
+						currentHitBox.onCollide(hitBox);
 					}
 				}
 			}

@@ -16,7 +16,7 @@ var Camera = function(world) {
 	this.targetBuilding = null;
 	this.controls = new Controls(this);
 	this.clipMode = false;
-	// TODO customizable fovy and view distance
+	// TODO customizable fovy and view distance (+fog ?)
 };
 
 Camera.prototype.updateProjectionMatrix = function(screenWidth, screenHeight) {
@@ -100,6 +100,8 @@ Camera.prototype.update = function() {
 	
 	// TODO add an inventory button in hud
 	
+	// TODO optimize by not creating temp vectors everytime
+	
 	if(this.targetBuilding == null && userSpaceShip != null) {
 		for(var k in userSpaceShip.entities) {
 			if(userSpaceShip.entities[k].type.isControllable) {
@@ -149,44 +151,37 @@ Camera.prototype.update = function() {
 			var halfPI = Math.PI / 2;
 			
 			// First person euler rotation
-			var eulerRotation = vec3.fromValues(
-				degToRad(rotationRate[0] * elapsed),
-				degToRad(rotationRate[1] * elapsed),
-				0
-			);
-			// Constraints X
-			if(this._eulerRotation[0] + eulerRotation[0] >  halfPI) eulerRotation[0] =  halfPI - this._eulerRotation[0];
-			if(this._eulerRotation[0] + eulerRotation[0] < -halfPI) eulerRotation[0] = -halfPI - this._eulerRotation[0];
-			
-			vec3.add(this._eulerRotation, this._eulerRotation, eulerRotation);
+			var yEulerRotation = degToRad(rotationRate[1] * elapsed);
+			this._eulerRotation[0] += degToRad(rotationRate[0] * elapsed);
+			if(this._eulerRotation[0] >  halfPI) this._eulerRotation[0] =  halfPI;
+			if(this._eulerRotation[0] < -halfPI) this._eulerRotation[0] = -halfPI;
 			
 			// Moves
 			var currentMove = vec3.create();
 			vec3.scale(currentMove, movement, this.moveSpeed * elapsed);
-			var translation = vec3.fromValues(
-				Math.sin(this._eulerRotation[1]) * currentMove[2] + Math.sin(this._eulerRotation[1] + halfPI) * currentMove[0],
-				0,
-				Math.cos(this._eulerRotation[1]) * currentMove[2] + Math.cos(this._eulerRotation[1] + halfPI) * currentMove[0]
-			);
-			
-			// Camera rotation
-			mat4.identity(invertedRotation);
-			mat4.rotateY(invertedRotation, invertedRotation, this._eulerRotation[1]);
-			mat4.rotateX(invertedRotation, invertedRotation, this._eulerRotation[0]);
-			mat4.invert(invertedRotation, invertedRotation);
 			
 			// Only rotating the character over the Y axis
-			this.targetBuilding.moveAndRotateInSpaceShip(translation, vec3.fromValues(0, eulerRotation[1], 0));
+			var targetBuildingRotation = quat.create();
+			quat.rotateY(targetBuildingRotation, targetBuildingRotation, yEulerRotation);
+			this.targetBuilding.moveAndLookInSpaceShip(currentMove, targetBuildingRotation);
 			
-			vec3.negate(negatedPosition, this.targetBuilding.positionInSpaceShip);
+			// Camera rotation
+			var cameraQuat = quat.create();
+			quat.rotateX(cameraQuat, cameraQuat, this._eulerRotation[0]);
+			quat.multiply(cameraQuat, this.targetBuilding.rotationInSpaceShip, cameraQuat);
+			mat4.fromQuat(invertedRotation, cameraQuat);
+			mat4.invert(invertedRotation, invertedRotation);
 			
 			var eye = this.targetBuilding.model.meshGroups["eye"];
 			if(eye) {
 				var vertices = eye[0].vertices;
-				negatedPosition[0] -= vertices[0];
-				negatedPosition[1] -= vertices[1];
-				negatedPosition[2] -= vertices[2];
+				negatedPosition[0] += vertices[0];
+				negatedPosition[1] += vertices[1];
+				negatedPosition[2] += vertices[2];
+				vec3.transformQuat(negatedPosition, negatedPosition, this.targetBuilding.rotationInSpaceShip);
 			}
+			vec3.add(negatedPosition, negatedPosition, this.targetBuilding.positionInSpaceShip);
+			vec3.negate(negatedPosition, negatedPosition);
 			
 			// TODO send building moves to server and other players (+ animate on other clients)
 			// TODO stop animation when the character stops walking
@@ -195,7 +190,6 @@ Camera.prototype.update = function() {
 	this.lastAnimationTime = timeNow;
 	
 	// TODO separate mtl files ?
-	// TODO clean door obj file
 	
 	mat4.identity(this.lastModelViewMatrix);
 	
@@ -214,7 +208,7 @@ Camera.prototype.update = function() {
 		mat4.multiply(this.lastModelViewMatrix, this.lastModelViewMatrix, invertedRotation);
 	}
 	
-	// TODO is character rotation inverted ?
+	// TODO character rotation is inverted ?!?
 	
 	return this.lastModelViewMatrix;
 };

@@ -104,7 +104,7 @@ Building.builders.Room = function(building, state) {
 		
 		// Inner & outer walls
 		var self = this;
-		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, yRotation, width, height) {
+		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, xRotation, yRotation, width, height, playerRotation) {
 			for(var x = 0 ; x < width ; x++) {
 				for(var y = 0 ; y < height ; y++) {
 					var isGap = false;
@@ -171,6 +171,10 @@ Building.builders.Room = function(building, state) {
 									hull.rotateY(yRotation);
 									wall.rotateY(yRotation);
 								}
+								if(xRotation && xRotation != 0) {
+									hull.rotateX(xRotation);
+									wall.rotateX(xRotation);
+								}
 							}
 							if(s[1] < height - 1) {
 								// Bottom
@@ -200,6 +204,10 @@ Building.builders.Room = function(building, state) {
 								if(yRotation && yRotation != 0) {
 									hull.rotateY(yRotation);
 									wall.rotateY(yRotation);
+								}
+								if(xRotation && xRotation != 0) {
+									hull.rotateX(xRotation);
+									wall.rotateX(xRotation);
 								}
 							}
 							if(s[0] > 0) {
@@ -231,6 +239,10 @@ Building.builders.Room = function(building, state) {
 									hull.rotateY(yRotation);
 									wall.rotateY(yRotation);
 								}
+								if(xRotation && xRotation != 0) {
+									hull.rotateX(xRotation);
+									wall.rotateX(xRotation);
+								}
 							}
 							if(s[0] < width - 1) {
 								// Right
@@ -260,6 +272,10 @@ Building.builders.Room = function(building, state) {
 								if(yRotation && yRotation != 0) {
 									hull.rotateY(yRotation);
 									wall.rotateY(yRotation);
+								}
+								if(xRotation && xRotation != 0) {
+									hull.rotateX(xRotation);
+									wall.rotateX(xRotation);
 								}
 							}
 						}
@@ -320,6 +336,29 @@ Building.builders.Room = function(building, state) {
 								coord1[2]
 							)
 						);
+						hitBox.onCollide = function(hb) {
+							var wallRotation = quat.create();
+							quat.rotateX(wallRotation, wallRotation, xRotation);
+							quat.rotateY(wallRotation, wallRotation, -yRotation);
+							
+							var buildingRotation = hb.building.rotationInSpaceShip;
+							
+							if(hb.building == hb.building.world.camera.targetBuilding) { // TODO remove (testing ...)
+								var r = quat.create();
+								quat.invert(r, buildingRotation);
+								quat.multiply(r, r, wallRotation);
+								
+								var distance = r[3]*r[3] - r[0]*r[0] - r[1]*r[1] + r[2]*r[2];
+								
+								if(distance < -0.5) {
+									// Here the player is looking to the wall and going forward to it
+									quat.copy(hb.building.gridRotation, playerRotation);
+									hb.building.refreshPositionAndRotationInSpaceShip();
+									
+									//print("ok", Math.random());
+								}
+							}
+						};
 						building.hitBoxes.push(hitBox);
 						
 						meshes.push(hull);
@@ -341,55 +380,40 @@ Building.builders.Room = function(building, state) {
 							hitBox.max[0] = maxX;
 							hitBox.max[2] = maxZ;
 						}
+						if(xRotation && xRotation != 0) {
+							hull.rotateX(xRotation);
+							wall.rotateX(xRotation);
+							
+							// Rotating hitbox
+							var cos = Math.cos(xRotation);
+							var sin = Math.sin(xRotation);
+							
+							var minY = hitBox.min[1] * cos - hitBox.min[2] * sin;
+							var minZ = hitBox.min[2] * cos + hitBox.min[1] * sin;
+							hitBox.min[1] = minY;
+							hitBox.min[2] = minZ;
+							var maxY = hitBox.max[1] * cos - hitBox.max[2] * sin;
+							var maxZ = hitBox.max[2] * cos + hitBox.max[1] * sin;
+							hitBox.max[1] = maxY;
+							hitBox.max[2] = maxZ;
+						}
 					}
 				}
 			}
 		};
 		
+		var test = quat.create();
+		quat.rotateX(test, test, Math.PI / 2);
+		
 		// Creating faces
-		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,             building.gridSize[0], building.gridSize[1]);
-		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], -Math.PI,       building.gridSize[0], building.gridSize[1]);
-		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], -Math.PI * 1.5, building.gridSize[2], building.gridSize[1]);
-		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], -Math.PI * 0.5, building.gridSize[2], building.gridSize[1]);
+		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0,  0,           building.gridSize[0], building.gridSize[1], test);
+		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0, -Math.PI,     building.gridSize[0], building.gridSize[1], test);
+		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 0,  Math.PI / 2, building.gridSize[2], building.gridSize[1], test);
+		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 0, -Math.PI / 2, building.gridSize[2], building.gridSize[1], test);
 		
-		// Outer top and bottom, Inner ground and ceil
-		meshes.push(new Mesh(material_METAL_BOLT, [
-			-x1, y2,  z1,
-			 x1, y2,  z1,
-			 x1, y2, -z1,
-			-x1, y2, -z1
-		], [0, 1, 0])); // Out top
-		meshes.push(new Mesh(material_METAL_BOLT, [
-			-x1, -y2, -z1,
-			 x1, -y2, -z1,
-			 x1, -y2,  z1,
-			-x1, -y2,  z1
-		], [0, -1, 0])); // Out bottom
-		meshes.push(new Mesh(material_METAL_WALL, [
-			-x1, -y1,  z1,
-			 x1, -y1,  z1,
-			 x1, -y1, -z1,
-			-x1, -y1, -z1
-		], [0, 1, 0])); // Ground
-		meshes.push(new Mesh(material_METAL_WALL, [
-			-x1, y1, -z1,
-			 x1, y1, -z1,
-			 x1, y1,  z1,
-			-x1, y1,  z1
-		], [0, -1, 0])); // Ceil
-		
-		// ceil and groud hitboxes
-		var groundGlitchAddition = 0.2; // Dirty way to avoid falling on the hole between two rooms
-		building.hitBoxes.push(new HitBox(vec3.fromValues(-x1,  y1, -z1), vec3.fromValues(x1,  y2, z1)));
-		building.hitBoxes.push(new HitBox(vec3.fromValues(
-			-x1 - groundGlitchAddition,
-			-y2,
-			-z1 - groundGlitchAddition
-		), vec3.fromValues(
-			x1 + groundGlitchAddition,
-			-y1,
-			z1 + groundGlitchAddition
-		)));
+		// ceil (TODO holes)
+		createFace([], unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2], -Math.PI / 2, 0, building.gridSize[0], building.gridSize[2], test);
+		createFace([], unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2],  Math.PI / 2, 0, building.gridSize[0], building.gridSize[2], test);
 		
 		// Outer diagonals top
 		meshes.push(new Mesh(material_METAL_BOLT, [

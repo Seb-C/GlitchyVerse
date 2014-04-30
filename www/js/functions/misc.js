@@ -21,14 +21,14 @@ function radToDeg(radians) {
  * @param quat The rotation quaternion
  * @return vec3 The euler angles
  */
-function quatToEuler(q) {
+/*function quatToEuler(q) {
 	var x = q[0], y = q[1], z = q[2], w = q[3];
 	return vec3.fromValues(
-		radToDeg(Math.atan2( 2 * (y * z + w * x), w * w - x * x - y * y + z * z)),
-		radToDeg(Math.asin (-2 * (x * z - w * y))),
-		radToDeg(Math.atan2( 2 * (x * y + w * z), w * w + x * x - y * y - z * z))
+		Math.atan2( 2 * (y * z + w * x), w * w - x * x - y * y + z * z),
+		Math.asin (-2 * (x * z - w * y)),
+		Math.atan2( 2 * (x * y + w * z), w * w + x * x - y * y - z * z)
 	);
-}
+}*/
 
 /**
  * Returns the quaternion rotation from a vec3 (euler)

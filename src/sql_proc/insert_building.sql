@@ -12,6 +12,7 @@
 -- @param REAL :rotation_x The X rotation of the building
 -- @param REAL :rotation_y The Y rotation of the building
 -- @param REAL :rotation_z The Z rotation of the building
+-- @param REAL :rotation_w The W rotation of the building
 INSERT INTO building
 SELECT DISTINCT
 	NULL AS building_id,
@@ -23,6 +24,7 @@ SELECT DISTINCT
 	data.building_rotation_x,
 	data.building_rotation_y,
 	data.building_rotation_z,
+	data.building_rotation_w,
 	data.building_size_x,
 	data.building_size_y,
 	data.building_size_z,
@@ -53,7 +55,8 @@ FROM (
 		:size_z AS building_size_z,
 		:rotation_x AS building_rotation_x,
 		:rotation_y AS building_rotation_y,
-		:rotation_z AS building_rotation_z
+		:rotation_z AS building_rotation_z,
+		:rotation_w AS building_rotation_w
 ) AS data
 INNER JOIN building_type ON building_type.building_type_id = data.type_id
 

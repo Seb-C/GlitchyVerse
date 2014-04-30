@@ -105,7 +105,8 @@ class User
 			"rotation" => [
 				row["building_rotation_x"],
 				row["building_rotation_y"],
-				row["building_rotation_z"]
+				row["building_rotation_z"],
+				row["building_rotation_w"]
 			],
 			"size" => [
 				row["building_size_x"],

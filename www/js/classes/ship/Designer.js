@@ -527,7 +527,7 @@ Designer.prototype.draw = function() {
 		var size     = entity.gridSize;
 		var position = entity.gridPosition;
 		var rotation = entity.eulerRotationInSpaceShip;
-		
+		// TODO remove and recreate the designer in 3D
 		this.context.save();
 		this.context.translate(
 			trueSize * (position[0] + this.scroll[0] + size[0] / 2 - 0.5),

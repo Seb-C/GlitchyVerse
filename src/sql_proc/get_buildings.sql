@@ -10,6 +10,7 @@ SELECT
     building_rotation_x,
     building_rotation_y,
     building_rotation_z,
+    building_rotation_w,
     building_size_x,
     building_size_y,
     building_size_z,

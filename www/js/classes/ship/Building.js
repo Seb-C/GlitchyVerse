@@ -10,16 +10,17 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	this.spaceShip    = spaceShip;
 	this.gridSize     = definition.size;
 	this.gridPosition = definition.position;
+	this.gridRotation = definition.rotation; // quat
 	this.typeId       = definition.type_id;
 	this.isEnabled    = definition.is_enabled;
 	this.seed         = definition.seed;
 	this.id           = definition.id;
 	this.isBuilt      = definition.is_built;
-	this.eulerRotationInSpaceShip = vec3.fromValues(
-		degToRad(definition.rotation[0]),
-		degToRad(definition.rotation[1]),
-		degToRad(definition.rotation[2])
-	);
+	
+	this.look = quat.create();
+	
+	this.positionInSpaceShip = vec3.create(); // Absolute positionning in real world units
+	this.rotationInSpaceShip = quat.clone(this.gridRotation); // Rotation including look around Y
 	
 	this.hitBoxes = [];
 	
@@ -49,9 +50,6 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 		this.spaceShip.physics.add(hitBox);
 	}
 	
-	this.positionInSpaceShip = vec3.create();
-	this.rotationInSpaceShip = quat.create();
-	
 	this.refreshPositionAndRotationInSpaceShip();
 	
 	// Initializing hitboxes with position and rotation
@@ -79,26 +77,23 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 Building.extend(Entity);
 
 // TODO move it in BuildingType ?
-Building.alreadyCreatedModels   = {}; // Static, cache of models created from obj
+Building.alreadyCreatedModels = {}; // Static, cache of models created from obj
 
 Building.builders = {}; // Static, files in js/buildingBuilders
 
 Building.types = null; // Set by ServerConnection, key = id
 
 /**
- * Moves (translates the position) and rotates the entity
- * @param vec3 Translation
- * @param Euler rotation to apply
- * @param boolean True if the translation is relative to the entity rotation and must be transformed. Default false
+ * Moves (translates the position) and rotates the look of the entity
+ * @param vec3 Translation. Relative to the entity rotation.
+ * @param quat Rotation to apply. Relative to the current look rotation.
  * @return boolean true if the rotation or position in spaceship has changed
  */
-Building.prototype.translateAndRotateInSpaceShip = function(translation, rotation, isTranslationRelative) {
+Building.prototype.translateAndLookInSpaceShip = function(translation, rotation) {
 	if(translation[0] != 0 || translation[1] != 0 || translation[2] != 0 || rotation[0] != 0 || rotation[1] != 0 || rotation[2] != 0) {
 		var translationToApply = vec3.clone(translation);
 		
-		if(isTranslationRelative) {
-			vec3.transformQuat(translationToApply, translationToApply, this.rotationInSpaceShip);
-		}
+		vec3.transformQuat(translationToApply, translationToApply, this.rotationInSpaceShip);
 		
 		for(var i = 0 ; i < this.hitBoxes.length ; i++) {
 			this.spaceShip.physics.preventCollision(this.hitBoxes[i], translationToApply);
@@ -109,7 +104,7 @@ Building.prototype.translateAndRotateInSpaceShip = function(translation, rotatio
 		}
 		vec3.add(this.gridPosition, this.gridPosition, translationToApply);
 		
-		vec3.add(this.eulerRotationInSpaceShip, this.eulerRotationInSpaceShip, rotation);
+		quat.multiply(this.look, this.look, rotation);
 		
 		this.refreshPositionAndRotationInSpaceShip();
 		
@@ -120,10 +115,10 @@ Building.prototype.translateAndRotateInSpaceShip = function(translation, rotatio
 };
 
 /**
- * It's basically the same method than translateAndRotateInSpaceShip, but it also throws some events like walk animations.
+ * It's basically the same method than translateAndLookInSpaceShip, but it also throws some events like walk animations.
  */
-Building.prototype.moveAndRotateInSpaceShip = function(translation, rotation, isTranslationRelative) {
-	if(this.translateAndRotateInSpaceShip(translation, rotation, isTranslationRelative)) {
+Building.prototype.moveAndLookInSpaceShip = function(translation, rotation) {
+	if(this.translateAndLookInSpaceShip(translation, rotation)) {
 		if(this.onMoveInSpaceShip != null) {
 			this.onMoveInSpaceShip();
 		}
@@ -150,14 +145,7 @@ Building.prototype.refreshPositionAndRotationInSpaceShip = function() {
 		vec3.copy(this.positionInSpaceShip, this.gridPosition);
 	}
 	
-	// Refreshing rotation
-	quat.identity(this.rotationInSpaceShip);
-	if(this.eulerRotationInSpaceShip[0] != 0 || this.eulerRotationInSpaceShip[1] != 0 || this.eulerRotationInSpaceShip[2] != 0) {
-		quat.rotateY(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[1]);
-		quat.rotateX(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[0]);
-		quat.rotateZ(this.rotationInSpaceShip, this.rotationInSpaceShip, this.eulerRotationInSpaceShip[2]);
-	}
-	quat.invert(this.rotationInSpaceShip, this.rotationInSpaceShip);
+	quat.multiply(this.rotationInSpaceShip, this.gridRotation, this.look);
 	
 	// Refreshing HitBoxes
 	for(var i = 0 ; i < this.hitBoxes.length ; i++) {
@@ -181,6 +169,7 @@ Building.prototype.refreshAbsolutePositionAndRotation = function() {
 	// Refreshing rotation
 	var entityRotation = this.getRotation();
 	quat.copy(entityRotation, this.rotationInSpaceShip);
+	quat.invert(entityRotation, entityRotation);
 	if(this.spaceShip.rotation[0] != 0) quat.rotateX(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[0]));
 	if(this.spaceShip.rotation[1] != 0) quat.rotateY(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[1]));
 	if(this.spaceShip.rotation[2] != 0) quat.rotateZ(entityRotation, entityRotation, degToRad(this.spaceShip.rotation[2]));
