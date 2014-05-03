@@ -16,6 +16,7 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	this.seed         = definition.seed;
 	this.id           = definition.id;
 	this.isBuilt      = definition.is_built;
+	this.isFrozen     = false;
 	
 	this.look = quat.create();
 	
@@ -115,10 +116,11 @@ Building.prototype.translateAndLookInSpaceShip = function(translation, rotation)
 };
 
 /**
- * It's basically the same method than translateAndLookInSpaceShip, but it also throws some events like walk animations.
+ * It's basically the same method than translateAndLookInSpaceShip,
+ * but it also throws some events like walk animations, and checks more constraints.
  */
 Building.prototype.moveAndLookInSpaceShip = function(translation, rotation) {
-	if(this.translateAndLookInSpaceShip(translation, rotation)) {
+	if(!this.isFrozen && this.translateAndLookInSpaceShip(translation, rotation)) {
 		if(this.onMoveInSpaceShip != null) {
 			this.onMoveInSpaceShip();
 		}

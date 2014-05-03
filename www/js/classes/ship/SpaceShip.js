@@ -122,10 +122,7 @@ SpaceShip.prototype.addBuilding = function(building) {
  * @param Object Definition received from server.
  */
 SpaceShip.prototype._addGapBuilding = function(building) {
-	this.gapBuildings[building.id] = {
-		isLeftOrRight: (building.rotation[1] != 0 && building.rotation[1] != 180),
-		position: building.position
-	};
+	this.gapBuildings[building.id] = building;
 	
 	// Determining new building bounds
 	var beginX = building.position[0] - 0.5;

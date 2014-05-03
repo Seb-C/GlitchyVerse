@@ -14,6 +14,8 @@ Building.builders.Room = function(building, state) {
 	// Loading required textures
 	Materials.loadMtl("materials/main.mtl");
 	
+	var wallChangeDuration = 1000;
+	
 	/**
 	 * Regenerates all meshes, based on the known definition and the gaps listed in the SpaceShip object.
 	 */
@@ -25,58 +27,85 @@ Building.builders.Room = function(building, state) {
 		}
 		
 		var unitSize = building.spaceShip.roomUnitSize;
+		var bSize = building.gridSize;
+		var bPos  = building.gridPosition;
 		
 		var material_METAL_BOLT = Materials.get("METAL_BOLT");
 		var material_METAL_WALL = Materials.get("METAL_WALL");
 		
 		var gaps = {
-			front: [],
-			back : [],
-			left : [],
-			right: []
+			front : [],
+			back  : [],
+			left  : [],
+			right : [],
+			ceil  : [],
+			ground: []
 		};
 		for(var k in building.spaceShip.gapBuildings) {
 			var gap = building.spaceShip.gapBuildings[k];
 			
 			var side = null;
 			var pos = null;
-			if(gap.isLeftOrRight) {
+			if(gap.position[0] % 1 != 0) { // Left or right
 				// Checking that Y and Z points are in this room
 				if(
-					   gap.position[1] >= building.gridPosition[1] && gap.position[1] < building.gridPosition[1] + building.gridSize[1]
-					&& gap.position[2] >= building.gridPosition[2] && gap.position[2] < building.gridPosition[2] + building.gridSize[2]
+					   gap.position[1] >= bPos[1] && gap.position[1] < bPos[1] + bSize[1]
+					&& gap.position[2] >= bPos[2] && gap.position[2] < bPos[2] + bSize[2]
 				) {
-					if(Math.ceil(gap.position[0]) == building.gridPosition[0]) {
+					if(Math.ceil(gap.position[0]) == bPos[0]) {
 						side = "left";
 						pos = [
-							(building.gridPosition[2] + building.gridSize[2] - 1) - gap.position[2],
-							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
+							(bPos[2] + bSize[2] - 1) - gap.position[2],
+							(bPos[1] + bSize[1] - 1) - gap.position[1]
 						];
-					} else if(Math.floor(gap.position[0]) == building.gridPosition[0] + building.gridSize[0] - 1) {
+					} else if(Math.floor(gap.position[0]) == bPos[0] + bSize[0] - 1) {
 						side = "right";
 						pos = [
-							gap.position[2] - building.gridPosition[2],
-							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
+							gap.position[2] - bPos[2],
+							(bPos[1] + bSize[1] - 1) - gap.position[1]
 						];
 					}
 				}
-			} else {
+			} else if(gap.position[1] % 1 != 0) { // Ground or ceil
+				// Checking that X and Z points are in this room
+				if(
+					   gap.position[0] >= bPos[0] && gap.position[0] < bPos[0] + bSize[0]
+					&& gap.position[2] >= bPos[2] && gap.position[2] < bPos[2] + bSize[2]
+				) {
+					if(Math.floor(gap.position[1]) == bPos[1] + bSize[1] - 1) {
+						side = "ceil";
+						pos = [
+							(bPos[0] + bSize[0] - 1) - gap.position[0],
+							gap.position[2] - bPos[2]
+						];
+					} else if(Math.ceil(gap.position[1]) == bPos[1]) {
+						side = "ground";
+						pos = [
+							(bPos[0] + bSize[0] - 1) - gap.position[0],
+							(bPos[2] + bSize[2] - 1) - gap.position[2]
+						];
+					}
+				}
+				
+				// TODO start faces with ground instead of front, to synchronize it with identity quaternion ?
+				
+			} else if(gap.position[2] % 1 != 0) { // Front or back
 				// Checking that X and Y points are in this room
 				if(
-					   gap.position[0] >= building.gridPosition[0] && gap.position[0] < building.gridPosition[0] + building.gridSize[0]
-					&& gap.position[1] >= building.gridPosition[1] && gap.position[1] < building.gridPosition[1] + building.gridSize[1]
+					   gap.position[0] >= bPos[0] && gap.position[0] < bPos[0] + bSize[0]
+					&& gap.position[1] >= bPos[1] && gap.position[1] < bPos[1] + bSize[1]
 				) {
-					if(Math.ceil(gap.position[2]) == building.gridPosition[2]) {
+					if(Math.ceil(gap.position[2]) == bPos[2]) {
 						side = "back";
 						pos = [
-							gap.position[0] - building.gridPosition[0],
-							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
+							gap.position[0] - bPos[0],
+							(bPos[1] + bSize[1] - 1) - gap.position[1]
 						];
-					} else if(Math.floor(gap.position[2]) == building.gridPosition[2] + building.gridSize[2] - 1) {
+					} else if(Math.floor(gap.position[2]) == bPos[2] + bSize[2] - 1) {
 						side = "front";
 						pos = [
-							(building.gridPosition[0] + building.gridSize[0] - 1) - gap.position[0],
-							(building.gridPosition[1] + building.gridSize[1] - 1) - gap.position[1]
+							(bPos[0] + bSize[0] - 1) - gap.position[0],
+							(bPos[1] + bSize[1] - 1) - gap.position[1]
 						];
 					}
 				}
@@ -92,9 +121,9 @@ Building.builders.Room = function(building, state) {
 		var edgeSize = building.spaceShip.edgeSize;
 		
 		// Walls positions
-		var x2 = unitSize[0] * building.gridSize[0] / 2;
-		var y2 = unitSize[1] * building.gridSize[1] / 2;
-		var z2 = unitSize[2] * building.gridSize[2] / 2;
+		var x2 = unitSize[0] * bSize[0] / 2;
+		var y2 = unitSize[1] * bSize[1] / 2;
+		var z2 = unitSize[2] * bSize[2] / 2;
 		var x1 = x2 - edgeSize;
 		var y1 = y2 - edgeSize;
 		var z1 = z2 - edgeSize;
@@ -104,7 +133,7 @@ Building.builders.Room = function(building, state) {
 		
 		// Inner & outer walls
 		var self = this;
-		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, xRotation, yRotation, width, height, playerRotation) {
+		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, xRotation, yRotation, width, height, walkingBuildingRotation) {
 			for(var x = 0 ; x < width ; x++) {
 				for(var y = 0 ; y < height ; y++) {
 					var isGap = false;
@@ -337,25 +366,41 @@ Building.builders.Room = function(building, state) {
 							)
 						);
 						hitBox.onCollide = function(hb) {
-							var wallRotation = quat.create();
-							quat.rotateX(wallRotation, wallRotation, xRotation);
-							quat.rotateY(wallRotation, wallRotation, -yRotation);
-							
-							var buildingRotation = hb.building.rotationInSpaceShip;
-							
-							if(hb.building == hb.building.world.camera.targetBuilding) { // TODO remove (testing ...)
+							if(!hb.building.isFrozen) {
+								var wallRotation = quat.create();
+								quat.rotateX(wallRotation, wallRotation, xRotation);
+								quat.rotateY(wallRotation, wallRotation, yRotation);
+								quat.invert(wallRotation, wallRotation);
+								
+								var buildingRotation = hb.building.rotationInSpaceShip;
+								
 								var r = quat.create();
 								quat.invert(r, buildingRotation);
 								quat.multiply(r, r, wallRotation);
 								
 								var distance = r[3]*r[3] - r[0]*r[0] - r[1]*r[1] + r[2]*r[2];
-								
-								if(distance < -0.5) {
-									// Here the player is looking to the wall and going forward to it
-									quat.copy(hb.building.gridRotation, playerRotation);
-									hb.building.refreshPositionAndRotationInSpaceShip();
+								if(distance < -0.5) { // The player is looking to the wall and going forward to it
+									var beginTime = TimerManager.lastUpdateTimeStamp;
 									
-									//print("ok", Math.random());
+									var initialRotation = quat.clone(hb.building.gridRotation);
+									
+									var animationTimer = new Timer(function() {
+										var currentTime = TimerManager.lastUpdateTimeStamp;
+										var animationRate = (currentTime - beginTime) / wallChangeDuration;
+										if(animationRate >= 1) {
+											animationRate = 1;
+											hb.building.isFrozen = false;
+											animationTimer.unregister();
+										}
+										
+										// Changing rotation of the building
+										quat.slerp(hb.building.gridRotation, initialRotation, walkingBuildingRotation, animationRate);
+										hb.building.refreshPositionAndRotationInSpaceShip();
+									}, 0);
+									hb.building.isFrozen = true;
+									
+									// TODO glitch when walking on ceil, right to the back, in the big room ?!?
+									// TODO check every rotation to fix weird cases
 								}
 							}
 						};
@@ -388,12 +433,12 @@ Building.builders.Room = function(building, state) {
 							var cos = Math.cos(xRotation);
 							var sin = Math.sin(xRotation);
 							
-							var minY = hitBox.min[1] * cos - hitBox.min[2] * sin;
-							var minZ = hitBox.min[2] * cos + hitBox.min[1] * sin;
+							var minY = hitBox.min[1] * cos + hitBox.min[2] * sin;
+							var minZ = hitBox.min[2] * cos - hitBox.min[1] * sin;
 							hitBox.min[1] = minY;
 							hitBox.min[2] = minZ;
-							var maxY = hitBox.max[1] * cos - hitBox.max[2] * sin;
-							var maxZ = hitBox.max[2] * cos + hitBox.max[1] * sin;
+							var maxY = hitBox.max[1] * cos + hitBox.max[2] * sin;
+							var maxZ = hitBox.max[2] * cos - hitBox.max[1] * sin;
 							hitBox.max[1] = maxY;
 							hitBox.max[2] = maxZ;
 						}
@@ -402,18 +447,34 @@ Building.builders.Room = function(building, state) {
 			}
 		};
 		
-		var test = quat.create();
-		quat.rotateX(test, test, Math.PI / 2);
+		// Faces rotations
+		var playerRot = {};
+		
+		playerRot.front = quat.create();
+		quat.rotateX(playerRot.front, playerRot.front, -Math.PI / 2);
+		
+		playerRot.back = quat.create();
+		quat.rotateX(playerRot.back, playerRot.back, Math.PI / 2);
+		
+		playerRot.left = quat.create();
+		quat.rotateZ(playerRot.left, playerRot.left, -Math.PI / 2);
+		
+		playerRot.right = quat.create();
+		quat.rotateZ(playerRot.right, playerRot.right, Math.PI / 2);
+		
+		playerRot.ground = quat.create();
+		
+		playerRot.ceil = quat.create();
+		quat.rotateX(playerRot.ceil, playerRot.ceil, Math.PI);
+		quat.invert(playerRot.ceil, playerRot.ceil);
 		
 		// Creating faces
-		createFace(gaps.front, unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0,  0,           building.gridSize[0], building.gridSize[1], test);
-		createFace(gaps.back,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2], 0, -Math.PI,     building.gridSize[0], building.gridSize[1], test);
-		createFace(gaps.left,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 0,  Math.PI / 2, building.gridSize[2], building.gridSize[1], test);
-		createFace(gaps.right, unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2], 0, -Math.PI / 2, building.gridSize[2], building.gridSize[1], test);
-		
-		// ceil (TODO holes)
-		createFace([], unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2], -Math.PI / 2, 0, building.gridSize[0], building.gridSize[2], test);
-		createFace([], unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2],  Math.PI / 2, 0, building.gridSize[0], building.gridSize[2], test);
+		createFace(gaps.front,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,            0,           bSize[0], bSize[1], playerRot.front );
+		createFace(gaps.back,   unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,           -Math.PI,     bSize[0], bSize[1], playerRot.back  );
+		createFace(gaps.left,   unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2],  0,            Math.PI / 2, bSize[2], bSize[1], playerRot.left  );
+		createFace(gaps.right,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2],  0,           -Math.PI / 2, bSize[2], bSize[1], playerRot.right );
+		createFace(gaps.ground, unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2], -Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ground);
+		createFace(gaps.ceil,   unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2],  Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ceil  );
 		
 		// Outer diagonals top
 		meshes.push(new Mesh(material_METAL_BOLT, [
