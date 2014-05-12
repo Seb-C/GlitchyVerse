@@ -7,7 +7,6 @@ var BuildingType = function(definition) {
 	this.defaultState             = definition.default_state;
 	this.allowRotation            = definition.allow_rotation; // vec3
 	this.isSizeable               = definition.is_sizeable;
-	this.rotationAllowedDivisions = definition.rotation_allowed_divisions;
 	this.isRoomUnit               = definition.is_position_by_room_unit;
 	this.isControllable           = definition.is_controllable;
 	this.exertThrust              = definition.can_exert_thrust;

@@ -354,14 +354,18 @@ Building.builders.Room = function(building, state) {
 							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2]
 						], [0, 0, -1], textureBounds);
 						
+						// TODO hitboxes on windows and doors frames
+						
+						var hitBoxesMargin = edgeSize * 0.98;
+						
 						var hitBox = new HitBox(
 							vec3.fromValues(
-								coord2[0] - x * unitWidth + edgeSize,
-								coord2[1] - y * unitHeight + edgeSize,
+								coord2[0] - x * unitWidth + hitBoxesMargin,
+								coord2[1] - y * unitHeight + hitBoxesMargin,
 								coord2[2]
 							), vec3.fromValues(
-								coord2[0] - (x + 1) * unitWidth - edgeSize,
-								coord2[1] - (y + 1) * unitHeight - edgeSize,
+								coord2[0] - (x + 1) * unitWidth - hitBoxesMargin,
+								coord2[1] - (y + 1) * unitHeight - hitBoxesMargin,
 								coord1[2]
 							)
 						);
@@ -383,24 +387,38 @@ Building.builders.Room = function(building, state) {
 									var beginTime = TimerManager.lastUpdateTimeStamp;
 									
 									var initialRotation = quat.clone(hb.building.gridRotation);
+									var targetRotation = quat.clone(walkingBuildingRotation);
+									
+									// Applying required Y rotation to the look quaternion
+									var targetLook = quat.create();
+									quat.invert(targetLook, initialRotation);
+									quat.multiply(targetLook, targetRotation, targetLook);
+									targetLook[0] = 0;
+									targetLook[2] = 0;
+									quat.normalize(targetLook, targetLook);
+									quat.multiply(targetLook, hb.building.look, targetLook);
+									
+									var animationBegin = quat.clone(hb.building.rotationInSpaceShip);
+									var animationEnd = quat.create();
+									quat.multiply(animationEnd, targetRotation, targetLook);
+									quat.identity(hb.building.look);
 									
 									var animationTimer = new Timer(function() {
 										var currentTime = TimerManager.lastUpdateTimeStamp;
 										var animationRate = (currentTime - beginTime) / wallChangeDuration;
 										if(animationRate >= 1) {
-											animationRate = 1;
 											hb.building.isFrozen = false;
 											animationTimer.unregister();
+											hb.building.gridRotation = targetRotation;
+											hb.building.look         = targetLook;
+										} else {
+											// Changing rotation of the building
+											quat.slerp(hb.building.gridRotation, animationBegin, animationEnd, animationRate);
 										}
 										
-										// Changing rotation of the building
-										quat.slerp(hb.building.gridRotation, initialRotation, walkingBuildingRotation, animationRate);
 										hb.building.refreshPositionAndRotationInSpaceShip();
-									}, 0);
+									}, 0, true);
 									hb.building.isFrozen = true;
-									
-									// TODO glitch when walking on ceil, right to the back, in the big room ?!?
-									// TODO check every rotation to fix weird cases
 								}
 							}
 						};

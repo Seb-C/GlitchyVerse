@@ -60,11 +60,7 @@ FROM (
 ) AS data
 INNER JOIN building_type ON building_type.building_type_id = data.type_id
 
-WHERE (building_type.building_type_rotation_x_allowed_divisions <> 0 OR data.building_rotation_x = 0)
-AND   (building_type.building_type_rotation_y_allowed_divisions <> 0 OR data.building_rotation_y = 0)
-AND   (building_type.building_type_rotation_z_allowed_divisions <> 0 OR data.building_rotation_z = 0)
-
-AND building_type.building_type_category_id IS NOT NULL
+WHERE building_type.building_type_category_id IS NOT NULL
 
 AND (
 	building_type.building_type_is_sizeable = 1

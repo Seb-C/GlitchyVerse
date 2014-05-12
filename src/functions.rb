@@ -40,11 +40,6 @@ def get_building_types_definition()
 			"max_state"        => row["building_type_max_state"],
 			"can_exert_thrust" => row["building_type_can_exert_thrust"] == 1,
 			"is_controllable"  => row["building_type_is_controllable"],
-			"rotation_allowed_divisions" => [
-				row["building_type_rotation_x_allowed_divisions"],
-				row["building_type_rotation_y_allowed_divisions"],
-				row["building_type_rotation_z_allowed_divisions"]
-			],
 			"slots" => slots_by_building_id[row["building_type_id"]]
 		})
 	end
