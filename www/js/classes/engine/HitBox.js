@@ -70,7 +70,8 @@ HitBox.prototype.linkToBuilding = function(building) {
  */
 HitBox.prototype.isCollision = function(b, movement) {
 	return (
-		   !(this.absMin[0] + movement[0] > b.absMax[0] || this.absMax[0] + movement[0] < b.absMin[0])
+		this.building.isBuilt && b.building.isBuilt
+		&& !(this.absMin[0] + movement[0] > b.absMax[0] || this.absMax[0] + movement[0] < b.absMin[0])
 		&& !(this.absMin[1] + movement[1] > b.absMax[1] || this.absMax[1] + movement[1] < b.absMin[1])
 		&& !(this.absMin[2] + movement[2] > b.absMax[2] || this.absMax[2] + movement[2] < b.absMin[2])
 	);

@@ -76,13 +76,14 @@ ServerConnection.prototype._data_building_types_definition = function(data) {
 };
 
 ServerConnection.prototype._add_building = function(data) {
-	this.world.spaceShips[data.spaceship_id].addBuilding(data);
+	var ss = this.world.spaceShips[data.spaceship_id];
+	ss.addBuilding(new Building(this.world, ss, data));
 };
 
 ServerConnection.prototype._delete_building = function(data) {
 	var ss = this.world.spaceShips[data.spaceship_id];
 	var building = ss.entities[data.building_id];
-	ss.deleteBuilding(data.building_id);
+	ss.deleteBuilding(building);
 	this.world.camera.notifyBuildingRemoved(building);
 };
 

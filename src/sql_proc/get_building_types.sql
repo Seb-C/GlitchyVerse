@@ -7,6 +7,8 @@ SELECT
 	building_type_is_gap,
 	building_type_default_state,
 	building_type_is_sizeable,
+	building_type_is_container,
+	building_type_is_inside,
     building_type_is_position_by_room_unit,
 	building_type_min_state,
 	building_type_max_state,

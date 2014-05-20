@@ -5,11 +5,13 @@
  * @param String The window title
  * @param boolean (optional, default true) True if the window can be resized by the player
  * @param callBack (optional) Function to call when the window is closed
+ * @param String (optional) Horizontal initial position of the window ("left", "right", "center"). Default = "center"
+ * @param String (optional) Vertical initial position of the window ("top", "middle", "bottom"). Default = "middle"
  * @return HTMLElement Where to put window content.
  *                     Window can be opened again after closing by
  *                     calling the "showWindow" method on this object.
  */
-function createWindow(initialWidth, initialHeight, title, isResizable, closeCallBack) {
+function createWindow(initialWidth, initialHeight, title, isResizable, closeCallBack, hPosition, vPosition) {
 	if(!createWindow.nextZIndex) createWindow.nextZIndex = 0;
 	
 	var win = document.createElement("div");
@@ -21,9 +23,23 @@ function createWindow(initialWidth, initialHeight, title, isResizable, closeCall
 	// Setting size and putting it on the top of other windows
 	win.style.width  = initialWidth  + "px";
 	win.style.height = initialHeight + "px";
-	win.style.left   = Math.round((window.innerWidth  - initialWidth ) / 2) + "px";
-	win.style.top    = Math.round((window.innerHeight - initialHeight) / 2) + "px";
 	win.style.zIndex = createWindow.nextZIndex++;
+	
+	if(hPosition == "left") {
+		win.style.left = "0px";
+	} else if(hPosition == "right") {
+		win.style.left = "0px";
+	} else {
+		win.style.left = Math.round((window.innerWidth  - initialWidth ) / 2) + "px";
+	}
+	
+	if(vPosition == "top") {
+		win.style.top = "0px";
+	} else if(vPosition == "bottom") {
+		win.style.bottom = "0px";
+	} else {
+		win.style.top = Math.round((window.innerHeight - initialHeight) / 2) + "px";
+	}
 	
 	var hideWindow = function() {
 		win.style.display = "none";

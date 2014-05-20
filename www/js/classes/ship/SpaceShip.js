@@ -48,16 +48,20 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	// TODO can't see spaceship without propeller ?!?
 	
 	// Initializing gap buildings list
+	// TODO optimize those two loops by sorting the definition array ?
 	for(var i = 0 ; i < definition.length ; i++) {
-		var building = definition[i];
-		if(Building.types[building.type_id].isGap) {
+		if(Building.types[definition[i].type_id].isGap) {
+			var building = new Building(this.world, this, definition[i]);
 			this._addGapBuilding(building);
+			this._addBuildingFast(building);
 		}
 	}
-	
 	// Creating buildings
 	for(var i = 0 ; i < definition.length ; i++) {
-		this._addBuilding(definition[i]);
+		if(!Building.types[definition[i].type_id].isGap) {
+			var building = new Building(this.world, this, definition[i]);
+			this._addBuildingFast(building);
+		}
 	}
 	
 	this._recalculateMinMaxBounds();
@@ -94,17 +98,17 @@ SpaceShip.prototype._recalculateMinMaxBounds = function() {
 };
 
 /**
- * Adds a building to the spaceship, based on it's definition.
- * @param Object Definition received from server.
+ * Adds a building to the spaceship.
+ * @param Building The building to add.
  */
 SpaceShip.prototype.addBuilding = function(building) {
-	if(Building.types[building.type_id].isGap) {
+	if(Building.types[building.typeId].isGap) {
 		this._addGapBuilding(building);
 	}
-	this._addBuilding(building);
+	this._addBuildingFast(building);
 	
-	var position = building.position;
-	var size = building.size;
+	var position = building.gridPosition;
+	var size = building.gridSize;
 	var positionEnd = [position[0] + size[0] - 1, position[1] + size[1] - 1, position[2] + size[2] - 1];
 	
 	// Recalculates min and max bounds (addition => we can do faster than the method)
@@ -119,18 +123,18 @@ SpaceShip.prototype.addBuilding = function(building) {
 
 /**
  * Adds information to the list of gaps to apply to the rooms, and recreates the required rooms
- * @param Object Definition received from server.
+ * @param Building The building added
  */
 SpaceShip.prototype._addGapBuilding = function(building) {
 	this.gapBuildings[building.id] = building;
 	
 	// Determining new building bounds
-	var beginX = building.position[0] - 0.5;
-	var beginY = building.position[1];
-	var beginZ = building.position[2] - 0.5;
-	var endX = beginX + building.size[0];
-	var endY = beginY + building.size[1];
-	var endZ = beginZ + building.size[2];
+	var beginX = building.gridPosition[0] - 0.5;
+	var beginY = building.gridPosition[1];
+	var beginZ = building.gridPosition[2] - 0.5;
+	var endX = beginX + building.gridSize[0];
+	var endY = beginY + building.gridSize[1];
+	var endZ = beginZ + building.gridSize[2];
 	
 	// Recreates the rooms concerned
 	for(var k in this.entities) {
@@ -150,35 +154,33 @@ SpaceShip.prototype._addGapBuilding = function(building) {
 };
 
 /**
- * Adds a building to the spaceship, based on it's definition.
- * Be careful not to use this private method, there is another 
- * public method with the same name (without underscore)
- * @param Object Definition received from server.
+ * Adds a building to the spaceship.
+ * This is a fast method which doesn't refreshes some buffers.
+ * @param Building The building to add
  */
-SpaceShip.prototype._addBuilding = function(definition) {
-	var rotation = vec3.create();
-	vec3.add(rotation, definition.rotation, this.rotation);
-	
-	this.entities[definition.id] = new Building(world, this, vec3.create(), quat.create(), definition);
-	if(!this.buildingsByTypeIds[definition.type_id]) this.buildingsByTypeIds[definition.type_id] = new Array();
-	this.buildingsByTypeIds[definition.type_id].push(definition.id);
-	
-	this.world.add(this.entities[definition.id]);
-	this.updateAcceleration();
+SpaceShip.prototype._addBuildingFast = function(building) {
+	if(!this.entities[building.id]) {
+		this.entities[building.id] = building;
+		if(!this.buildingsByTypeIds[building.typeId]) this.buildingsByTypeIds[building.typeId] = new Array();
+		this.buildingsByTypeIds[building.typeId].push(building.id);
+		
+		this.world.add(building);
+		this.updateAcceleration();
+	}
 };
 
 /**
  * Deletes a building from the spaceship, based on it's id.
- * @param int Id of the building to delete
+ * @param Building the building to remove
  */
-SpaceShip.prototype.deleteBuilding = function(id) {
-	var entity = this.entities[id];
+SpaceShip.prototype.deleteBuilding = function(building) {
+	var id = building.id;
 	
 	if(this.gapBuildings[id]) {
 		delete this.gapBuildings[id];
 		
-		var position = entity.gridPosition;
-		var size = entity.gridSize;
+		var position = building.gridPosition;
+		var size = building.gridSize;
 		
 		// Determining building bounds
 		var beginX = position[0] - 0.5;
@@ -205,16 +207,14 @@ SpaceShip.prototype.deleteBuilding = function(id) {
 		}
 	}
 	
-	var entity = this.entities[id];
-	
-	this.buildingsByTypeIds[entity.typeId].splice(
-		this.buildingsByTypeIds[entity.typeId].indexOf(id),
+	this.buildingsByTypeIds[building.typeId].splice(
+		this.buildingsByTypeIds[building.typeId].indexOf(id),
 		1
 	);
 	delete this.entities[id];
 	
 	this._recalculateMinMaxBounds();
-	this.world.remove(entity);
+	this.world.remove(building);
 	this.updateAcceleration();
 };
 

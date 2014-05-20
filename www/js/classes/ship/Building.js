@@ -2,11 +2,10 @@
  * A building is an entity which is a part of a spaceship
  * @param World The world where the spaceship is
  * @param SpaceShip The spaceship containing the building
- * @param vec3 TODO it's useless here ?!?
- * @param quat TODO it's useless here ?!?
  * @param Object The definition of the building
+ * @param vec4 (optional) To apply a different colour than the default one on a "not built" building
  */
-var Building = function(world, spaceShip, position, rotation, definition) {
+var Building = function(world, spaceShip, definition, notBuiltColorMask) {
 	this.spaceShip    = spaceShip;
 	this.gridSize     = definition.size;
 	this.gridPosition = definition.position;
@@ -29,12 +28,20 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 	
 	this.modelName = this.type.model;
 	
-	var colorMask = this.isBuilt ? null : vec4.fromValues(0.5, 0.5, 1, 0.5); // TODO blinking textures -> cull faces everywhere
+	// TODO blinking textures -> cull faces everywhere
+	var colorMask = null;
+	if(!this.isBuilt) {
+		if(notBuiltColorMask) {
+			colorMask = vec4.clone(notBuiltColorMask);
+		} else {
+			colorMask = vec4.fromValues(0.5, 0.5, 1, 0.5);
+		}
+	}
 	
 	this.onMoveInSpaceShip = null;
 	
 	if(Building.builders[this.modelName]) {
-		this.parent(world, new Model(world, []), position, rotation, colorMask);
+		this.parent(world, new Model(world, []), vec3.create(), quat.create(), colorMask);
 		Building.builders[this.modelName](this, definition.state);
 	} else {
 		if(!Building.alreadyCreatedModels[this.modelName]) {
@@ -45,13 +52,15 @@ var Building = function(world, spaceShip, position, rotation, definition) {
 			Building.alreadyCreatedModels[this.modelName] = model;
 		}
 		var model = Building.alreadyCreatedModels[this.modelName];
-		this.parent(world, model, position, rotation, colorMask);
+		this.parent(world, model, vec3.create(), quat.create(), colorMask);
 		var hitBox = HitBox.createFromModel(model);
 		this.hitBoxes.push(hitBox);
 		this.spaceShip.physics.add(hitBox);
 	}
 	
 	this.refreshPositionAndRotationInSpaceShip();
+	
+	// TODO make a unbuilt building not pickable (doesn't even print black meshes)
 	
 	// Initializing hitboxes with position and rotation
 	for(var i = 0 ; i < this.hitBoxes.length ; i++) {

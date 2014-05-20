@@ -30,7 +30,7 @@ var World = function() {
 	this.spaceContent     = new SpaceContent(this);
 	
 	// Starts with 1 because 0 = not pickable
-	// TODO meshes in this array cannot be destroyed by garbage collector
+	// TODO meshes in this array cannot be destroyed by garbage collector (especially room walls regenerating)
 	this.nextPickableColor = [0, 0, 1];
 	this._pickableContent = {}; // key = color, value = Mesh or Entity
 };
@@ -101,7 +101,6 @@ World.prototype.sortEntities = function() {
  */
 World.prototype.setUserSpaceShip = function(spaceShip) {
 	this.userSpaceShip = spaceShip;
-	this.designer       .setSpaceShip(this.userSpaceShip);
 	
 	var self = this;
 	var lastPos = vec3.clone(this.userSpaceShip.getPosition());
@@ -300,7 +299,4 @@ World.prototype.draw = function(mode) {
 	}
 	
 	// TODO sort entities by model and enable the buffers once
-	
-	// Drawing additional windows
-	if(this.designer != null && this.designer.isVisible) this.designer.draw();
 };

@@ -29,12 +29,9 @@ def get_building_types_definition()
 			"category"         => row["building_type_category_name"],
 			"is_gap"           => row["building_type_is_gap"] == 1,
 			"default_state"    => row["building_type_default_state"],
-			"allow_rotation"   => [
-				row["building_type_allow_rotation_x"],
-				row["building_type_allow_rotation_y"],
-				row["building_type_allow_rotation_z"]
-			],
 			"is_sizeable"      => row["building_type_is_sizeable"] == 1,
+			"is_container"     => row["building_type_is_container"] == 1,
+			"is_inside"        => row["building_type_is_inside"] == 1,
 			"is_position_by_room_unit" => row["building_type_is_position_by_room_unit"] == 1,
 			"min_state"        => row["building_type_min_state"],
 			"max_state"        => row["building_type_max_state"],

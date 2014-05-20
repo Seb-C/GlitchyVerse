@@ -26,7 +26,7 @@ Building.builders.Room = function(building, state) {
 			building.hitBoxes = [];
 		}
 		
-		var unitSize = building.spaceShip.roomUnitSize;
+		var unitSize = building.spaceShip.roomUnitSize[0]; // TODO change in spaceship and everywhere from a vec3 to a float
 		var bSize = building.gridSize;
 		var bPos  = building.gridPosition;
 		
@@ -46,66 +46,66 @@ Building.builders.Room = function(building, state) {
 			
 			var side = null;
 			var pos = null;
-			if(gap.position[0] % 1 != 0) { // Left or right
+			if(gap.gridPosition[0] % 1 != 0) { // Left or right
 				// Checking that Y and Z points are in this room
 				if(
-					   gap.position[1] >= bPos[1] && gap.position[1] < bPos[1] + bSize[1]
-					&& gap.position[2] >= bPos[2] && gap.position[2] < bPos[2] + bSize[2]
+					   gap.gridPosition[1] >= bPos[1] && gap.gridPosition[1] < bPos[1] + bSize[1]
+					&& gap.gridPosition[2] >= bPos[2] && gap.gridPosition[2] < bPos[2] + bSize[2]
 				) {
-					if(Math.ceil(gap.position[0]) == bPos[0]) {
+					if(Math.ceil(gap.gridPosition[0]) == bPos[0]) {
 						side = "left";
 						pos = [
-							(bPos[2] + bSize[2] - 1) - gap.position[2],
-							(bPos[1] + bSize[1] - 1) - gap.position[1]
+							(bPos[2] + bSize[2] - 1) - gap.gridPosition[2],
+							(bPos[1] + bSize[1] - 1) - gap.gridPosition[1]
 						];
-					} else if(Math.floor(gap.position[0]) == bPos[0] + bSize[0] - 1) {
+					} else if(Math.floor(gap.gridPosition[0]) == bPos[0] + bSize[0] - 1) {
 						side = "right";
 						pos = [
-							gap.position[2] - bPos[2],
-							(bPos[1] + bSize[1] - 1) - gap.position[1]
+							gap.gridPosition[2] - bPos[2],
+							(bPos[1] + bSize[1] - 1) - gap.gridPosition[1]
 						];
 					}
 				}
-			} else if(gap.position[1] % 1 != 0) { // Ground or ceil
+			} else if(gap.gridPosition[1] % 1 != 0) { // Ground or ceil
 				// Checking that X and Z points are in this room
 				if(
-					   gap.position[0] >= bPos[0] && gap.position[0] < bPos[0] + bSize[0]
-					&& gap.position[2] >= bPos[2] && gap.position[2] < bPos[2] + bSize[2]
+					   gap.gridPosition[0] >= bPos[0] && gap.gridPosition[0] < bPos[0] + bSize[0]
+					&& gap.gridPosition[2] >= bPos[2] && gap.gridPosition[2] < bPos[2] + bSize[2]
 				) {
-					if(Math.floor(gap.position[1]) == bPos[1] + bSize[1] - 1) {
+					if(Math.floor(gap.gridPosition[1]) == bPos[1] + bSize[1] - 1) {
 						side = "ceil";
 						pos = [
-							(bPos[0] + bSize[0] - 1) - gap.position[0],
-							gap.position[2] - bPos[2]
+							(bPos[0] + bSize[0] - 1) - gap.gridPosition[0],
+							gap.gridPosition[2] - bPos[2]
 						];
-					} else if(Math.ceil(gap.position[1]) == bPos[1]) {
+					} else if(Math.ceil(gap.gridPosition[1]) == bPos[1]) {
 						side = "ground";
 						pos = [
-							(bPos[0] + bSize[0] - 1) - gap.position[0],
-							(bPos[2] + bSize[2] - 1) - gap.position[2]
+							(bPos[0] + bSize[0] - 1) - gap.gridPosition[0],
+							(bPos[2] + bSize[2] - 1) - gap.gridPosition[2]
 						];
 					}
 				}
 				
 				// TODO start faces with ground instead of front, to synchronize it with identity quaternion ?
 				
-			} else if(gap.position[2] % 1 != 0) { // Front or back
+			} else if(gap.gridPosition[2] % 1 != 0) { // Front or back
 				// Checking that X and Y points are in this room
 				if(
-					   gap.position[0] >= bPos[0] && gap.position[0] < bPos[0] + bSize[0]
-					&& gap.position[1] >= bPos[1] && gap.position[1] < bPos[1] + bSize[1]
+					   gap.gridPosition[0] >= bPos[0] && gap.gridPosition[0] < bPos[0] + bSize[0]
+					&& gap.gridPosition[1] >= bPos[1] && gap.gridPosition[1] < bPos[1] + bSize[1]
 				) {
-					if(Math.ceil(gap.position[2]) == bPos[2]) {
+					if(Math.ceil(gap.gridPosition[2]) == bPos[2]) {
 						side = "back";
 						pos = [
-							gap.position[0] - bPos[0],
-							(bPos[1] + bSize[1] - 1) - gap.position[1]
+							gap.gridPosition[0] - bPos[0],
+							(bPos[1] + bSize[1] - 1) - gap.gridPosition[1]
 						];
-					} else if(Math.floor(gap.position[2]) == bPos[2] + bSize[2] - 1) {
+					} else if(Math.floor(gap.gridPosition[2]) == bPos[2] + bSize[2] - 1) {
 						side = "front";
 						pos = [
-							(bPos[0] + bSize[0] - 1) - gap.position[0],
-							(bPos[1] + bSize[1] - 1) - gap.position[1]
+							(bPos[0] + bSize[0] - 1) - gap.gridPosition[0],
+							(bPos[1] + bSize[1] - 1) - gap.gridPosition[1]
 						];
 					}
 				}
@@ -121,9 +121,9 @@ Building.builders.Room = function(building, state) {
 		var edgeSize = building.spaceShip.edgeSize;
 		
 		// Walls positions
-		var x2 = unitSize[0] * bSize[0] / 2;
-		var y2 = unitSize[1] * bSize[1] / 2;
-		var z2 = unitSize[2] * bSize[2] / 2;
+		var x2 = unitSize * bSize[0] / 2;
+		var y2 = unitSize * bSize[1] / 2;
+		var z2 = unitSize * bSize[2] / 2;
 		var x1 = x2 - edgeSize;
 		var y1 = y2 - edgeSize;
 		var z1 = z2 - edgeSize;
@@ -133,7 +133,10 @@ Building.builders.Room = function(building, state) {
 		
 		// Inner & outer walls
 		var self = this;
-		var createFace = function(faceGaps, unitWidth, unitHeight, coord1, coord2, xRotation, yRotation, width, height, walkingBuildingRotation) {
+		var createFace = function(faceGaps, zCoord1, coord2, xRotation, yRotation, width, height, walkingBuildingRotation, absPos, absPosXIncrement, absPosYIncrement, buildAngleDelta) {
+			var absPos1 = vec3.clone(absPos);
+			var absPos2 = vec3.clone(absPos);
+			
 			for(var x = 0 ; x < width ; x++) {
 				for(var y = 0 ; y < height ; y++) {
 					var isGap = false;
@@ -150,14 +153,9 @@ Building.builders.Room = function(building, state) {
 							var s = faceGaps[i];
 							
 							// Calculating texture bounds
-							var textureBounds = [
-								0,
-								0,
-								unitWidth,
-								unitHeight
-							];
-							if(s[0]     ==      0 ) textureBounds[0] += edgeSize;
-							if(s[1]     ==      0 ) textureBounds[1] += edgeSize;
+							var textureBounds = [0, 0, unitSize, unitSize];
+							if(s[0]     ==     0 ) textureBounds[0] += edgeSize;
+							if(s[1]     ==     0 ) textureBounds[1] += edgeSize;
 							if(s[0] + 1 == width ) textureBounds[2] -= edgeSize;
 							if(s[1] + 1 == height) textureBounds[3] -= edgeSize;
 							if(s[1] % 2 == 1) {
@@ -181,16 +179,16 @@ Building.builders.Room = function(building, state) {
 								];
 								
 								var hull = new Mesh(material_METAL_BOLT, [
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight,            coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight,            coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight - edgeSize, coord2[2],
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight - edgeSize, coord2[2]
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - s[1] * unitSize,            coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - s[1] * unitSize,            coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - s[1] * unitSize - edgeSize, coord2[2],
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - s[1] * unitSize - edgeSize, coord2[2]
 								], [0, 0, 1], texture);
 								var wall = new Mesh(material_METAL_WALL, [
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight,            coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight,            coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - s[1] * unitHeight - edgeSize, coord1[2],
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - s[1] * unitHeight - edgeSize, coord1[2]
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - s[1] * unitSize,            zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - s[1] * unitSize,            zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - s[1] * unitSize - edgeSize, zCoord1,
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - s[1] * unitSize - edgeSize, zCoord1
 								], [0, 0, -1], texture);
 								
 								meshes.push(hull);
@@ -215,16 +213,16 @@ Building.builders.Room = function(building, state) {
 								];
 								
 								var hull = new Mesh(material_METAL_BOLT, [
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight,            coord2[2],
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight,            coord2[2]
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - (s[1] + 1) * unitSize + edgeSize, coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - (s[1] + 1) * unitSize + edgeSize, coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - (s[1] + 1) * unitSize,            coord2[2],
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - (s[1] + 1) * unitSize,            coord2[2]
 								], [0, 0, 1], texture);
 								var wall = new Mesh(material_METAL_WALL, [
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight + edgeSize, coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth + rightAdd, coord2[1] - (s[1] + 1) * unitHeight,            coord1[2],
-									coord2[0] -  s[0]      * unitWidth + leftAdd,  coord2[1] - (s[1] + 1) * unitHeight,            coord1[2]
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - (s[1] + 1) * unitSize + edgeSize, zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - (s[1] + 1) * unitSize + edgeSize, zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize + rightAdd, coord2[1] - (s[1] + 1) * unitSize,            zCoord1,
+									coord2[0] -  s[0]      * unitSize + leftAdd,  coord2[1] - (s[1] + 1) * unitSize,            zCoord1
 								], [0, 0, -1], texture);
 								
 								meshes.push(hull);
@@ -249,16 +247,16 @@ Building.builders.Room = function(building, state) {
 								];
 								
 								var hull = new Mesh(material_METAL_BOLT, [
-									coord2[0] - s[0] * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
-									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
-									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2],
-									coord2[0] - s[0] * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2]
+									coord2[0] - s[0] * unitSize,            coord2[1] -  s[1]      * unitSize + topAdd,    coord2[2],
+									coord2[0] - s[0] * unitSize - edgeSize, coord2[1] -  s[1]      * unitSize + topAdd,    coord2[2],
+									coord2[0] - s[0] * unitSize - edgeSize, coord2[1] - (s[1] + 1) * unitSize + bottomAdd, coord2[2],
+									coord2[0] - s[0] * unitSize,            coord2[1] - (s[1] + 1) * unitSize + bottomAdd, coord2[2]
 								], [0, 0, 1], texture);
 								var wall = new Mesh(material_METAL_WALL, [
-									coord2[0] - s[0] * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
-									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
-									coord2[0] - s[0] * unitWidth - edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2],
-									coord2[0] - s[0] * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2]
+									coord2[0] - s[0] * unitSize,            coord2[1] -  s[1]      * unitSize + topAdd,    zCoord1,
+									coord2[0] - s[0] * unitSize - edgeSize, coord2[1] -  s[1]      * unitSize + topAdd,    zCoord1,
+									coord2[0] - s[0] * unitSize - edgeSize, coord2[1] - (s[1] + 1) * unitSize + bottomAdd, zCoord1,
+									coord2[0] - s[0] * unitSize,            coord2[1] - (s[1] + 1) * unitSize + bottomAdd, zCoord1
 								], [0, 0, -1], texture);
 								
 								meshes.push(hull);
@@ -283,16 +281,16 @@ Building.builders.Room = function(building, state) {
 								];
 								
 								var hull = new Mesh(material_METAL_BOLT, [
-									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2],
-									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord2[2]
+									coord2[0] - (s[0] + 1) * unitSize + edgeSize, coord2[1] -  s[1]      * unitSize + topAdd,    coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize,            coord2[1] -  s[1]      * unitSize + topAdd,    coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize,            coord2[1] - (s[1] + 1) * unitSize + bottomAdd, coord2[2],
+									coord2[0] - (s[0] + 1) * unitSize + edgeSize, coord2[1] - (s[1] + 1) * unitSize + bottomAdd, coord2[2]
 								], [0, 0, 1], texture);
 								var wall = new Mesh(material_METAL_WALL, [
-									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] -  s[1]      * unitHeight + topAdd,    coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth,            coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2],
-									coord2[0] - (s[0] + 1) * unitWidth + edgeSize, coord2[1] - (s[1] + 1) * unitHeight + bottomAdd, coord1[2]
+									coord2[0] - (s[0] + 1) * unitSize + edgeSize, coord2[1] -  s[1]      * unitSize + topAdd,    zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize,            coord2[1] -  s[1]      * unitSize + topAdd,    zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize,            coord2[1] - (s[1] + 1) * unitSize + bottomAdd, zCoord1,
+									coord2[0] - (s[0] + 1) * unitSize + edgeSize, coord2[1] - (s[1] + 1) * unitSize + bottomAdd, zCoord1
 								], [0, 0, -1], texture);
 								
 								meshes.push(hull);
@@ -310,12 +308,7 @@ Building.builders.Room = function(building, state) {
 						}
 					} else {
 						// Meshes for faces parts where there are not gaps
-						var textureBounds = [
-							0,
-							0,
-							unitWidth,
-							unitHeight
-						];
+						var textureBounds = [0, 0, unitSize, unitSize];
 						if(x == 0) textureBounds[0] += edgeSize;
 						if(y == 0) textureBounds[1] += edgeSize;
 						if(x + 1 == 1) textureBounds[2] -= edgeSize;
@@ -330,7 +323,7 @@ Building.builders.Room = function(building, state) {
 							textureBounds[2], textureBounds[1],
 							textureBounds[2], textureBounds[3],
 							textureBounds[0], textureBounds[3]
-						]
+						];
 						
 						// Sides additions
 						var leftAdd   = x == 0 ? edgeSize : 0;
@@ -340,19 +333,46 @@ Building.builders.Room = function(building, state) {
 						
 						// Exterior (face), hull
 						var hull = new Mesh(material_METAL_BOLT, [
-							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] -  y      * unitHeight - topAdd,    coord2[2],
-							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] -  y      * unitHeight - topAdd,    coord2[2],
-							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] - (y + 1) * unitHeight + bottomAdd, coord2[2],
-							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord2[2]
+							coord2[0] -  x      * unitSize - leftAdd,  coord2[1] -  y      * unitSize - topAdd,    coord2[2],
+							coord2[0] - (x + 1) * unitSize + rightAdd, coord2[1] -  y      * unitSize - topAdd,    coord2[2],
+							coord2[0] - (x + 1) * unitSize + rightAdd, coord2[1] - (y + 1) * unitSize + bottomAdd, coord2[2],
+							coord2[0] -  x      * unitSize - leftAdd,  coord2[1] - (y + 1) * unitSize + bottomAdd, coord2[2]
 						], [0, 0, 1], textureBounds);
 						
 						// Interior (Wall)
 						var wall = new Mesh(material_METAL_WALL, [
-							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] -  y      * unitHeight - topAdd,    coord1[2],
-							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] -  y      * unitHeight - topAdd,    coord1[2],
-							coord2[0] - (x + 1) * unitWidth + rightAdd, coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2],
-							coord2[0] -  x      * unitWidth - leftAdd,  coord2[1] - (y + 1) * unitHeight + bottomAdd, coord1[2]
+							coord2[0] -  x      * unitSize - leftAdd,  coord2[1] -  y      * unitSize - topAdd,    zCoord1,
+							coord2[0] - (x + 1) * unitSize + rightAdd, coord2[1] -  y      * unitSize - topAdd,    zCoord1,
+							coord2[0] - (x + 1) * unitSize + rightAdd, coord2[1] - (y + 1) * unitSize + bottomAdd, zCoord1,
+							coord2[0] -  x      * unitSize - leftAdd,  coord2[1] - (y + 1) * unitSize + bottomAdd, zCoord1
 						], [0, 0, -1], textureBounds);
+						
+						(function() {
+							var wallPositionInSpaceShip = vec3.clone(absPos2);
+							
+							var buildOnWallDirection = vec3.fromValues(0, 1, 0);
+							vec3.transformQuat(buildOnWallDirection, buildOnWallDirection, walkingBuildingRotation);
+							buildOnWallDirection[0] = Math.round(buildOnWallDirection[0]);
+							buildOnWallDirection[1] = Math.round(buildOnWallDirection[1]);
+							buildOnWallDirection[2] = Math.round(buildOnWallDirection[2]);
+							var buildOnHullDirection = vec3.clone(buildOnWallDirection);
+							vec3.negate(buildOnHullDirection, buildOnHullDirection);
+							
+							var walkingRotationOnHull = quat.invert(quat.create(), walkingBuildingRotation);
+							
+							building.world.configurePickableContent(hull, function(pickX, pickY) {
+								if(building.world.designer.spaceShip == building.spaceShip) {
+									var yAngle = Math.atan2((1 - pickX) - 0.5, (1 - pickY) - 0.5) + buildAngleDelta;
+									building.world.designer.setPickedPosition(wallPositionInSpaceShip, buildOnHullDirection, walkingRotationOnHull, yAngle);
+								}
+							}, true);
+							building.world.configurePickableContent(wall, function(pickX, pickY) {
+								if(building.world.designer.spaceShip == building.spaceShip) {
+									var yAngle = Math.atan2(pickX - 0.5, pickY - 0.5) + buildAngleDelta;
+									building.world.designer.setPickedPosition(wallPositionInSpaceShip, buildOnWallDirection, walkingBuildingRotation, yAngle);
+								}
+							}, true);
+						})();
 						
 						// TODO hitboxes on windows and doors frames
 						
@@ -360,13 +380,13 @@ Building.builders.Room = function(building, state) {
 						
 						var hitBox = new HitBox(
 							vec3.fromValues(
-								coord2[0] - x * unitWidth + hitBoxesMargin,
-								coord2[1] - y * unitHeight + hitBoxesMargin,
+								coord2[0] - x * unitSize + hitBoxesMargin,
+								coord2[1] - y * unitSize + hitBoxesMargin,
 								coord2[2]
 							), vec3.fromValues(
-								coord2[0] - (x + 1) * unitWidth - hitBoxesMargin,
-								coord2[1] - (y + 1) * unitHeight - hitBoxesMargin,
-								coord1[2]
+								coord2[0] - (x + 1) * unitSize - hitBoxesMargin,
+								coord2[1] - (y + 1) * unitSize - hitBoxesMargin,
+								zCoord1
 							)
 						);
 						hitBox.onCollide = function(hb) {
@@ -461,7 +481,12 @@ Building.builders.Room = function(building, state) {
 							hitBox.max[2] = maxZ;
 						}
 					}
+					
+					vec3.add(absPos2, absPos2, absPosYIncrement);
 				}
+				
+				vec3.add(absPos1, absPos1, absPosXIncrement);
+				vec3.copy(absPos2, absPos1);
 			}
 		};
 		
@@ -487,12 +512,12 @@ Building.builders.Room = function(building, state) {
 		quat.invert(playerRot.ceil, playerRot.ceil);
 		
 		// Creating faces
-		createFace(gaps.front,  unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,            0,           bSize[0], bSize[1], playerRot.front );
-		createFace(gaps.back,   unitSize[0], unitSize[1], [x1, y1, z1], [x2, y2, z2],  0,           -Math.PI,     bSize[0], bSize[1], playerRot.back  );
-		createFace(gaps.left,   unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2],  0,            Math.PI / 2, bSize[2], bSize[1], playerRot.left  );
-		createFace(gaps.right,  unitSize[2], unitSize[1], [z1, y1, x1], [z2, y2, x2],  0,           -Math.PI / 2, bSize[2], bSize[1], playerRot.right );
-		createFace(gaps.ground, unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2], -Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ground);
-		createFace(gaps.ceil,   unitSize[0], unitSize[2], [x1, z1, y1], [x2, z2, y2],  Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ceil  );
+		createFace(gaps.front,  z1, [x2, y2, z2],  0,            0,           bSize[0], bSize[1], playerRot.front , [bPos[0] + bSize[0] - 1,   bPos[1] + bSize[1] - 1,   bPos[2] + bSize[2] - 0.5], [-1,  0,  0], [ 0, -1,  0],            0);
+		createFace(gaps.back,   z1, [x2, y2, z2],  0,           -Math.PI,     bSize[0], bSize[1], playerRot.back  , [bPos[0],                  bPos[1] + bSize[1] - 1,   bPos[2] - 0.5           ], [+1,  0,  0], [ 0, -1,  0],  Math.PI    );
+		createFace(gaps.left,   x1, [z2, y2, x2],  0,            Math.PI / 2, bSize[2], bSize[1], playerRot.left  , [bPos[0] - 0.5,            bPos[1] + bSize[1] - 1,   bPos[2] + bSize[2] - 1  ], [ 0,  0, -1], [ 0, -1,  0], -Math.PI / 2);
+		createFace(gaps.right,  x1, [z2, y2, x2],  0,           -Math.PI / 2, bSize[2], bSize[1], playerRot.right , [bPos[0] + bSize[0] - 0.5, bPos[1] + bSize[1] - 1,   bPos[2]                 ], [ 0,  0, +1], [ 0, -1,  0],  Math.PI / 2);
+		createFace(gaps.ground, y1, [x2, z2, y2], -Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ground, [bPos[0] + bSize[0] - 1,   bPos[1] - 0.5,            bPos[2] + bSize[2] - 1  ], [-1,  0,  0], [ 0,  0, -1],            0);
+		createFace(gaps.ceil,   y1, [x2, z2, y2],  Math.PI / 2,  0,           bSize[0], bSize[2], playerRot.ceil  , [bPos[0] + bSize[0] - 1,   bPos[1] + bSize[1] - 0.5, bPos[2]                 ], [-1,  0,  0], [ 0,  0, +1],            0);
 		
 		// Outer diagonals top
 		meshes.push(new Mesh(material_METAL_BOLT, [
