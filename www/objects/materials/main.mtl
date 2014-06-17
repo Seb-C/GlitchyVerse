@@ -4,6 +4,15 @@ newmtl WHITE
 newmtl BLACK
 	map_Kd textures/black.png
 
+newmtl RED
+	map_Kd textures/red.png
+
+newmtl GREEN
+	map_Kd textures/green.png
+
+newmtl BLUE
+	map_Kd textures/blue.png
+
 newmtl METAL
 	map_Kd textures/metal.png
 

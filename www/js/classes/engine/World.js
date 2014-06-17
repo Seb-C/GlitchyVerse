@@ -115,12 +115,15 @@ World.prototype.setUserSpaceShip = function(spaceShip) {
 	this.designer.setSpaceShip(this.userSpaceShip);
 };
 
+// TODO disable up/down keys
+
 /**
  * Configures an entity or a mesh as pickable
  * @param Entity|Mesh The content which is pickable
  * @param callback The function to execute when the content is picked. "this" will reference the Entity or the Mesh
  * @param boolean True if content is a Mesh and if the mesh is a screen. If true, x and y coordinates of the click 
- *                on the screen will be passed to callback, as floats (0.0 .. 1.0)
+ *                on the screen will be passed to callback, as floats (0.0 .. 1.0). A third boolean argument
+ *                will be set as true when the player releases the mouse button (= on mouse up).
  */
 World.prototype.configurePickableContent = function(content, callBack, isScreen) {
 	content.pickColor = [

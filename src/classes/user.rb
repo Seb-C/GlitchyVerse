@@ -245,7 +245,8 @@ class User
 			:size_z       => size[2],
 			:rotation_x   => rotation[0],
 			:rotation_y   => rotation[1],
-			:rotation_z   => rotation[2]
+			:rotation_z   => rotation[2],
+			:rotation_w   => rotation[3]
 		)
 		
 		if $DB.affected_rows() == 0

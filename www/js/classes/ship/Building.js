@@ -28,6 +28,8 @@ var Building = function(world, spaceShip, definition, notBuiltColorMask) {
 	
 	this.modelName = this.type.model;
 	
+	this.regenerateMeshes = null; // Implemented separately for each building
+	
 	// TODO blinking textures -> cull faces everywhere
 	var colorMask = null;
 	if(!this.isBuilt) {
@@ -75,14 +77,20 @@ var Building = function(world, spaceShip, definition, notBuiltColorMask) {
 	}
 	this.inventoryDom = null;
 	
-	// TODO do it again when it's built
+	// TODO initialize it again when it's built
 	this.slotSizeMultiplicator = this.gridSize[0] * this.gridSize[1] * this.gridSize[2];
-	if(this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator > 0) {
-		this.createDomInventory();
-		world.configurePickableContent(this, function() {
-			this.toggleDomInventory();
-		});
-	}
+	var hasInventory = this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator > 0;
+	if(hasInventory) this.createDomInventory();
+	
+	world.configurePickableContent(this, function(x, y, isReleasing) {
+		if(isReleasing) {
+			if(this.world.designer.isDestroyMode) {
+				this.world.designer.setPickedBuildingToDestroy(this);
+			} else if(hasInventory) {
+				this.toggleDomInventory();
+			}
+		}
+	});
 };
 Building.extend(Entity);
 
@@ -91,7 +99,7 @@ Building.alreadyCreatedModels = {}; // Static, cache of models created from obj
 
 Building.builders = {}; // Static, files in js/buildingBuilders
 
-Building.types = null; // Set by ServerConnection, key = id
+Building.types = {}; // Set by ServerConnection, key = id
 
 /**
  * Moves (translates the position) and rotates the look of the entity
@@ -205,7 +213,7 @@ Building.prototype.getItemById = function(id) {
  * Hides or shows the inveotory window of the building inventory
  */
 Building.prototype.toggleDomInventory = function() {
-	if(this.inventoryDom != null) { // TODO delay between two toggles (in case of picking on the screen) ? Only showable via picking ?
+	if(this.inventoryDom != null) {
 		// TODO minimum distance to open an inventory (+ do it server side) ? How to handle big buildings (size > 1) ?
 		this.inventoryDom.toggleWindow();
 	}

@@ -54,8 +54,8 @@ Building.builders.Door = function(building, state) {
 		var mesh = building.model.meshes[i];
 		
 		if(mesh.groups.indexOf("lock") != -1) {
-			building.world.configurePickableContent(mesh, function() {
-				building.setOpened(!isOpened);
+			building.world.configurePickableContent(mesh, function(x, y, isReleasing) {
+				if(isReleasing) building.setOpened(!isOpened);
 			}, false);
 		}
 	}

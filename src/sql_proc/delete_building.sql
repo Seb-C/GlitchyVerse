@@ -7,6 +7,13 @@ DELETE FROM building
 WHERE building_id = :building_id
 AND spaceship_id = :spaceship_id
 
+-- Can't destroy un-buildable buildings such as characters
+AND building_type_id NOT IN (
+	SELECT building_type_id
+	FROM building_type
+	WHERE building_type_category_id IS NULL
+)
+
 -- If the building is a container, checking that there is not a building inside it
 AND (
 	building_type_id NOT IN (

@@ -29,7 +29,7 @@ var Mesh = function(texture, vertices, normals, texturePart, groups, verticesInd
 	} else if(this.pointsCount == 3) {
 		this.verticesCount = 3;
 	} else if(this.pointsCount % 4 != 0) {
-		//throw new Error("Error : big meshes must have a number of vertices multiple of 4.");
+		throw new Error("Error : Unsupported number of vertices.");
 	} else {
 		this.verticesCount = this.pointsCount / 4 * 6;
 	}

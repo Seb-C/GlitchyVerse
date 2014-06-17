@@ -6,10 +6,19 @@ var Designer = function(world) {
 	this.spaceShip = null;
 	this.ghostBuildings = null;
 	this.ghostColor = vec4.fromValues(1, 1, 1, 0.5);
+	this.sizeSelector = null;
 	
 	this.selectedType = null; // When choosing a new building in a tree
+	this.isDestroyMode = false;
+	this.selectedBuildingToDestroy = null;
+	this.selectedGhostPosition = vec3.create();
 	
 	this._DOMWindow = null;
+	this._DOMConfirmBuildingButton = null;
+	this._DOMConfirmDestruction = null;
+	this._DOMConfirmDestroyButton = null;
+	this._DOMNotEmptyError = null;
+	this._DOMDestroyBuilding = null;
 	this.isVisible  = false;
 	
 	// TODO in database, add a field to forbid removing the last building of a determined type (propeller, room ...) ?
@@ -54,6 +63,98 @@ Designer.prototype.setSpaceShip = function(spaceShip) {
 			items     : []
 		}, this.ghostColor);
 	}
+	
+	this.sizeSelector = new Building(this.world, this.spaceShip, {
+		size      : vec3.fromValues(1, 1, 1),
+		position  : vec3.create(),
+		rotation  : quat.create(),
+		type_id   : "sizeSelector",
+		is_enabled: false,
+		seed      : null,
+		id        : -2,
+		is_built  : true,
+		state     : null,
+		items     : []
+	});
+	
+	var self = this;
+	new Timer(function() {
+		if(self.selectedType != null && self.selectedType.isSizeable) {
+			var cameraPos = self.world.camera.targetBuilding.gridPosition;
+			self.sizeSelector.gridPosition[0] = Math.round(cameraPos[0]);
+			self.sizeSelector.gridPosition[1] = Math.round(cameraPos[1]);
+			self.sizeSelector.gridPosition[2] = Math.round(cameraPos[2]);
+			self.sizeSelector.refreshPositionAndRotationInSpaceShip();
+		}
+	}, 0);
+};
+
+/**
+ * Changes the size of the ghost
+ * @param vec3 The translation to apply to the min bounds of the ghost
+ * @param vec3 The translation to apply to the max bounds of the ghost
+ */
+Designer.prototype.translateSize = function(min, max) {
+	var ghost = this.ghostBuildings[this.selectedType.id];
+	
+	var newPosition = vec3.clone(ghost.gridPosition);
+	var newSize = vec3.clone(ghost.gridSize);
+	
+	vec3.add(newSize, newSize, max);
+	
+	vec3.subtract(newSize, newSize, min);
+	vec3.add(newPosition, newPosition, min);
+	
+	// Checking if new size/position are valid
+	if(
+		newSize[0] >= 1 && newSize[1] >= 1 && newSize[2] >= 1
+		&& newPosition[0] <= this.selectedGhostPosition[0] && this.selectedGhostPosition[0] <= newPosition[0] + newSize[0] - 1
+		&& newPosition[1] <= this.selectedGhostPosition[1] && this.selectedGhostPosition[1] <= newPosition[1] + newSize[1] - 1
+		&& newPosition[2] <= this.selectedGhostPosition[2] && this.selectedGhostPosition[2] <= newPosition[2] + newSize[2] - 1
+	) {
+		var isPlaceableHere;
+		if(this.selectedType.isGap) {
+			isPlaceableHere = true;
+		} else {
+			var mustBeInside = this.selectedType.isInside && !this.selectedType.isContainer;
+			
+			isPlaceableHere = !mustBeInside;
+			for(var k in this.spaceShip.entities) {
+				var entity = this.spaceShip.entities[k];
+				if(entity != ghost
+					&& !(newPosition[0] > entity.gridPosition[0] + entity.gridSize[0] - 1 || entity.gridPosition[0] > newPosition[0] + newSize[0] - 1)
+					&& !(newPosition[1] > entity.gridPosition[1] + entity.gridSize[1] - 1 || entity.gridPosition[1] > newPosition[1] + newSize[1] - 1)
+					&& !(newPosition[2] > entity.gridPosition[2] + entity.gridSize[2] - 1 || entity.gridPosition[2] > newPosition[2] + newSize[2] - 1)
+				) {
+					isPlaceableHere = mustBeInside;
+					break;
+				}
+			}
+		}
+		
+		// Checking that there is no building here with the same value for isInside
+		var isPositionOccupied = false;
+		for(var k in this.spaceShip.entities) {
+			var entity = this.spaceShip.entities[k];
+			
+			if(entity != ghost && entity.type.isInside == this.selectedType.isInside
+				&& !(newPosition[0] > entity.gridPosition[0] + entity.gridSize[0] - 1 || entity.gridPosition[0] > newPosition[0] + newSize[0] - 1)
+				&& !(newPosition[1] > entity.gridPosition[1] + entity.gridSize[1] - 1 || entity.gridPosition[1] > newPosition[1] + newSize[1] - 1)
+				&& !(newPosition[2] > entity.gridPosition[2] + entity.gridSize[2] - 1 || entity.gridPosition[2] > newPosition[2] + newSize[2] - 1)
+			) {
+				isPositionOccupied = true;
+				break;
+			}
+		}
+		
+		// Refreshing ghost size
+		if(isPlaceableHere && !isPositionOccupied) {
+			ghost.gridPosition = newPosition;
+			ghost.gridSize = newSize;
+			if(ghost.regenerateMeshes != null) ghost.regenerateMeshes();
+			ghost.refreshPositionAndRotationInSpaceShip();
+		}
+	}
 };
 
 /**
@@ -86,7 +187,8 @@ Designer.prototype.setPickedPosition = function(clickedPosition, direction, defa
 			isPlaceableHere = !mustBeInside;
 			for(var k in this.spaceShip.entities) {
 				var entity = this.spaceShip.entities[k];
-				if(    position[0] >= entity.gridPosition[0] && position[0] <= entity.gridPosition[0] + entity.gridSize[0] - 1
+				if(entity != ghost
+					&& position[0] >= entity.gridPosition[0] && position[0] <= entity.gridPosition[0] + entity.gridSize[0] - 1
 					&& position[1] >= entity.gridPosition[1] && position[1] <= entity.gridPosition[1] + entity.gridSize[1] - 1
 					&& position[2] >= entity.gridPosition[2] && position[2] <= entity.gridPosition[2] + entity.gridSize[2] - 1
 				) {
@@ -101,7 +203,7 @@ Designer.prototype.setPickedPosition = function(clickedPosition, direction, defa
 		for(var k in this.spaceShip.entities) {
 			var entity = this.spaceShip.entities[k];
 			
-			if(entity != ghost && Building.types[entity.typeId].isInside == this.selectedType.isInside
+			if(entity != ghost && entity.type.isInside == this.selectedType.isInside
 				&& position[0] >= entity.gridPosition[0] && position[0] <= entity.gridPosition[0] + entity.gridSize[0] - 1
 				&& position[1] >= entity.gridPosition[1] && position[1] <= entity.gridPosition[1] + entity.gridSize[1] - 1
 				&& position[2] >= entity.gridPosition[2] && position[2] <= entity.gridPosition[2] + entity.gridSize[2] - 1
@@ -114,6 +216,9 @@ Designer.prototype.setPickedPosition = function(clickedPosition, direction, defa
 		// Showing ghost
 		if(isPlaceableHere && !isPositionOccupied) {
 			vec3.copy(ghost.gridPosition, position);
+			vec3.copy(this.selectedGhostPosition, position);
+			
+			vec3.set(ghost.gridSize, 1, 1, 1);
 			
 			quat.identity(ghost.gridRotation);
 			if(this.selectedType.isGap) {
@@ -137,9 +242,45 @@ Designer.prototype.setPickedPosition = function(clickedPosition, direction, defa
 			ghost.refreshPositionAndRotationInSpaceShip();
 			
 			// TODO check inside / outside constraints
-			// TODO choose size
 			
 			this.spaceShip.addBuilding(ghost);
+			
+			if(this.selectedType.isSizeable) {
+				this.spaceShip.addBuilding(this.sizeSelector);
+			}
+			
+			this._DOMConfirmBuildingButton.setAttribute("data-isVisible", true);
+		}
+	}
+};
+
+Designer.prototype.setPickedBuildingToDestroy = function(building) {
+	if(building.type.category != null) {
+		var isContainerEmpty = true;
+		if(building.type.isContainer) {
+			// Checking that there is nothing inside this container
+			for(var k in this.spaceShip.entities) {
+				var b = this.spaceShip.entities[k];
+				if(b.type.isInside && (
+					   !(b.gridPosition[0] > building.gridPosition[0] + building.gridSize[0] - 1 || b.gridPosition[0] + b.gridSize[0] - 1 < building.gridPosition[0])
+					&& !(b.gridPosition[1] > building.gridPosition[1] + building.gridSize[1] - 1 || b.gridPosition[1] + b.gridSize[1] - 1 < building.gridPosition[1])
+					&& !(b.gridPosition[2] > building.gridPosition[2] + building.gridSize[2] - 1 || b.gridPosition[2] + b.gridSize[2] - 1 < building.gridPosition[2])
+				)) {
+					isContainerEmpty = false;
+					break;
+				}
+			}
+		}
+		
+		if(!building.type.isContainer || isContainerEmpty) {
+			this._DOMConfirmDestroyButton.setAttribute("value", "Destroy this " + building.type.name + " !");
+			this._DOMConfirmDestruction.setAttribute("data-isInventoryWarning", building.items.length > 0);
+			this._DOMConfirmDestruction.setAttribute("data-isVisible", true);
+			this._DOMNotEmptyError.setAttribute("data-isVisible", false);
+			this.selectedBuildingToDestroy = building;
+		} else {
+			this._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+			this._DOMNotEmptyError.setAttribute("data-isVisible", true);
 		}
 	}
 };
@@ -155,6 +296,12 @@ Designer.prototype._createDesignerWindow = function() {
 		if(self.selectedType != null) {
 			self.selectedType.domElement.setAttribute("data-isSelected", false); // TODO don't create a dom element attribute in type
 			self.spaceShip.deleteBuilding(self.ghostBuildings[self.selectedType.id]);
+			if(self.selectedType.isSizeable) {
+				self._DOMConfirmBuildingButton.setAttribute("data-isVisible", false);
+				self._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+				self._DOMNotEmptyError.setAttribute("data-isVisible", false);
+				self.spaceShip.deleteBuilding(self.sizeSelector);
+			}
 			self.selectedType = null;
 		}
 		
@@ -162,6 +309,7 @@ Designer.prototype._createDesignerWindow = function() {
 	this._DOMWindow.setAttribute("id", "designerWindowContent");
 	
 	this._createDesignerTree();
+	this._createDOMConfirmActions();
 };
 
 Designer.prototype._createDesignerTree = function() {
@@ -199,6 +347,12 @@ Designer.prototype._createDesignerTree = function() {
 				if(self.selectedType != null) {
 					self.selectedType.domElement.setAttribute("data-isSelected", false);
 					self.spaceShip.deleteBuilding(self.ghostBuildings[self.selectedType.id]);
+					if(self.selectedType.isSizeable) {
+						self.spaceShip.deleteBuilding(self.sizeSelector);
+					}
+					self._DOMConfirmBuildingButton.setAttribute("data-isVisible", false);
+					self._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+					self._DOMNotEmptyError.setAttribute("data-isVisible", false);
 					// TODO bug with transparent textures ?
 				}
 				if(self.selectedType == building) {
@@ -207,10 +361,94 @@ Designer.prototype._createDesignerTree = function() {
 					this.setAttribute("data-isSelected", true);
 					self.selectedType = building;
 				}
+				
+				self.isDestroyMode = false;
+				self._DOMDestroyBuilding.setAttribute("data-isSelected", false);
 			});
 			tempCategoriesDOMSubElements[building.category].appendChild(building.domElement);
 		}
 	});
 	
+	this._DOMDestroyBuilding = document.createElement("li");
+	this._DOMDestroyBuilding.appendChild(document.createTextNode("Destroy ..."));
+	this._DOMDestroyBuilding.addEventListener("click", function(event) {
+		if(self.selectedType != null) {
+			self.selectedType.domElement.setAttribute("data-isSelected", false);
+			self.spaceShip.deleteBuilding(self.ghostBuildings[self.selectedType.id]);
+			if(self.selectedType.isSizeable) {
+				self.spaceShip.deleteBuilding(self.sizeSelector);
+			}
+			self._DOMConfirmBuildingButton.setAttribute("data-isVisible", false);
+			self._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+			self._DOMNotEmptyError.setAttribute("data-isVisible", false);
+			self.selectedType = null;
+		}
+		
+		self.isDestroyMode = !self.isDestroyMode;
+		self._DOMDestroyBuilding.setAttribute("data-isSelected", self.isDestroyMode);
+	});
+	tree.appendChild(this._DOMDestroyBuilding);
+	
 	// TODO buildings names --> client only (in a lang singleton ? How to manage category names ?), then remove names from database
+};
+
+Designer.prototype._createDOMConfirmActions = function() {
+	var self = this;
+	
+	// Confirm building
+	
+	this._DOMConfirmBuildingButton = document.createElement("input");
+	this._DOMConfirmBuildingButton.setAttribute("type", "button");
+	this._DOMConfirmBuildingButton.setAttribute("value", "Build it !");
+	this._DOMConfirmBuildingButton.setAttribute("class", "confirmBuildingButton");
+	this._DOMConfirmBuildingButton.setAttribute("data-isVisible", false);
+	this._DOMConfirmBuildingButton.addEventListener("click", function() {
+		var ghost = self.ghostBuildings[self.selectedType.id];
+		self.world.server.sendMessage("build_query", {
+			"type_id" : self.selectedType.id,
+			"position": ghost.gridPosition,
+			"size"    : ghost.gridSize,
+			"rotation": ghost.gridRotation
+		});
+		
+		self.selectedType.domElement.setAttribute("data-isSelected", false);
+		self.spaceShip.deleteBuilding(ghost);
+		if(self.selectedType.isSizeable) {
+			self.spaceShip.deleteBuilding(self.sizeSelector);
+		}
+		this.setAttribute("data-isVisible", false);
+		self.selectedType = null;
+	});
+	this._DOMWindow.appendChild(this._DOMConfirmBuildingButton);
+	
+	// Confirm destruction
+	
+	this._DOMConfirmDestruction = document.createElement("div");
+	this._DOMConfirmDestruction.setAttribute("class", "confirmDestruction");
+	this._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+	this._DOMConfirmDestruction.setAttribute("data-isInventoryWarning", false);
+	this._DOMWindow.appendChild(this._DOMConfirmDestruction);
+	
+	var warningMessage = document.createElement("div");
+	warningMessage.setAttribute("class", "inventoryWarning");
+	warningMessage.appendChild(document.createTextNode("Warning : Everything in it's inventory will be destroyed."));
+	this._DOMConfirmDestruction.appendChild(warningMessage);
+	
+	this._DOMConfirmDestroyButton = document.createElement("input");
+	this._DOMConfirmDestroyButton.setAttribute("type", "button");
+	//this._DOMConfirmDestroyButton.setAttribute("value", "Destroy it !");
+	this._DOMConfirmDestroyButton.addEventListener("click", function() {
+		self.world.server.sendMessage("destroy_query", self.selectedBuildingToDestroy.id);
+		self._DOMConfirmDestruction.setAttribute("data-isVisible", false);
+		self._DOMDestroyBuilding.setAttribute("data-isSelected", false);
+		self.isDestroyMode = false;
+	});
+	this._DOMConfirmDestruction.appendChild(this._DOMConfirmDestroyButton);
+	
+	// Error message when a container building is not empty
+	this._DOMNotEmptyError = document.createElement("div");
+	this._DOMNotEmptyError.setAttribute("class", "notEmptyError");
+	this._DOMNotEmptyError.setAttribute("data-isVisible", false);
+	this._DOMNotEmptyError.appendChild(document.createTextNode("You must first destroy everything inside it."));
+	this._DOMWindow.appendChild(this._DOMNotEmptyError);
 };

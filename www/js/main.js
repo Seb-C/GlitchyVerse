@@ -61,19 +61,22 @@ if(gl) {
 		resize();
 	});
 	
+	var lastPicking = null;
 	var updateAll = function() {
 		world.update();
 		TimerManager.update();
 		
 		// If the user tries to click on something in the world
 		var picking = world.camera.controls.getPicking();
-		if(picking) {
+		var releasing = lastPicking != null && picking == null;
+		if(picking || releasing) {
+			var pickCoord = releasing ? lastPicking : picking;
 			world.draw(world.DRAW_MODE_PICK_CONTENT);
 			
 			// Translating mouse coordinates (0, 0 point is on the top left corner)
 			// to WebGL coordinates (0, 0 point is in the bottom left corner)
-			var x = picking[0];
-			var y = world.camera.screenSize[1] - picking[1];
+			var x = pickCoord[0];
+			var y = world.camera.screenSize[1] - pickCoord[1];
 			var pixel = new Uint8Array(4);
 			gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 			
@@ -89,8 +92,8 @@ if(gl) {
 					
 					// Translating mouse coordinates (0, 0 point is on the top left corner)
 					// to WebGL coordinates (0, 0 point is in the bottom left corner)
-					var x = picking[0];
-					var y = world.camera.screenSize[1] - picking[1];
+					var x = pickCoord[0];
+					var y = world.camera.screenSize[1] - pickCoord[1];
 					var pixel = new Uint8Array(4);
 					gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 					if(pixel[0] != 0 || pixel[1] != 0) {
@@ -98,10 +101,10 @@ if(gl) {
 						yClick = pixel[1] / 255;
 					}
 				}
-				
-				pickedContent.pickCallBack(xClick, yClick);
+				pickedContent.pickCallBack(xClick, yClick, releasing);
 			}
 		}
+		lastPicking = picking;
 	};
 	
 	// TODO login screen : enter key to validate

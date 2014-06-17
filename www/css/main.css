@@ -119,6 +119,7 @@ ul.contextMenu li:hover {
 	margin: 0px;
 	overflow: auto;
 	max-height: calc(100% - 30px);
+	z-index: 10;
 }
 
 #designerWindowContent .tree li {
@@ -133,7 +134,7 @@ ul.contextMenu li:hover {
 	background: #333344;
 }
 
-#designerWindowContent .tree>li>ul>li[data-isSelected=true] {
+#designerWindowContent .tree li[data-isSelected=true] {
 	background: #555566;
 }
 
@@ -145,8 +146,12 @@ ul.contextMenu li:hover {
 	content: "+";
 }
 
-#designerWindowContent .tree>li:before {
+#designerWindowContent .tree>li[data-isOpened=true]:before {
 	content: "-";
+}
+
+#designerWindowContent .tree>li[data-isOpened=true]:before,
+#designerWindowContent .tree>li[data-isOpened=false]:before {
 	display: inline-block;
 	border: 1px solid white;
 	margin-right: 5px;
@@ -171,6 +176,46 @@ ul.contextMenu li:hover {
 #designerWindowContent .sizeSelectorsContainer .sizeSelector {
 	width: 30px;
 	height: 15px;
+}
+
+#designerWindowContent .confirmBuildingButton {
+	display: block;
+	position: absolute;
+	z-index: 11;
+	bottom: 3px;
+	right: 3px;
+}
+#designerWindowContent .confirmBuildingButton[data-isVisible=false] {
+	display: none;
+}
+
+#designerWindowContent .confirmDestruction {
+	display: block;
+	position: absolute;
+	z-index: 11;
+	bottom: 3px;
+	right: 3px;
+}
+#designerWindowContent .confirmDestruction .inventoryWarning {
+	font-weight: bold;
+	color: red;
+}
+#designerWindowContent .confirmDestruction[data-isVisible=false] {
+	display: none;
+}
+#designerWindowContent .confirmDestruction[data-isInventoryWarning=false] .inventoryWarning {
+	display: none;
+}
+
+#designerWindowContent .notEmptyError {
+	display: block;
+	position: absolute;
+	z-index: 11;
+	bottom: 3px;
+	right: 3px;
+}
+#designerWindowContent .notEmptyError[data-isVisible=false] {
+	display: none;
 }
 
 /*****************

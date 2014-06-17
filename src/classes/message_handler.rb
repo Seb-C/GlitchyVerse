@@ -138,7 +138,7 @@ class MessageHandler
 		user.add_building(self, data["type_id"], data["position"], data["size"], data["rotation"])
 	end
 	
-	def dismantle_query(data, user)
+	def destroy_query(data, user)
 		user.delete_building(self, data)
 	end
 	

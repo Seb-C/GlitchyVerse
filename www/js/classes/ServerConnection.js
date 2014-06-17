@@ -68,7 +68,6 @@ ServerConnection.prototype._data_spaceship = function(data) {
 };
 
 ServerConnection.prototype._data_building_types_definition = function(data) {
-	Building.types = {};
 	for(var i = 0 ; i < data.length ; i++) {
 		var bt = new BuildingType(data[i]);
 		Building.types[bt.id] = bt;
