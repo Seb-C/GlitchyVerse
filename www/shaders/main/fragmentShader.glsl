@@ -73,10 +73,10 @@ void main(void) {
 		}
 		gl_FragColor = vec4(texelColor.rgb * (vLighting + pointLights), texelColor.a);
 	} else if(uDrawMode == DRAW_MODE_PICK_CONTENT) {
-		if(uEntityPickColor[0] != 0.0 || uEntityPickColor[1] != 0.0 || uEntityPickColor[2] != 0.0) {
-			gl_FragColor = vec4(uEntityPickColor, 1.0); // Pickable entity
-		} else {
+		if(vPickColor[0] != 0.0 || vPickColor[1] != 0.0 || vPickColor[2] != 0.0) {
 			gl_FragColor = vec4(vPickColor, 1.0); // Pickable mesh
+		} else if(uEntityPickColor[0] != 0.0 || uEntityPickColor[1] != 0.0 || uEntityPickColor[2] != 0.0) {
+			gl_FragColor = vec4(uEntityPickColor, 1.0); // Pickable entity
 		}
 	} else /*if(uDrawMode == DRAW_MODE_PICK_SCREEN)*/ {
 		gl_FragColor = vec4(vPickColor, 1.0);

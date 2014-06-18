@@ -645,8 +645,11 @@ Building.builders.Room = function(building, state) {
 		building.model.regenerateCache();
 		
 		// No hitboxes if there are buildings on each wall
+		for(var i = 0 ; i < building.hitBoxes.length ; i++) {
+			building.hitBoxes[i].linkToBuilding(building);
+		}
 		if(building.hitBoxes.length > 0) building.spaceShip.physics.add(building.hitBoxes);
-		if(oldHitBoxes != null) building.spaceShip.physics.remove(oldHitBoxes); // TODO pass through the ground when updating a room (by adding a door/window for example) ?
+		if(oldHitBoxes != null) building.spaceShip.physics.remove(oldHitBoxes);
 	};
 	
 	building.regenerateMeshes();
