@@ -1,0 +1,93 @@
+newmtl WHITE
+	map_Kd textures/white.png
+
+newmtl BLACK
+	map_Kd textures/black.png
+
+newmtl RED
+	map_Kd textures/red.png
+
+newmtl GREEN
+	map_Kd textures/green.png
+
+newmtl BLUE
+	map_Kd textures/blue.png
+
+newmtl METAL
+	map_Kd textures/metal.png
+
+newmtl BRUSHED_METAL
+	map_Kd textures/brushedMetal.png
+
+newmtl METAL_BOLT
+	map_Kd textures/metalBolt.png
+
+newmtl LINO
+	map_Kd textures/lino.png
+
+newmtl LINO_TILE
+	map_Kd textures/linoTile.png
+
+newmtl LIGHT_AND_CLIM
+	map_Kd textures/lightAndClim.png
+
+newmtl METAL_WALL
+	map_Kd textures/metalWall.png
+
+newmtl METAL_GROUND
+	map_Kd textures/metalGround.png
+
+newmtl GLASS_PANE
+	map_Kd textures/glassPane.png
+	d 0
+
+newmtl PROPELLER
+	map_Kd textures/propeller.png
+
+newmtl DOOR_BUTTON
+	map_Kd textures/doorButton.png
+
+newmtl ALUMINIUM
+	map_Kd textures/aluminium.png
+
+newmtl BLUE_PLASTIC
+	map_Kd textures/blue_plastic.png
+
+newmtl WATER_TANK_SIDES
+	map_Kd textures/water_tank_sides.png
+
+newmtl GRID
+	map_Kd textures/grid.png
+
+newmtl WHITE_METAL_WITH_AIRING
+	map_Kd textures/white_metal_with_airing.png
+
+newmtl WHITE_METAL
+	map_Kd textures/white_metal.png
+
+newmtl BLACK_METAL
+	map_Kd textures/blackMetal.png
+
+newmtl DOOR_LOCK
+	map_Kd textures/doorLock.png
+
+newmtl PLANET
+	map_Kd textures/planet.png
+
+newmtl FLAME
+	map_Kd textures/flame.png
+	d 0
+
+newmtl STAR
+	map_Kd textures/star.png
+	d 0
+
+newmtl TREE_BARK
+	map_Kd textures/treeBark.png
+	
+newmtl CHARACTER
+	map_Kd textures/character.png
+
+newmtl TREE_LEAF
+	map_Kd textures/treeLeaf.png
+	d 0
