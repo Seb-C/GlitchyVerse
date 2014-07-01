@@ -8,6 +8,7 @@ import (
 	"archive/tar"
 	"glitchyverse/database"
 	"glitchyverse/socket"
+	"glitchyverse/user"
 )
 
 
@@ -15,6 +16,7 @@ func main() {
 	fmt.Println("Hello World from foobar!")
 	
 	db.Open()
+	user.StartItemProductionThread()
 	
 	// Handling normal files
 	http.Handle("/", http.FileServer(http.Dir("./www")))
