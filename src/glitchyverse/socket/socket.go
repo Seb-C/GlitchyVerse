@@ -5,6 +5,7 @@ import (
 	"log"
 	"runtime"
 	"net/http"
+	"strings"
 	"github.com/gorilla/websocket"
 	"glitchyverse/user"
 	"encoding/json"
@@ -52,19 +53,23 @@ func handleMessage(user *user.User, rawMessage []byte) (err error) {
 		}
 	}()
 	
-	var message [2]interface{}
-	err = json.Unmarshal(rawMessage, &message)
-	if err != nil {
-		return
-	}
+	stringMessage := string(rawMessage)
+	hashIndex := strings.Index(stringMessage, "#")
+	methodName := stringMessage[:hashIndex]
+	rawData := []byte(stringMessage[hashIndex + 1:])
 	
-	methodName := message[0].(string)
 	method, ok := methods[methodName]
 	if !ok {
 		return errors.New("Unknown method : " + methodName)
 	}
 	
-	err = method(user, message[1])
+	var data interface{}
+	err = json.Unmarshal(rawData, &data)
+	if err != nil {
+		return
+	}
+	
+	err = method(user, data)
 	
 	return
 }

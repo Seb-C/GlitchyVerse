@@ -17,12 +17,15 @@ var ServerConnection = function(serverName, resource, world) {
 		
 	});
 	this.socket.addEventListener('message', function(event) {
-		var message = JSON.parse(event.data);
+		var message = event.data;
+		var hashIndex = message.indexOf("#");
+		var method = message.substring(0, hashIndex)
+		var data = JSON.parse(message.substring(hashIndex + 1));
 		
-		if(self["_" + message[0]]) {
-			self["_" + message[0]](message[1]);
+		if(self["_" + method]) {
+			self["_" + method](data);
 		} else {
-			throw new Error("Unknown method name : " + message[0]);
+			throw new Error("Unknown method name : " + method);
 		}
 	});
 	this.socket.addEventListener('close', function(event) { 
@@ -41,8 +44,8 @@ var ServerConnection = function(serverName, resource, world) {
  * @param {Object} data Anything related to the action. Can also be null
  */
 ServerConnection.prototype.sendMessage = function(method, data) {
-	var message = JSON.stringify([method, data]);
-	this.socket.send(message);
+	var jsonData = JSON.stringify(data);
+	this.socket.send(method + "#" + jsonData);
 };
 
 ServerConnection.prototype._authQuery = function(data) {

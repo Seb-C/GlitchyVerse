@@ -56,26 +56,26 @@ func (user *User) Disconnect() {
 }
 
 func (user *User) SendMessage(method string, data interface{}) {
-	jsonMessage, err := json.Marshal([]interface{}{method, data})
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Panic(err)
 	}
 	
-	err = user.Socket.WriteMessage(websocket.TextMessage, jsonMessage)
+	err = user.Socket.WriteMessage(websocket.TextMessage, []byte(method + "#" + string(jsonData)))
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
 func (user *User) SendMessageBroadcast(method string, data interface{}, exceptCurrentUser bool) {
-	jsonMessage, err := json.Marshal([]interface{}{method, data})
+	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Panic(err)
 	}
 	
 	for k := range users {
 		if !exceptCurrentUser || k != user {
-			err = k.Socket.WriteMessage(websocket.TextMessage, jsonMessage)
+			err = k.Socket.WriteMessage(websocket.TextMessage, []byte(method + "#" + string(jsonData)))
 			if err != nil {
 				log.Panic(err)
 			}
