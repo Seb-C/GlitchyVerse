@@ -10,11 +10,11 @@ var Building = function(world, spaceShip, definition, notBuiltColorMask) {
 	this.gridSize     = definition.size;
 	this.gridPosition = definition.position;
 	this.gridRotation = definition.rotation; // quat
-	this.typeId       = definition.type_id;
-	this.isEnabled    = definition.is_enabled;
+	this.typeId       = definition.typeId;
+	this.isEnabled    = definition.isEnabled;
 	this.seed         = definition.seed;
 	this.id           = definition.id;
-	this.isBuilt      = definition.is_built;
+	this.isBuilt      = definition.isBuilt;
 	this.isFrozen     = false;
 	
 	this.look = quat.create();
@@ -285,10 +285,10 @@ Building.prototype.regenDomInventoryItems = function() {
 			emptySlot.addEventListener("drop", function(event) {
 				var item = Item.currentItemDragged;
 				if((item.container != self || item.slotGroupId != slotGroupId) && item.type.groups.indexOf(slotGroupId) >= 0) {
-					self.world.server.sendMessage("move_item_query", {
-						"item_id"      : Item.currentItemDragged.id,
-						"building_id"  : self.id,
-						"slot_group_id": slotGroupId
+					self.world.server.sendMessage("moveItemQuery", {
+						"itemId"      : Item.currentItemDragged.id,
+						"buildingId"  : self.id,
+						"slotGroupId": slotGroupId
 					});
 				}
 			});
@@ -305,7 +305,7 @@ Building.prototype.addItem = function(item) {
 	this.regenDomInventoryItems();
 	
 	if(!this.isBuilt && this.items.length == this.type.getSlotsCount(this.isBuilt) * this.slotSizeMultiplicator) {
-		this.world.server.sendMessage("achieve_building_query", this.id);
+		this.world.server.sendMessage("achieveBuildingQuery", this.id);
 	}
 };
 

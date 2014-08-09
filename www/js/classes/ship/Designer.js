@@ -51,30 +51,30 @@ Designer.prototype.setSpaceShip = function(spaceShip) {
 	for(var k in Building.types) {
 		var typeId = Building.types[k].id;
 		this.ghostBuildings[typeId] = new Building(this.world, this.spaceShip, {
-			size      : vec3.fromValues(1, 1, 1),
-			position  : vec3.create(),
-			rotation  : quat.create(),
-			type_id   : typeId,
-			is_enabled: true,
-			seed      : null,
-			id        : -1,
-			is_built  : false,
-			state     : null,
-			items     : []
+			size     : vec3.fromValues(1, 1, 1),
+			position : vec3.create(),
+			rotation : quat.create(),
+			typeId   : typeId,
+			isEnabled: true,
+			seed     : null,
+			id       : -1,
+			isBuilt  : false,
+			state    : null,
+			items    : []
 		}, this.ghostColor);
 	}
 	
 	this.sizeSelector = new Building(this.world, this.spaceShip, {
-		size      : vec3.fromValues(1, 1, 1),
-		position  : vec3.create(),
-		rotation  : quat.create(),
-		type_id   : "sizeSelector",
-		is_enabled: false,
-		seed      : null,
-		id        : -2,
-		is_built  : true,
-		state     : null,
-		items     : []
+		size     : vec3.fromValues(1, 1, 1),
+		position : vec3.create(),
+		rotation : quat.create(),
+		typeId   : "sizeSelector",
+		isEnabled: false,
+		seed     : null,
+		id       : -2,
+		isBuilt  : true,
+		state    : null,
+		items    : []
 	});
 	
 	var self = this;
@@ -404,8 +404,8 @@ Designer.prototype._createDOMConfirmActions = function() {
 	this._DOMConfirmBuildingButton.setAttribute("data-isVisible", false);
 	this._DOMConfirmBuildingButton.addEventListener("click", function() {
 		var ghost = self.ghostBuildings[self.selectedType.id];
-		self.world.server.sendMessage("build_query", {
-			"type_id" : self.selectedType.id,
+		self.world.server.sendMessage("buildQuery", {
+			"typeId" : self.selectedType.id,
 			"position": ghost.gridPosition,
 			"size"    : ghost.gridSize,
 			"rotation": ghost.gridRotation
@@ -438,7 +438,7 @@ Designer.prototype._createDOMConfirmActions = function() {
 	this._DOMConfirmDestroyButton.setAttribute("type", "button");
 	//this._DOMConfirmDestroyButton.setAttribute("value", "Destroy it !");
 	this._DOMConfirmDestroyButton.addEventListener("click", function() {
-		self.world.server.sendMessage("destroy_query", self.selectedBuildingToDestroy.id);
+		self.world.server.sendMessage("destroyQuery", self.selectedBuildingToDestroy.id);
 		self._DOMConfirmDestruction.setAttribute("data-isVisible", false);
 		self._DOMDestroyBuilding.setAttribute("data-isSelected", false);
 		self.isDestroyMode = false;

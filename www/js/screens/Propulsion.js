@@ -258,7 +258,7 @@ Screens.Propulsion = {
 		this._serverUpdateSelectedContent = controlScreen.selectedContent;
 		this._serverUpdateTimeout = setTimeout(function() {
 			// Timeout to avoid sending an update at each percent change
-			controlScreen.world.server.sendMessage("update_propellers", {"id": controlScreen.selectedContent, "power": newPower});
+			controlScreen.world.server.sendMessage("updatePropellers", {"id": controlScreen.selectedContent, "power": newPower});
 			self._serverUpdateTimeout = null;
 		}, 500);
 	}

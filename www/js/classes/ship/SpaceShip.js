@@ -7,7 +7,7 @@
  * @param vec3 The rotation of the spaceship
  * @param Array(Object) An object containing the definition of the content of the spaceship.
  * @param Object Containing the definition of some attributes : 
- *               - max_speed_per_propeller_unit : The max speed to add per propeller unit
+ *               - maxSpeedPerPropellerUnit : The max speed to add per propeller unit
  */
 var SpaceShip = function(world, id, name, position, rotation, definition, attributes) {
 	this.world = world;
@@ -16,7 +16,7 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	this.edgeSize = 0.2;
 	this.lightAndClimEdgeSize = 0.58;
 	this.recoilMaxSpeedRate = 0.2; // Relative to the normal max speed
-	this.maxSpeedPerPropellerUnit = attributes.max_speed_per_propeller_unit;
+	this.maxSpeedPerPropellerUnit = attributes.maxSpeedPerPropellerUnit;
 	
 	this._linearMaxSpeed = 0;
 	
@@ -50,7 +50,7 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	// Initializing gap buildings list
 	// TODO optimize those two loops by sorting the definition array ?
 	for(var i = 0 ; i < definition.length ; i++) {
-		if(Building.types[definition[i].type_id].isGap) {
+		if(Building.types[definition[i].typeId].isGap) {
 			var building = new Building(this.world, this, definition[i]);
 			this._addGapBuilding(building);
 			this._addBuildingFast(building);
@@ -58,7 +58,7 @@ var SpaceShip = function(world, id, name, position, rotation, definition, attrib
 	}
 	// Creating buildings
 	for(var i = 0 ; i < definition.length ; i++) {
-		if(!Building.types[definition[i].type_id].isGap) {
+		if(!Building.types[definition[i].typeId].isGap) {
 			var building = new Building(this.world, this, definition[i]);
 			this._addBuildingFast(building);
 		}

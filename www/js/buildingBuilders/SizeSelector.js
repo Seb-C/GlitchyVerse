@@ -38,19 +38,19 @@ Building.builders.SizeSelector = function(building, state) {
 
 // Creating size selector building type
 Building.types["sizeSelector"] = new BuildingType({
-	id                      : "sizeSelector",
-	name                    : null,
-	category                : null,
-	model                   : "SizeSelector",
-	is_gap                  : false,
-	default_state           : null,
-	is_sizeable             : false,
-	is_container            : false,
-	is_inside               : false,
-	is_position_by_room_unit: true,
-	is_controllable         : false,
-	can_exert_thrust        : false,
-	min_state               : null,
-	max_state               : null,
-	slots                   : []
+	id                  : "sizeSelector",
+	name                : null,
+	category            : null,
+	model               : "SizeSelector",
+	isGap               : false,
+	defaultState        : null,
+	isSizeable          : false,
+	isContainer         : false,
+	isInside            : false,
+	isPositionByRoomUnit: true,
+	isControllable      : false,
+	canExertThrust      : false,
+	minState            : null,
+	maxState            : null,
+	slots               : []
 });

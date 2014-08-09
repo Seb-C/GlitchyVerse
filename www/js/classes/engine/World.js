@@ -108,7 +108,7 @@ World.prototype.setUserSpaceShip = function(spaceShip) {
 		var newPosition = self.userSpaceShip.getPosition();
 		if(newPosition[0] != lastPos[0] || newPosition[1] != lastPos[1] || newPosition[2] != lastPos[2]) {
 			vec3.copy(lastPos, newPosition);
-			self.server.sendMessage("update_position", {position: newPosition, rotation: self.userSpaceShip.rotation});
+			self.server.sendMessage("updatePosition", {position: newPosition, rotation: self.userSpaceShip.rotation});
 		}
 	}, this.userSpaceShipMoveTimerDelay, false);
 	

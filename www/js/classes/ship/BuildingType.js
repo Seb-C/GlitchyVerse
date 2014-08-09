@@ -3,16 +3,16 @@ var BuildingType = function(definition) {
 	this.name                     = definition.name;
 	this.category                 = definition.category;
 	this.model                    = definition.model;
-	this.isGap                    = definition.is_gap;
-	this.defaultState             = definition.default_state;
-	this.isSizeable               = definition.is_sizeable;
-	this.isContainer              = definition.is_container;
-	this.isInside                 = definition.is_inside;
-	this.isRoomUnit               = definition.is_position_by_room_unit;
-	this.isControllable           = definition.is_controllable;
-	this.exertThrust              = definition.can_exert_thrust;
-	this.minState                 = definition.min_state;
-	this.maxState                 = definition.max_state;
+	this.isGap                    = definition.isGap;
+	this.defaultState             = definition.defaultState;
+	this.isSizeable               = definition.isSizeable;
+	this.isContainer              = definition.isContainer;
+	this.isInside                 = definition.isInside;
+	this.isRoomUnit               = definition.isPositionByRoomUnit;
+	this.isControllable           = definition.isControllable;
+	this.exertThrust              = definition.canExertThrust;
+	this.minState                 = definition.minState;
+	this.maxState                 = definition.maxState;
 	
 	// Key = group id
 	this.slotsWhenBuilt    = {};
@@ -20,10 +20,10 @@ var BuildingType = function(definition) {
 	
 	for(var i = 0 ; i < definition.slots.length ; i++) {
 		var slot = definition.slots[i];
-		var container = slot.when_building ? this.slotsWhenNotBuilt : this.slotsWhenBuilt;
+		var container = slot.whenBuilding ? this.slotsWhenNotBuilt : this.slotsWhenBuilt;
 		container[slot.group] = {
-			maximumAmount : slot.maximum_amount,
-			stateVariation: slot.state_variation
+			maximumAmount : slot.maximumAmount,
+			stateVariation: slot.stateVariation
 		};
 	}
 };

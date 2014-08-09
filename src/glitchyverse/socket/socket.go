@@ -86,25 +86,25 @@ func toVec4(data interface{}) (r [4]float64) {
 }
 
 var methods = map[string]func(user *user.User, data interface{}) (err error) {
-	"auth_answer": func(user *user.User, data interface{}) (err error) {
+	"authAnswer": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.Connect(d["name"].(string), d["password"].(string))
 		return
 	},
 	
-	"update_propellers": func(user *user.User, data interface{}) (err error) {
+	"updatePropellers": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.UpdatePropellers(int64(d["id"].(float64)), d["power"].(float64))
 		return
 	},
 	
-	"update_doors": func(user *user.User, data interface{}) (err error) {
+	"updateDoors": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.UpdateDoors(int64(d["id"].(float64)), d["state"].(float64))
 		return
 	},
 	
-	"update_position": func(user *user.User, data interface{}) (err error) {
+	"updatePosition": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.UpdatePosition(toVec3(d["position"]), toVec3(d["rotation"]))
 		return
@@ -112,10 +112,10 @@ var methods = map[string]func(user *user.User, data interface{}) (err error) {
 	
 	// TODO better and unique way to update building, with boolean indicating if the building is freely updatable or not
 	
-	"build_query": func(user *user.User, data interface{}) (err error) {
+	"buildQuery": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.AddBuilding(
-			int64(d["type_id"].(float64)),
+			int64(d["typeId"].(float64)),
 			toVec3(d["position"]),
 			toVec3(d["size"]),
 			toVec4(d["rotation"]),
@@ -123,25 +123,23 @@ var methods = map[string]func(user *user.User, data interface{}) (err error) {
 		return
 	},
 	
-	"destroy_query": func(user *user.User, data interface{}) (err error) {
+	"destroyQuery": func(user *user.User, data interface{}) (err error) {
 		user.DeleteBuilding(int64(data.(float64)))
 		return
 	},
 	
-	"move_item_query": func(user *user.User, data interface{}) (err error) {
+	"moveItemQuery": func(user *user.User, data interface{}) (err error) {
 		d := data.(map[string]interface{})
 		user.MoveItem(
-			int64(d["item_id"].(float64)),
-			int64(d["building_id"].(float64)),
-			int64(d["slot_group_id"].(float64)),
+			int64(d["itemId"].(float64)),
+			int64(d["buildingId"].(float64)),
+			int64(d["slotGroupId"].(float64)),
 		)
 		return
 	},
 	
-	"achieve_building_query": func(user *user.User, data interface{}) (err error) {
+	"achieveBuildingQuery": func(user *user.User, data interface{}) (err error) {
 		user.AchieveBuilding(int64(data.(float64)))
 		return
 	},
 }
-
-// TODO methods names to CamelCase

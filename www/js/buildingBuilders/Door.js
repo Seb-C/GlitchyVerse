@@ -41,7 +41,7 @@ Building.builders.Door = function(building, state) {
 				isAnimationStarted = false;
 			});
 			
-			building.world.server.sendMessage("update_doors", {"id": building.id, "state": newIsOpened ? 1 : 0});
+			building.world.server.sendMessage("updateDoors", {"id": building.id, "state": newIsOpened ? 1 : 0});
 			isOpened = newIsOpened;
 		}
 	};

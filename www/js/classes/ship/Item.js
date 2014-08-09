@@ -5,11 +5,11 @@
  */
 var Item = function(definition, container) {
 	this.id          = definition.id;
-	this.typeId      = definition.type_id;
+	this.typeId      = definition.typeId;
 	this.type        = Item.types[this.typeId];
 	this.state       = definition.state;
 	this.container   = container;
-	this.slotGroupId = definition.slot_group_id;
+	this.slotGroupId = definition.slotGroupId;
 	
 	this.dom = null;
 	this.domTooltipState = null;

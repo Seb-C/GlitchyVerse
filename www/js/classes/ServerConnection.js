@@ -45,16 +45,16 @@ ServerConnection.prototype.sendMessage = function(method, data) {
 	this.socket.send(message);
 };
 
-ServerConnection.prototype._auth_query = function(data) {
+ServerConnection.prototype._authQuery = function(data) {
 	var self = this;
 	LoginForm.open(this.world, function(name, password) {
-		self.sendMessage("auth_answer", {name: name, password: password});
+		self.sendMessage("authAnswer", {name: name, password: password});
 	});
 };
 
-ServerConnection.prototype._auth_result = function(data) {
-	LoginForm.setMessage(data.message, data.is_valid);
-	if(data.is_valid) {
+ServerConnection.prototype._authResult = function(data) {
+	LoginForm.setMessage(data.message, data.isValid);
+	if(data.isValid) {
 		LoginForm.close();
 	}
 };
@@ -67,37 +67,37 @@ ServerConnection.prototype._data_spaceship = function(data) {
 	}
 };
 
-ServerConnection.prototype._data_building_types_definition = function(data) {
+ServerConnection.prototype._data_buildingTypesDefinition = function(data) {
 	for(var i = 0 ; i < data.length ; i++) {
 		var bt = new BuildingType(data[i]);
 		Building.types[bt.id] = bt;
 	}
 };
 
-ServerConnection.prototype._add_building = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._addBuilding = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	ss.addBuilding(new Building(this.world, ss, data));
 };
 
-ServerConnection.prototype._delete_building = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
-	var building = ss.entities[data.building_id];
+ServerConnection.prototype._deleteBuilding = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
+	var building = ss.entities[data.buildingId];
 	ss.deleteBuilding(building);
 	this.world.camera.notifyBuildingRemoved(building);
 };
 
-ServerConnection.prototype._data_space_content = function(data) {
+ServerConnection.prototype._data_spaceContent = function(data) {
 	this.world.spaceContent.setContent(data);
 };
 
-ServerConnection.prototype._update_position = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._updatePosition = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	ss.setPosition(data.position);
 	ss.rotation = data.rotation;
 };
 
-ServerConnection.prototype._update_propellers = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._updatePropellers = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	if(data.id == null) {
 		for(var k in ss.entities) {
 			if(ss.entities[k].type.exertThrust) {
@@ -109,15 +109,15 @@ ServerConnection.prototype._update_propellers = function(data) {
 	}
 };
 
-ServerConnection.prototype._delete_spaceship = function(data) {
+ServerConnection.prototype._deleteSpaceship = function(data) {
 	this.world.remove(this.world.spaceShips[data]);
 };
 
-ServerConnection.prototype._data_item_groups_definition = function(data) {
+ServerConnection.prototype._data_itemGroupsDefinition = function(data) {
 	Item.groups = data;
 };
 
-ServerConnection.prototype._data_item_types_definition = function(data) {
+ServerConnection.prototype._data_itemTypesDefinition = function(data) {
 	Item.types = {};
 	for(var i = 0 ; i < data.length ; i++) {
 		var it = new ItemType(data[i]);
@@ -125,16 +125,16 @@ ServerConnection.prototype._data_item_types_definition = function(data) {
 	}
 };
 
-ServerConnection.prototype._move_item = function(data) { // TODO do this work outside this class ?
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._moveItem = function(data) { // TODO do this work outside this class ?
+	var ss = this.world.spaceShips[data.spaceshipId];
 	if(ss) {
-		var targetBuilding = ss.entities[data.target_building_id];
+		var targetBuilding = ss.entities[data.targetBuildingId];
 		if(targetBuilding) {
 			// Searching from item in buildings
 			for(var k in ss.entities) {
-				var item = ss.entities[k].getItemById(data.item_id);
+				var item = ss.entities[k].getItemById(data.itemId);
 				if(item != null) {
-					item.moveTo(targetBuilding, data.target_slot_group_id);
+					item.moveTo(targetBuilding, data.targetSlotGroupId);
 					targetBuilding.isEnabled = true;
 					return;
 				}
@@ -143,35 +143,35 @@ ServerConnection.prototype._move_item = function(data) { // TODO do this work ou
 	}
 };
 
-ServerConnection.prototype._achieve_building = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._achieveBuilding = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	if(ss) {
-		var targetBuilding = ss.entities[data.building_id];
+		var targetBuilding = ss.entities[data.buildingId];
 		if(targetBuilding) {
 			targetBuilding.achieveBuilding();
 		}
 	}
 };
 
-ServerConnection.prototype._update_items_states = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._updateItemsStates = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	if(ss) {
 		for(var i = 0 ; i < data.items.length ; i++) {
 			var itemData = data.items[i];
-			var building = ss.entities[itemData.building_id];
-			var item = building.getItemById(itemData.item_id);
+			var building = ss.entities[itemData.buildingId];
+			var item = building.getItemById(itemData.itemId);
 			if(item != null) {
-				item.setState(itemData.new_item_state);
+				item.setState(itemData.newItemState);
 			}
 		}
 	}
 };
 
-ServerConnection.prototype._disable_buildings = function(data) {
-	var ss = this.world.spaceShips[data.spaceship_id];
+ServerConnection.prototype._disableBuildings = function(data) {
+	var ss = this.world.spaceShips[data.spaceshipId];
 	if(ss) {
-		for(var i = 0 ; i < data.building_ids.length ; i++) {
-			ss.entities[data.building_ids[i]].isEnabled = false;
+		for(var i = 0 ; i < data.buildingIds.length ; i++) {
+			ss.entities[data.buildingIds[i]].isEnabled = false;
 		}
 		ss.updateAcceleration();
 	}

@@ -34,7 +34,7 @@ var users = make(map[*User]bool)
 func NewUser(socket *websocket.Conn) *User {
 	user := &User{Socket: socket}
 	users[user] = true // TODO synchronize it ?
-	user.SendMessage("auth_query", nil)
+	user.SendMessage("authQuery", nil)
 	return user
 }
 
@@ -49,7 +49,7 @@ func (user *User) GetPosition() [3]float64 {
 }
 
 func (user *User) Disconnect() {
-	user.SendMessageBroadcast("delete_spaceship", user.SpaceShipId, true)
+	user.SendMessageBroadcast("deleteSpaceship", user.SpaceShipId, true)
 	db.DeleteUserOnline(user.UserId)
 	delete(users, user) // TODO synchronize it ?
 	user.Socket.Close()
@@ -84,7 +84,7 @@ func (user *User) SendMessageBroadcast(method string, data interface{}, exceptCu
 }
 
 func (user *User) SendSpaceContent(data []map[string]interface{}) {
-	user.SendMessage("data_space_content", data)
+	user.SendMessage("data_spaceContent", data)
 }
 
 func (user *User) SendVisibleChunks() {
@@ -112,9 +112,9 @@ func (user *User) Connect(name, password string) {
 		message = "Name or password isn't valid."
 	}
 	
-	user.SendMessage("auth_result", map[string]interface{}{
+	user.SendMessage("authResult", map[string]interface{}{
 		"message": message,
-		"is_valid": connected,
+		"isValid": connected,
 	})
 	
 	if connected {
@@ -135,16 +135,16 @@ func (user *User) SendItemVariation() {
 	newStates := make([]interface{}, 0)
 	db.GetNewStatesFromItemVariation(user.SpaceShipId, func(itemId int64, newItemState float64, buildingId int64) {
 		newStates = append(newStates, map[string]interface{} {
-			"item_id"       : itemId,
-			"new_item_state": newItemState,
-			"building_id"   : buildingId,
+			"itemId"      : itemId,
+			"newItemState": newItemState,
+			"buildingId"  : buildingId,
 		})
 	})
 	
 	if len(newStates) > 0 {
-		user.SendMessage("update_items_states", map[string]interface{} {
-			"spaceship_id": user.SpaceShipId,
-			"items"       : newStates,
+		user.SendMessage("updateItemsStates", map[string]interface{} {
+			"spaceshipId": user.SpaceShipId,
+			"items"      : newStates,
 		})
 	}
 }
@@ -156,9 +156,9 @@ func (user *User) SendDisabledBuildings() {
 	})
 	
 	if len(buildings) > 0 {
-		user.SendMessage("disable_buildings", map[string]interface{} {
-			"spaceship_id": user.SpaceShipId,
-			"building_ids": buildings,
+		user.SendMessage("disableBuildings", map[string]interface{} {
+			"spaceshipId": user.SpaceShipId,
+			"buildingIds": buildings,
 		})
 	}
 }
@@ -173,10 +173,10 @@ func (user *User) SendSpaceShipData() {
 		}
 		
 		itemsListById[strconv.FormatInt(buildingId, 10)] = append(itemList, map[string]interface{} {
-			"id"           : id,
-			"type_id"      : typeId,
-			"state"        : state,
-			"slot_group_id": slotGroupId,
+			"id"         : id,
+			"typeId"     : typeId,
+			"state"      : state,
+			"slotGroupId": slotGroupId,
 		})
 	})
 	
@@ -199,16 +199,16 @@ func (user *User) SendSpaceShipData() {
 		}
 		
 		buildings = append(buildings, map[string]interface{} {
-			"id"        : id,
-			"type_id"   : typeId,
-			"position"  : position,
-			"rotation"  : rotation,
-			"size"      : size,
-			"state"     : state,
-			"is_built"  : isBuilt,
-			"is_enabled": isEnabled,
-			"seed"      : seed,
-			"items"     : itemList,
+			"id"       : id,
+			"typeId"   : typeId,
+			"position" : position,
+			"rotation" : rotation,
+			"size"     : size,
+			"state"    : state,
+			"isBuilt"  : isBuilt,
+			"isEnabled": isEnabled,
+			"seed"     : seed,
+			"items"    : itemList,
 		})
 	})
 	
@@ -221,7 +221,7 @@ func (user *User) SendSpaceShipData() {
 		"rotation"  : user.Rotation,
 		"buildings" : buildings,
 		"attributes": map[string]interface{} {
-			"max_speed_per_propeller_unit": SpaceShipMaxSpeedPerPropellerUnit,
+			"maxSpeedPerPropellerUnit": SpaceShipMaxSpeedPerPropellerUnit,
 		},
 	}
 	
@@ -236,10 +236,10 @@ func (user *User) SendSpaceShipData() {
 func (user *User) UpdatePropellers(propellerId int64, powerLevel float64) {
 	db.SetPropellersPowerRate(user.SpaceShipId, propellerId, powerLevel)
 	
-	user.SendMessageBroadcast("update_propellers", map[string]interface{} {
-		"spaceship_id": user.SpaceShipId,
-		"id"          : propellerId,
-		"power"       : powerLevel,
+	user.SendMessageBroadcast("updatePropellers", map[string]interface{} {
+		"spaceshipId": user.SpaceShipId,
+		"id"         : propellerId,
+		"power"      : powerLevel,
 	}, true)
 }
 
@@ -247,7 +247,7 @@ func (user *User) UpdateDoors(doorId int64, state float64) {
 	db.SetBuildingsState(
 		user.SpaceShipId,
 		doorId,
-		"Door", // TODO replace model by type_id here + block possibility to update multiple buildings at a time ?
+		"Door", // TODO replace model by typeId here + block possibility to update multiple buildings at a time ?
 		state,
 	)
 	// TODO send information to other clients ?
@@ -276,10 +276,10 @@ func (user *User) UpdatePosition(position [3]float64, rotation [3]float64) {
 		sendPositionToUser = true
 	}
 	
-	user.SendMessageBroadcast("update_position", map[string]interface{} {
-		"spaceship_id": user.SpaceShipId,
-		"position"    : position,
-		"rotation"    : rotation,
+	user.SendMessageBroadcast("updatePosition", map[string]interface{} {
+		"spaceshipId": user.SpaceShipId,
+		"position"   : position,
+		"rotation"   : rotation,
 	}, !sendPositionToUser)
 }
 
@@ -304,18 +304,18 @@ func (user *User) AddBuilding(typeId int64, position [3]float64, size [3]float64
 			seed *string,
 			isEnabled bool,
 		) {
-			user.SendMessageBroadcast("add_building", map[string]interface{} {
-				"id"          : id,
-				"type_id"     : typeId,
-				"spaceship_id": user.SpaceShipId,
-				"position"    : position,
-				"rotation"    : rotation,
-				"size"        : size,
-				"state"       : state,
-				"is_built"    : isBuilt,
-				"is_enabled"  : isEnabled,
-				"seed"        : seed,
-				"items"       : make([]interface{}, 0), // Items array is always empty after creation
+			user.SendMessageBroadcast("addBuilding", map[string]interface{} {
+				"id"         : id,
+				"typeId"     : typeId,
+				"spaceshipId": user.SpaceShipId,
+				"position"   : position,
+				"rotation"   : rotation,
+				"size"       : size,
+				"state"      : state,
+				"isBuilt"    : isBuilt,
+				"isEnabled"  : isEnabled,
+				"seed"       : seed,
+				"items"      : make([]interface{}, 0), // Items array is always empty after creation
 			}, false)
 		})
 	}
@@ -329,9 +329,9 @@ func (user *User) DeleteBuilding(buildingId int64) bool {
 	var ret bool
 	db.DeferredTransaction(func() bool {
 		if db.DeleteBuilding(user.SpaceShipId, buildingId) {
-			user.SendMessageBroadcast("delete_building", map[string]interface{} {
-				"building_id" : buildingId,
-				"spaceship_id": user.SpaceShipId,
+			user.SendMessageBroadcast("deleteBuilding", map[string]interface{} {
+				"buildingId" : buildingId,
+				"spaceshipId": user.SpaceShipId,
 			}, false)
 			
 			ret = true
@@ -347,14 +347,14 @@ func (user *User) DeleteBuilding(buildingId int64) bool {
 
 func (user *User) MoveItem(itemId int64, buildingId int64, slotGroupId int64) {
 	if db.MoveItem(user.SpaceShipId, itemId, buildingId, slotGroupId) {
-		// NOTE : the enabled state is implicitly updated client side by the "move_item" action
+		// NOTE : the enabled state is implicitly updated client side by the "moveItem" action
 		db.SetBuildingEnabled(user.SpaceShipId, buildingId, true)
 		
-		user.SendMessage("move_item", map[string]interface{} {
-			"spaceship_id"        : user.SpaceShipId,
-			"item_id"             : itemId,
-			"target_building_id"  : buildingId,
-			"target_slot_group_id": slotGroupId,
+		user.SendMessage("moveItem", map[string]interface{} {
+			"spaceshipId"      : user.SpaceShipId,
+			"itemId"           : itemId,
+			"targetBuildingId" : buildingId,
+			"targetSlotGroupId": slotGroupId,
 		}) // TODO broadcast ?!?
 	}
 }
@@ -364,9 +364,9 @@ func (user *User) AchieveBuilding(buildingId int64) {
 		if db.SetBuildingBuilt(user.SpaceShipId, buildingId) {
 			db.DeleteItems(user.SpaceShipId, buildingId)
 			
-			user.SendMessage("achieve_building", map[string]interface{} {
-				"spaceship_id": user.SpaceShipId,
-				"building_id" : buildingId,
+			user.SendMessage("achieveBuilding", map[string]interface{} {
+				"spaceshipId": user.SpaceShipId,
+				"buildingId" : buildingId,
 			}) // TODO broadcast ?!?
 			
 			return true
@@ -384,10 +384,10 @@ func (user *User) SendBuildingTypesDefinition() {
 			slots = make([]interface{}, 0)
 		}
 		itemSlots[strconv.FormatInt(buildingTypeId, 10)] = append(slots, map[string]interface{} {
-			"group"          : itemGroupId,
-			"when_building"  : whenBuilding,
-			"maximum_amount" : maxAmount,
-			"state_variation": variation,
+			"group"         : itemGroupId,
+			"whenBuilding"  : whenBuilding,
+			"maximumAmount" : maxAmount,
+			"stateVariation": variation,
 		})
 	})
 	
@@ -414,25 +414,25 @@ func (user *User) SendBuildingTypesDefinition() {
 		}
 		
 		definition = append(definition, map[string]interface{} {
-			"id"              : id,
-			"name"            : name,
-			"category"        : category,
-			"model"           : model,
-			"is_gap"          : isGap,
-			"default_state"   : defaultState,
-			"is_sizeable"     : isSizeable,
-			"is_container"    : isContainer,
-			"is_inside"       : isInside,
-			"is_position_by_room_unit": isPositionByRoomUnit,
-			"min_state"       : minState,
-			"max_state"       : maxState,
-			"can_exert_thrust": canExertThrust,
-			"is_controllable" : isControllable,
-			"slots"           : slots,
+			"id"                  : id,
+			"name"                : name,
+			"category"            : category,
+			"model"               : model,
+			"isGap"               : isGap,
+			"defaultState"        : defaultState,
+			"isSizeable"          : isSizeable,
+			"isContainer"         : isContainer,
+			"isInside"            : isInside,
+			"isPositionByRoomUnit": isPositionByRoomUnit,
+			"minState"            : minState,
+			"maxState"            : maxState,
+			"canExertThrust"      : canExertThrust,
+			"isControllable"      : isControllable,
+			"slots"               : slots,
 		})
 	})
 	
-	user.SendMessage("data_building_types_definition", definition)
+	user.SendMessage("data_buildingTypesDefinition", definition)
 }
 
 func (user *User) SendItemGroupsDefinition() {
@@ -440,7 +440,7 @@ func (user *User) SendItemGroupsDefinition() {
 	db.GetItemGroups(func(id int64, name string) {
 		definition[strconv.FormatInt(id, 10)] = name
 	})
-	user.SendMessage("data_item_groups_definition", definition)
+	user.SendMessage("data_itemGroupsDefinition", definition)
 }
 
 func (user *User) SendItemTypesDefinition() {
@@ -461,12 +461,12 @@ func (user *User) SendItemTypesDefinition() {
 		}
 		
 		definition = append(definition, map[string]interface{} {
-			"id"       : id,
-			"name"     : name,
-			"max_state": maxState,
-			"groups"   : groups,
+			"id"      : id,
+			"name"    : name,
+			"maxState": maxState,
+			"groups"  : groups,
 		})
 	})
 	
-	user.SendMessage("data_item_types_definition", definition)
+	user.SendMessage("data_itemTypesDefinition", definition)
 }
