@@ -9,12 +9,18 @@ import (
 	"github.com/gorilla/websocket"
 	"glitchyverse/user"
 	"encoding/json"
+	"reflect"
 	"errors"
 )
 
 var sockets = make(map[*user.User]bool)
 
 var upgrader = websocket.Upgrader{}
+
+type messageHandler struct {
+	funcValue reflect.Value
+	paramType reflect.Type
+}
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
@@ -46,8 +52,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 func handleMessage(user *user.User, rawMessage []byte) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-            trace := make([]byte, 1024)
-            runtime.Stack(trace, true)
+			trace := make([]byte, 1024)
+			runtime.Stack(trace, true)
 			
 			err = errors.New(fmt.Sprintf("%v\n===== Stack trace : =====\n%s", r, trace))
 		}
@@ -63,88 +69,87 @@ func handleMessage(user *user.User, rawMessage []byte) (err error) {
 		return errors.New("Unknown method : " + methodName)
 	}
 	
-	var data interface{}
-	err = json.Unmarshal(rawData, &data)
+	paramValue := reflect.New(method.paramType)
+	err = json.Unmarshal(rawData, paramValue.Interface())
 	if err != nil {
 		return
 	}
 	
-	err = method(user, data)
+	method.funcValue.Call([]reflect.Value{reflect.ValueOf(user), paramValue.Elem()})
 	
 	return
 }
 
-func toVec3(data interface{}) (r [3]float64) {
-	d := data.([]interface{})
-	for i, v := range d {
-		r[i] = v.(float64)
+var methods = make(map[string]messageHandler)
+
+func init() {
+	addMethod := func(name string, method reflect.Value) {
+		methods[name] = messageHandler {
+			funcValue: method,
+			paramType: method.Type().In(1),
+		}
 	}
-	return
-}
-
-func toVec4(data interface{}) (r [4]float64) {
-	d := data.([]interface{})
-	for i, v := range d {
-		r[i] = v.(float64)
-	}
-	return
-}
-
-var methods = map[string]func(user *user.User, data interface{}) (err error) {
-	"authAnswer": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.Connect(d["name"].(string), d["password"].(string))
-		return
-	},
 	
-	"updatePropellers": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.UpdatePropellers(int64(d["id"].(float64)), d["power"].(float64))
+	addMethod("authAnswer", reflect.ValueOf(func(user *user.User, data *struct {
+		Name string
+		Password string
+	}) (err error) {
+		user.Connect(data.Name, data.Password)
 		return
-	},
+	}))
 	
-	"updateDoors": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.UpdateDoors(int64(d["id"].(float64)), d["state"].(float64))
+	addMethod("updatePropellers", reflect.ValueOf(func(user *user.User, data *struct {
+		Id int64
+		Power float64
+	}) (err error) {
+		user.UpdatePropellers(data.Id, data.Power)
 		return
-	},
+	}))
 	
-	"updatePosition": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.UpdatePosition(toVec3(d["position"]), toVec3(d["rotation"]))
+	addMethod("updateDoors", reflect.ValueOf(func(user *user.User, data *struct {
+		Id int64
+		State float64
+	}) (err error) {
+		user.UpdateDoors(data.Id, data.State)
 		return
-	},
+	}))
+	
+	addMethod("updatePosition", reflect.ValueOf(func(user *user.User, data *struct {
+		Position [3]float64
+		Rotation [3]float64
+	}) (err error) {
+		user.UpdatePosition(data.Position, data.Rotation)
+		return
+	}))
 	
 	// TODO better and unique way to update building, with boolean indicating if the building is freely updatable or not
 	
-	"buildQuery": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.AddBuilding(
-			int64(d["typeId"].(float64)),
-			toVec3(d["position"]),
-			toVec3(d["size"]),
-			toVec4(d["rotation"]),
-		)
+	addMethod("buildQuery", reflect.ValueOf(func(user *user.User, data *struct {
+		TypeId int64
+		Position [3]float64
+		Size     [3]float64
+		Rotation [4]float64
+	}) (err error) {
+		user.AddBuilding(data.TypeId, data.Position, data.Size, data.Rotation)
 		return
-	},
+	}))
 	
-	"destroyQuery": func(user *user.User, data interface{}) (err error) {
-		user.DeleteBuilding(int64(data.(float64)))
+	addMethod("destroyQuery", reflect.ValueOf(func(user *user.User, data int64) (err error) {
+		user.DeleteBuilding(data)
 		return
-	},
+	}))
 	
-	"moveItemQuery": func(user *user.User, data interface{}) (err error) {
-		d := data.(map[string]interface{})
-		user.MoveItem(
-			int64(d["itemId"].(float64)),
-			int64(d["buildingId"].(float64)),
-			int64(d["slotGroupId"].(float64)),
-		)
+	addMethod("moveItemQuery", reflect.ValueOf(func(user *user.User, data *struct {
+		ItemId      int64
+		BuildingId  int64
+		SlotGroupId int64
+	}) (err error) {
+		user.MoveItem(data.ItemId, data.BuildingId, data.SlotGroupId)
 		return
-	},
+	}))
 	
-	"achieveBuildingQuery": func(user *user.User, data interface{}) (err error) {
-		user.AchieveBuilding(int64(data.(float64)))
+	addMethod("achieveBuildingQuery", reflect.ValueOf(func(user *user.User, data int64) (err error) {
+		user.AchieveBuilding(data)
 		return
-	},
+	}))
 }

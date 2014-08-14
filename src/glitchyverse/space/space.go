@@ -24,7 +24,15 @@ const (
 
 type chunkGeneratorQueueMember interface {
 	GetPosition() [3]float64
-	SendSpaceContent(data []map[string]interface{})
+	SendSpaceContent(data []Body)
+}
+
+type Body struct {
+	Id        int64      `json:"id"`
+	TypeModel string     `json:"model"`
+	Position  [3]float64 `json:"position"`
+	Radius    float64    `json:"radius"`
+	Seed      float64    `json:"seed"`
 }
 
 var chunkGeneratorQueue = make(chan chunkGeneratorQueueMember)
@@ -86,8 +94,8 @@ func SendVisibleChunks(user chunkGeneratorQueueMember) {
 	chunkGeneratorQueue <- user
 }
 
-func getVisibleBodies(position [3]float64) []map[string]interface{} {
-	bodies := make([]map[string]interface{}, 0)
+func getVisibleBodies(position [3]float64) []Body {
+	bodies := make([]Body, 0)
 	
 	db.GetVisibleBodies(position, func(
 		id, typeId int64,
@@ -99,12 +107,12 @@ func getVisibleBodies(position [3]float64) []map[string]interface{} {
 		typeModel string,
 		maxVisivilityDistance float64,
 	) {
-		bodies = append(bodies, map[string]interface{} {
-			"id"      : id,
-			"model"   : typeModel,
-			"position": position,
-			"radius"  : radius,
-			"seed"    : seed,
+		bodies = append(bodies, Body {
+			Id       : id,
+			TypeModel: typeModel,
+			Position : position,
+			Radius   : radius,
+			Seed     : seed,
 		})
 	},)
 	
