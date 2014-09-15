@@ -1,0 +1,52 @@
+Technologies aléatoires ???
+Biographie des personnages générée aléatoirement ???
+Journal de bord personnalisable + listant les événements ?
+
+arbre technologique (recherches via des items unités de calcul)
+	- Technologies de production/recyclage des matières de base (oxygène, nourriture, eau)
+	- Technologies de traitement et conversion de matière
+	- Technologies de recyclage
+	- Technologies de production d’objets à partir de matières
+	- Technologies de déplacement (réacteurs)
+	- Technologies de production d’énergie
+	- Technologies d’analyse environnementale (radars …)
+
+radar sur l'écran du vaisseau
+
+métaux
+nourriture
+
+évolution des personnages (niveaux d'expérience dans certaines tâches) ?
+
+alliance entre joueurs pour des recherches très longues ?
+
+possibilité de parler par micro/webcam via l'écran de contrôle
+
+Interface de gestion des RH ?
+
+Interface de construction du vaisseau spatial en 3D et plus en 2D
+
+portes, sas, écoutilles
+champs de force
+cryostase
+ascenseurs/téléporteurs
+usines
+hangars + machines (robots, chasseurs, sondes ...)
+élevage et cultures
+espaces de vie
+mécanique vs electronique/informatique
+événements aléatoires
+
+Accueillir autres joueurs sur son vaisseau
+
+Vitesse du vaisseau -> conserver en base de données (le vaisseau pourra continuer a errer après la mort de tous les personnages)
+
+Ecran de contrôle inutilisable si on ne dirige pas un personnage
+
+arcade game (with old disk only droppable) ?
+
+generator using food (hamster) (= easter egg, not powerful)
+
+random items (+ easter egg) found in spaceship "ruins"
+
+Add asteroids + gas planets (instead of only telluric)

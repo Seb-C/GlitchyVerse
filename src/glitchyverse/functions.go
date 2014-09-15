@@ -8,6 +8,7 @@ import (
 	"glitchyverse/database"
 	"glitchyverse/user"
 	"fmt"
+	"net/http"
 )
 
 func GetConfig() (db string, www string, ip string, debug bool) {
@@ -120,4 +121,11 @@ func startItemProductionThread() {
 			})
 		}
 	}()
+}
+
+func AddNoCacheHeaders(w http.ResponseWriter) {
+	headers := w.Header()
+	headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+	headers.Add("Pragma",        "no-cache")
+	headers.Add("Expires",       "0")
 }

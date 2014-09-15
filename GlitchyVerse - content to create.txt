@@ -1,0 +1,91 @@
+TODO before first release : 
+	Vidéo
+	hologramme de ctrl de la propulsion, entity : this.wireFrameMode
+	IA équipage
+	Contenu vaisseau
+	Astéroides
+	MV perso multi
+	==> exports obj via wings3D ==> mettre espaces dans nom des objets pour les groupes ?
+
+=========
+= Items =
+=========
+
+Batteries
+Fuel can
+deuterium can
+
+gaz
+petrol
+coal
+
+resources required to have nutrients ?
+
+raw nutrients
+water
+Pizza
+Handburger
+Pasta
+Bread
+Cheese
+Steak
+Apple
+Crisps
+
+nutrient can ? (+ factory ?)
+water bottles
+
+basic resources (rock, iron (+other metals), plastics ...)
+
+=============
+= Buildings =
+=============
+
+= Food =
+Food printer using nutrients
+Nutrients extractor
+
+= Mining =
+laser that can't rotate
+laser that can rotate
+integrated into space suit
+
+= Energy =
+Basic electric plant
+Fuel generator (more powerful than electric)
+Neutron generator (=deuterium) (more powerful than fuel)
+Fuel refinery : takes gaz, petrol, oil ... and creates fuel
+Solar panels --> batteries
+Battery factory
+fuel can factory
+
+= Misc =
+Beds
+Tables and chairs
+WC
+Decorations ...
+Floors
+Big doors
+Doors on ground and ceils
+Windows on ground and ceils
+Like doors and windows --> holes
+
+= Propellers =
+Electric propeller
+Fuel propeller (more powerful than electric)
+Neutron propeller (more powerful than fuel)
+
+Space suit (necessary for building some things only accessible from the outside of the spaceship)
+
+TODO Storage for everything
+TODO define levels
+TODO show items in container on the container
+TODO options : 
+	- destroy item when empty
+	- consumption -> all dependencies or only one
+	- production -> create a new container or only fill
+
+TODO replace ladder with circular thing
+TODO doors and windows on ground and ceil -> same code than walls
+TODO debug normals -> bug in wings or glitchyverse ?
+TODO use objects instead of smooth groups

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ~/Programmation/GlitchyVerse
+cd /data/Données/Programmation/GlitchyVerse
 
 export GOPATH=$(pwd)
 

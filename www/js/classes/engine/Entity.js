@@ -15,6 +15,7 @@ var Entity = function(world, model, position, rotation, colorMask) {
 	this.setColorMask(colorMask);
 	this.pickColor = vec3.create(); // In case the entity is made pickable, else it stays to (0, 0, 0)
 	this.isVisible = true;
+	this.wireFrameMode = false;
 	
 	this.lights = new Array(); // Lights associated to the entity (must be used when extended)
 	
@@ -57,7 +58,7 @@ Entity.prototype.draw = function(gl, shader, drawMode) {
 			gl.uniform3fv(shader.getVar("uEntityPickColor"), this.pickColor);
 		}
 		
-		this.model.draw(shader, drawMode);
+		this.model.draw(shader, drawMode, this.wireFrameMode);
 	}
 };
 

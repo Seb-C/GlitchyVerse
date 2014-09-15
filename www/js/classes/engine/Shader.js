@@ -1,5 +1,4 @@
 var Shader = function() {
-	this.directory = "/shaders/";
 	this._shaders = new Array();
 	this.program = null;
 	this._gl = null;
@@ -34,14 +33,8 @@ Shader.prototype._load = function(typeConstantName, fileName) {
 		shader: null
 	};
 	this._shaders.push(shader);
-	// TODO load from tar
-	var ajax = new XMLHttpRequest();
-	ajax.open("GET", this.directory + fileName, false);
-	ajax.send(null);
-
-	if(ajax.readyState == ajax.DONE && ajax.status == 200) {
-		shader.source = ajax.responseText;
-	}
+	
+	shader.source = FILES.getText("www/shaders/" + fileName);
 };
 
 /**

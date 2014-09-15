@@ -239,8 +239,9 @@ Model.lastModelDrawn = null;
  * Draws the model
  * @param Shader The shader to use to draw the model
  * @param int Draw mode, see World.prototype.DRAW_MODE_XXX
+ * @param boolean True if the model should be drawn as wireframe
  */
-Model.prototype.draw = function(shader, drawMode) {
+Model.prototype.draw = function(shader, drawMode, wireFrameMode) {
 	if(this.meshes instanceof Mesh || this.meshes.length > 0) {
 		if(this.onbeforedraw != null) {
 			this.onbeforedraw.call(this);
@@ -288,6 +289,8 @@ Model.prototype.draw = function(shader, drawMode) {
 			Model.lastModelDrawn = this;
 		}
 		
+		var facesMode = wireFrameMode ? this.gl.LINES : this.gl.TRIANGLES;
+		
 		var currentIndex = 0;
 		for(var i = 0 ; i < this._texturesToDraw.length ; i++) {
 			var verticesCount = this._verticesCountToDraw[i];
@@ -296,10 +299,10 @@ Model.prototype.draw = function(shader, drawMode) {
 			this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 			
 			if(this.drawTypeByElements) {
-				this.gl.drawElements(this.gl.TRIANGLES, verticesCount, this.gl.UNSIGNED_SHORT, currentIndex);
+				this.gl.drawElements(facesMode, verticesCount, this.gl.UNSIGNED_SHORT, currentIndex);
 				currentIndex += 2 * verticesCount;
 			} else {
-				this.gl.drawArrays(this.gl.TRIANGLES, currentIndex, verticesCount);
+				this.gl.drawArrays(facesMode, currentIndex, verticesCount);
 				currentIndex += verticesCount;
 			}
 		}

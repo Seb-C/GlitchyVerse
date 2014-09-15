@@ -91,3 +91,6 @@ newmtl CHARACTER
 newmtl TREE_LEAF
 	map_Kd textures/treeLeaf.png
 	d 0
+
+newmtl HOLOGRAM_LIGHT
+	map_Kd textures/hologramLight.png

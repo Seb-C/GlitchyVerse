@@ -21,11 +21,16 @@ func main() {
 	startItemProductionThread() // TODO use a init function ? where ?
 	
 	// Handling normal files
-	http.Handle("/", http.FileServer(http.Dir("./www")))
-	
-	// TODO don't cache static files
-	
-	if debug {} // TODO
+	fileServerHandler := http.FileServer(http.Dir("./www"))
+	if debug {
+		fileServerHandler = (func(h http.Handler) http.HandlerFunc {
+			return func(w http.ResponseWriter, r *http.Request) {
+				AddNoCacheHeaders(w)
+				h.ServeHTTP(w, r)
+			}
+		})(fileServerHandler)
+	}
+	http.Handle("/", fileServerHandler)
 	
 	// Creating content.tar in memory
 	buf := new(bytes.Buffer)
@@ -36,12 +41,11 @@ func main() {
 	}
 	tarContentBytes := buf.Bytes()
 	
-	// Handling content.tar (TODO no cache only in debug mode)
+	// Handling content.tar
 	http.HandleFunc("/content.tar", func(w http.ResponseWriter, r *http.Request) {
-		headers := w.Header()
-		headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
-		headers.Add("Pragma",        "no-cache") // TODO remove no-cache ?
-		headers.Add("Expires",       "0")
+		if debug {
+			AddNoCacheHeaders(w)
+		}
 		w.Write(tarContentBytes)
 	})
 	
@@ -52,5 +56,3 @@ func main() {
 }
 
 // TODO use debug mode (==> http header for client + static files without cache + database pragmas ...))
-// TODO use structs and tags (for json) everywhere on the database
-// TODO orm for database ?
